@@ -1,0 +1,119 @@
+# Doctum — source registry.
+# One entry per listing source. Same schema is used by the Python crawler (scraper/crawl.py)
+# and the in-browser bootstrap crawler (bootstrap/crawl.js, bootstrap/inline.js).
+#
+# Modes
+#   links   (default) listing page(s) -> detail links matching `link` regex -> fetch each detail page
+#   accordion  one page, projects in accordion panels; anchors whose #id matches `idRe`
+#   headings   one page, one project per heading (`head` selector), body = following siblings
+#
+# Keys
+#   lists        explicit listing URLs
+#   pages        {url: '...{page}...', from: N, to: M}  numbered pagination
+#   stopWhenEmpty  stop paging when a page adds no new links
+#   link / exclude  regexes on absolute detail URLs
+#   card         CSS selector for the listing "card" around each link (snippet text)
+#   detailIf     only fetch detail pages whose listing snippet matches this regex
+#   max, conc, delay   politeness / limits (delay in ms between requests per worker)
+#
+# Notes from the pilot (Oct 2026):
+#   Sheffield, Edinburgh and Manchester project directories are FindAPhD widgets ("Powered by FindAPhD.com")
+#   so they are deliberately NOT scraped. Exeter's funding search lives on funding.exeter.ac.uk (JS app) — TODO.
+
+sources:
+  - id: cranfield
+    institution: Cranfield University
+    region: England
+    pages: {url: "https://www.cranfield.ac.uk/research/phd?Page={page}", from: 1, to: 8}
+    stopWhenEmpty: true
+    link: 'cranfield\.ac\.uk/research/phd/[^/?#]+$'
+
+  - id: southampton
+    institution: University of Southampton
+    region: England
+    pages: {url: "https://www.southampton.ac.uk/study/postgraduate-research/projects?page={page}", from: 0, to: 12}
+    stopWhenEmpty: true
+    link: 'southampton\.ac\.uk/study/postgraduate-research/projects/[a-z0-9-]+$'
+
+  - id: loughborough
+    institution: Loughborough University
+    region: England
+    lists: ["https://www.lboro.ac.uk/study/postgraduate/research-degrees/phd-opportunities/"]
+    link: 'lboro\.ac\.uk/study/postgraduate/research-degrees/phd-opportunities/[a-z0-9-]+/$'
+
+  - id: surrey
+    institution: University of Surrey
+    region: England
+    lists: ["https://www.surrey.ac.uk/fees-and-funding/studentships"]
+    link: 'surrey\.ac\.uk/fees-and-funding/studentships/[a-z0-9-]+$'
+
+  - id: cambridge
+    institution: University of Cambridge
+    region: England
+    lists: ["https://www.cam.ac.uk/jobs/term/Studentships"]
+    link: 'cam\.ac\.uk/jobs/[a-z0-9-]+-[a-z]{2}\d{4,}$'
+
+  - id: nottingham
+    institution: University of Nottingham
+    region: England
+    lists: ["https://jobs.nottingham.ac.uk/vacancies.aspx?cat=213"]
+    link: 'jobs\.nottingham\.ac\.uk/vacancy\.aspx\?ref='
+
+  - id: leeds
+    institution: University of Leeds
+    region: England
+    # Funnelback search; 100 per page via start_rank. Only funded projects get a detail fetch.
+    pages: {url: "https://phd.leeds.ac.uk/search?num_ranks=100&type=project&collection=leeds~sp-pgr-meta&start_rank={page}01", from: 0, to: 26}
+    link: 'phd\.leeds\.ac\.uk/project/\d+'
+    detailIf: '^(?!.*Non-funded)'
+    max: 3000
+
+  - id: swansea
+    institution: Swansea University
+    region: Wales
+    lists: ["https://www.swansea.ac.uk/postgraduate/scholarships/research/"]
+    link: 'swansea\.ac\.uk/postgraduate/scholarships/research/[a-z0-9-]+\.php$'
+
+  - id: qub
+    institution: Queen's University Belfast
+    region: Northern Ireland
+    lists: ["https://www.qub.ac.uk/courses/postgraduate-research/phd-opportunities/"]
+    link: 'qub\.ac\.uk/courses/postgraduate-research/phd-opportunities/[^/]+\.html$'
+    card: '.margin-bottom-1'
+    max: 1500
+    conc: 4
+    delay: 150
+
+  - id: imperial
+    institution: Imperial College London
+    region: England
+    mode: accordion
+    idRe: '^tabpanel_'
+    # Hub page lists every department's studentship page; crawl.py expands it (hub_link regex).
+    hub: "https://www.imperial.ac.uk/jobs/career-programmes/phd-vacancies/"
+    hub_link: 'imperial\.ac\.uk/.*(departments|grantham|medicine|business-school)'
+    lists:
+      - "https://www.imperial.ac.uk/mechanical-engineering/study/phd/phd-opportunities/current-phd-studentships/"
+      - "https://www.imperial.ac.uk/engineering/departments/aeronautics/study/phd/phd-opportunities-and-funding/new-phd-studentships-admissions-round/"
+
+  - id: bristol
+    institution: University of Bristol
+    region: England
+    mode: headings
+    head: h2
+    lists: ["https://www.bristol.ac.uk/chemistry/postgraduate/pg-vacancies/phd-studentships-chemistry/"]
+
+  - id: durham
+    institution: Durham University
+    region: England
+    mode: headings
+    head: h3
+    lists: ["https://www.durham.ac.uk/research/institutes-and-centres/condensed-matter-physics/phd-projects/phd-opportunities/"]
+
+  - id: liverpool
+    institution: University of Liverpool
+    region: England
+    mode: headings
+    head: h2
+    skip: '^PDRA'
+    lists: ["https://www.liverpool.ac.uk/chemistry/study/postgraduate/postgraduate-research/opportunities/"]

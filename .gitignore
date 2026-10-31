@@ -1,0 +1,14 @@
+# Build output and the generated server-only database module
+dist/
+netlify/doctum/*.generated.js
+.netlify/
+node_modules/
+__pycache__/
+*.pyc
+# Raw per-source crawl dumps (rebuilt each run; the DB is the record)
+data/raw/
+.env
+.DS_Store
+# Commit/pull helpers (built from tools/doctumtools)
+DoctumCommit.exe
+DoctumPull.exe

@@ -1,0 +1,13 @@
+const ResEdit = require('resedit'); const PE = require('pe-library'); const fs = require('fs');
+const [,, exe, ico, desc] = process.argv;
+const e = PE.NtExecutable.from(fs.readFileSync(exe));
+const res = PE.NtExecutableResource.from(e);
+const icon = ResEdit.Data.IconFile.from(fs.readFileSync(ico));
+ResEdit.Resource.IconGroupEntry.replaceIconsForResource(res.entries, 1, 1033, icon.icons.map((i) => i.data));
+const vi = ResEdit.Resource.VersionInfo.createEmpty();
+vi.setFileVersion(1, 0, 0, 0, 1033);
+vi.setStringValues({ lang: 1033, codepage: 1200 }, { FileDescription: desc, ProductName: 'Doctum tools', CompanyName: 'Doctum', OriginalFilename: exe.split('/').pop() });
+vi.outputToResourceEntries(res.entries);
+res.outputResource(e);
+fs.writeFileSync(exe, Buffer.from(e.generate()));
+console.log('icon set on', exe);

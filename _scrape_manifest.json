@@ -1,0 +1,123 @@
+{
+  "run_date": "2026-10-31",
+  "alerts": [],
+  "sources": {
+    "bristol": {
+      "scraped": 5,
+      "kept": 5,
+      "open": 5,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:59:24.430Z"
+    },
+    "cambridge": {
+      "scraped": 13,
+      "kept": 13,
+      "open": 7,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:41:52.866Z"
+    },
+    "cranfield": {
+      "scraped": 48,
+      "kept": 47,
+      "open": 33,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:38:07.079Z"
+    },
+    "durham": {
+      "scraped": 19,
+      "kept": 16,
+      "open": 16,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:58:47.558Z"
+    },
+    "imperial": {
+      "scraped": 71,
+      "kept": 53,
+      "open": 51,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:57:12.731Z"
+    },
+    "leeds": {
+      "scraped": 289,
+      "kept": 288,
+      "open": 280,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:44:39.373Z"
+    },
+    "liverpool": {
+      "scraped": 4,
+      "kept": 3,
+      "open": 3,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:59:23.594Z"
+    },
+    "loughborough": {
+      "scraped": 67,
+      "kept": 67,
+      "open": 65,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:40:22.225Z"
+    },
+    "nottingham": {
+      "scraped": 4,
+      "kept": 4,
+      "open": 4,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:42:02.865Z"
+    },
+    "qub": {
+      "scraped": 1156,
+      "kept": 1151,
+      "open": 402,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:58:00.576Z"
+    },
+    "southampton": {
+      "scraped": 202,
+      "kept": 202,
+      "open": 57,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:40:12.114Z"
+    },
+    "surrey": {
+      "scraped": 7,
+      "kept": 6,
+      "open": 4,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:40:46.225Z"
+    },
+    "swansea": {
+      "scraped": 4,
+      "kept": 4,
+      "open": 2,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-04T07:49:02.758Z"
+    }
+  }
+}

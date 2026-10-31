@@ -1,0 +1,81 @@
+# Doctum — twice-weekly scrape (Tuesday and Friday, 05:23 UTC).
+#
+# Same pattern as The Grid's scrape workflows: off-the-hour cron, manual run
+# button, one run at a time, bot commit with a rebase/retry push loop and a
+# manifest with alerts. The commit to main triggers a Netlify build, which
+# regenerates the server-only DB module and every static page.
+name: PhD scrape
+
+on:
+  schedule:
+    - cron: '23 5 * * 2,5'
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: 'Only these source ids (space separated, blank = all)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phd-scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install
+        run: pip install requests beautifulsoup4 lxml pyyaml python-dateutil
+
+      - name: Crawl university sites
+        env:
+          CRAWLER_CONTACT: ${{ secrets.CRAWLER_CONTACT }}
+        run: python -m scraper.crawl ${{ github.event.inputs.sources }}
+
+      - name: Update database and export
+        run: |
+          python -m scraper.db build
+          python -m scraper.db export
+          python -m scraper.db manifest
+
+      - name: Check the build still works
+        run: node scripts/build.js && node scripts/test-api.mjs
+
+      - name: Summary and alerts
+        run: |
+          python - <<'PY'
+          import json, os
+          m = json.load(open('_scrape_manifest.json'))
+          lines = ['## PhD scrape ' + m['run_date'], '', '| Source | Scraped | Open | New | Changed | Gone |', '|---|---|---|---|---|---|']
+          for sid, s in sorted(m['sources'].items()):
+              lines.append(f"| {sid} | {s['scraped']} | {s['open']} | {s['new']} | {s['changed']} | {s['gone']} |")
+          if m['alerts']:
+              lines += ['', '### Alerts'] + [f'- {a}' for a in m['alerts']]
+              for a in m['alerts']:
+                  print(f'::warning title=Scrape alert::{a}')
+          open(os.environ['GITHUB_STEP_SUMMARY'], 'a').write('\n'.join(lines) + '\n')
+          PY
+
+      - name: Commit data
+        run: |
+          git config user.name "doctum-bot"
+          git config user.email "doctum-bot@users.noreply.github.com"
+          git add data/listings.json data/phd.db _scrape_manifest.json
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Data: PhD scrape $(date -u +%Y-%m-%d)"
+          for i in 1 2 3 4 5; do
+            git pull --rebase -X theirs origin main && git push origin HEAD:main && exit 0
+            echo "Push failed, retrying ($i)"; sleep $((i * 10))
+          done
+          exit 1

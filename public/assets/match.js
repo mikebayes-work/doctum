@@ -79,8 +79,7 @@
     var html = '<p class="why">In common with your CV:</p>' + tags(m.why, 'good') +
       (m.gaps.length ? '<p class="why">The advert also mentions:</p>' + tags(m.gaps) : '') +
       (m.flags.length ? '<p class="why">Check before applying:</p>' + tags(m.flags, 'flags') : '') +
-      '<p class="why">' + (analyseOn ? '<button type="button" class="btn-link" data-analyse="' + esc(m.id) + '">Detailed analysis of this PhD</button> · ' : '') +
-      '<a href="/briefing/?id=' + esc(m.id) + '">Opportunity briefing (supervisor deep dive)</a></p>' + (analyseOn ? '<div class="analysis" hidden></div>' : '');
+      (analyseOn ? '<p class="why"><button type="button" class="btn-link" data-analyse="' + esc(m.id) + '">Detailed analysis of this PhD</button></p><div class="analysis" hidden></div>' : '');
     return D.cardHtml(m, { score: m.score, html: html });
   }
   form.addEventListener('submit', function (e) {
@@ -138,12 +137,12 @@
           '<strong>Questions to ask the supervisor</strong><ul>' + li(j.supervisorQuestions, esc) + '</ul>' +
           '<strong>Angles for your personal statement</strong><ul>' + li(j.statementAngles, esc) + '</ul>' +
           '<p class="small">AI-generated from your CV and the advert only. Check everything against the advert.</p>';
-        box.hidden = false; if (b.nextSibling && b.nextSibling.nodeType === 3) b.nextSibling.remove(); b.remove();
+        box.hidden = false; b.remove();
       })
       .catch(function (x) {
         b.textContent = x instanceof SyntaxError ? 'The analysis came back incomplete. Try again.' : x.message;
         b.disabled = !analyseOn;
-        if (!analyseOn) out.querySelectorAll('[data-analyse]').forEach(function (o) { if (o !== b) { if (o.nextSibling && o.nextSibling.nodeType === 3) o.nextSibling.remove(); o.remove(); } });
+        if (!analyseOn) out.querySelectorAll('[data-analyse]').forEach(function (o) { if (o !== b) o.parentNode.remove(); });
       });
   });
 })();

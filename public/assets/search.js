@@ -133,7 +133,7 @@
       var sel = state[k], items = (f[k] || []).slice();
       sel.forEach(function (v) { if (!items.some(function (e) { return e[0] === v; })) items.push([v, 0]); });
       return '<fieldset class="fgroup"><legend>' + LABEL[k] + '</legend>' + (items.map(function (e) {
-        return '<label><input type="checkbox" name="' + k + '" value="' + esc(e[0]) + '"' + (sel.indexOf(e[0]) >= 0 ? ' checked' : '') + '> ' + esc(e[0]) + '<span class="n">' + e[1] + '</span></label>';
+        return '<label><input type="checkbox" name="' + k + '" value="' + esc(e[0]) + '"' + (sel.indexOf(e[0]) >= 0 ? ' checked' : '') + '> ' + esc(k === 'funding' && e[0] === 'Unknown' ? 'Not stated in advert' : e[0]) + '<span class="n">' + e[1] + '</span></label>';
       }).join('') || '<p class="small">None</p>') + '</fieldset>';
     }).join('');
   }

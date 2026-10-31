@@ -15,6 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const { explainerBody } = require('./explainer.js');
+const { recommended } = require('./recommended.js');
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const esc = (s) => String(s == null ? '' : s)
@@ -58,7 +59,7 @@ function makeShell(ctx) {
   const ver = (f) => crypto.createHash('sha1').update(fs.readFileSync(path.join(root, 'public', f))).digest('hex').slice(0, 10);
   const A = (u) => u.startsWith('/assets/') ? `${u}?v=${ver(u.slice(1))}` : u;
   const nav = [
-    ['/', 'Search'], ['/match/', 'Match my CV'], ['/subjects/', 'Subjects'],
+    ['/', 'Search'], ['/match/', 'CV match'], ['/subjects/', 'Subjects'],
     ['/universities/', 'Universities'], ['/opportunity-briefing/', 'Briefings'], ['/guides/', 'Guides'], ['/about/', 'About'],
   ];
   return function shell({ path: p, title, description, body, ld = [], noindex = false, scripts = [], ogType = 'website', crumbs }) {
@@ -324,23 +325,38 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   };
   const FACET_LABEL = { funding: 'Funding', disc: 'Subject', elig: 'Who can apply', inst: 'University' };
   const facetsHtml = ['funding', 'disc', 'elig', 'inst'].map((k) => `<fieldset class="fgroup"><legend>${FACET_LABEL[k]}</legend>${facetData[k]
-    .map(([v, c]) => `<label><input type="checkbox" name="${k}" value="${esc(v)}"> ${esc(v)}<span class="n">${c}</span></label>`).join('')}</fieldset>`).join('');
-  const firstPage = open.slice(0, 20);
+    .map(([v, c]) => `<label><input type="checkbox" name="${k}" value="${esc(v)}"> ${esc(k === 'funding' && v === 'Unknown' ? 'Not stated in advert' : v)}<span class="n">${c}</span></label>`).join('')}</fieldset>`).join('');
+  const firstPage = [...open].sort((a, b) => recommended(a, b, today)).slice(0, 20);
   const pages = Math.min(25, Math.ceil(open.length / 20));
   write('/', shell({
     path: '/', title: 'Doctum | Funded UK PhDs, matched to you',
     description: `Search ${n(open.length)} open PhDs from ${insts.length} UK universities, including ${n(funded.length)} fully funded. Filter by funding, subject and eligibility, or match your CV to the right projects.`,
     ld: [org, { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Doctum', url: site,
       potentialAction: { '@type': 'SearchAction', target: site + '/?q={search_term_string}', 'query-input': 'required name=search_term_string' } },
-      itemList(site, firstPage, 'Open UK PhDs, closing soonest')],
+      itemList(site, firstPage, 'Open UK PhDs, fully funded first')],
     scripts: ['/assets/search.js'],
     body: `
-<section class="hero">
-  <p class="eyebrow">Doctoral opportunities · United Kingdom</p>
-  <h1>Funded UK PhDs, matched to you</h1>
-  <p class="lead">PhD adverts collected straight from university websites every Tuesday and Friday. No adverts, no paid placement.</p>
-  <div class="figures"><div><b>${n(open.length)}</b>open PhDs</div><div><b>${n(funded.length)}</b>fully funded</div><div><b>${insts.length}</b>universities</div><div><b>${esc(ukDate(builtAt).replace(/ \d{4}$/, ''))}</b>last updated</div></div>
+<section class="hero hero-split">
+  <div class="hero-main">
+    <p class="eyebrow">Doctoral opportunities · United Kingdom</p>
+    <h1>Funded UK PhDs, matched to you</h1>
+    <p class="lead">PhD adverts collected straight from university websites. No adverts, no paid placement.</p>
+    <div class="figures"><div><b>${n(open.length)}</b>open PhDs</div><div><b>${n(funded.length)}</b>fully funded</div><div><b>${insts.length}</b>universities</div></div>
+    <p class="updated">Updated every Tuesday and Friday · last update ${esc(ukDate(builtAt))}</p>
+  </div>
+  <aside class="cv-card" aria-labelledby="cv-card-h">
+    <p class="cv-card-tag">Free · CV match</p>
+    <h2 id="cv-card-h">See which PhDs fit your CV</h2>
+    <p>Upload your CV and Doctum ranks every open PhD you can apply for, explains each match and flags anything that could rule you out.</p>
+    <a class="btn btn-brass" href="/match/">Find my matches</a>
+    <p class="small">Your CV is read for this search only and never stored.</p>
+  </aside>
 </section>
+<ol class="steps-strip" aria-label="How Doctum works">
+  <li><span>1</span><div><strong>Match your CV</strong>Your best-fit funded PhDs, with the reasons.</div></li>
+  <li><span>2</span><div><strong>Get a briefing</strong>The supervisor’s key papers, research thread and interview prep. <a href="/opportunity-briefing/">See an example</a></div></li>
+  <li><span>3</span><div><strong>Apply prepared</strong>Write to the supervisor knowing their work.</div></li>
+</ol>
 <div class="search-app" id="search-app">
   <div class="searchrow">
     ${searchForm()}
@@ -360,7 +376,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
       <div id="facets">${facetsHtml}</div>
     </aside>
     <section class="results" aria-live="polite">
-      <div class="results-bar"><p id="count"><strong>${n(open.length)}</strong> open projects · ${n(funded.length)} fully funded</p><a class="btn btn-brass" href="/match/">Match my CV</a></div>
+      <div class="results-bar"><p id="count"><strong>${n(open.length)}</strong> open projects · ${n(funded.length)} fully funded</p><a class="btn btn-ghost" href="/match/">Match my CV instead</a></div>
       <div id="results">${cardList(firstPage, today)}</div>
       <nav id="pager" class="pager" aria-label="Pages">${pages > 1 ? Array.from({ length: Math.min(pages, 7) }, (_, i) => `<button type="button" data-p="${i + 1}"${i === 0 ? ' aria-current="page"' : ''}>${i + 1}</button>`).join('') + '<button type="button" data-p="2">Next</button>' : ''}</nav>
     </section>

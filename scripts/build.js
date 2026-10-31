@@ -68,6 +68,7 @@ const PUBLIC = [
   ['public/assets/site.js', 'assets/site.js'],
   ['public/assets/search.js', 'assets/search.js'],
   ['public/assets/match.js', 'assets/match.js'],
+  ['public/assets/briefing.js', 'assets/briefing.js'],
   ['brand/logo.svg', 'brand/logo.svg'],
   ['brand/logo-dark.svg', 'brand/logo-dark.svg'],
   ['brand/logo-nav.svg', 'brand/logo-nav.svg'],

@@ -22,7 +22,7 @@ const stem = (w) => w.length > 6 && w.endsWith('ies') ? w.slice(0, -3) + 'y'
   : w.length > 5 && w.endsWith('ed') ? w.slice(0, -2)
   : w.length > 4 && w.endsWith('s') && !/(ss|is|us)$/.test(w) ? w.slice(0, -1) : w;
 
-function tokenise(text, surface) {
+export function tokenise(text, surface) {
   const out = [];
   let prev = null;
   for (const raw of String(text || '').toLowerCase().replace(/[^a-z0-9+#\- ]+/g, ' ').split(/\s+/)) {

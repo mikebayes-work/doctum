@@ -5,7 +5,12 @@
   "description": "Doctum: funded UK PhDs, matched to you. Static SEO pages + Netlify Edge Functions.",
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "node scripts/build.js && node scripts/test-api.mjs"
+    "test": "node scripts/build.js && node scripts/test-api.mjs && node scripts/test-briefing.mjs"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^10.7.13"
+  }
 }

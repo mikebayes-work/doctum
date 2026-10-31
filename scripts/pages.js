@@ -52,7 +52,7 @@ const FUNDING_NOTE = {
 function makeShell(ctx) {
   const { site, index, gaId, builtAt } = ctx;
   const nav = [
-    ['/search/', 'Search'], ['/match/', 'Match my CV'], ['/subjects/', 'Subjects'],
+    ['/', 'Search'], ['/match/', 'Match my CV'], ['/subjects/', 'Subjects'],
     ['/universities/', 'Universities'], ['/guides/', 'Guides'], ['/about/', 'About'],
   ];
   return function shell({ path: p, title, description, body, ld = [], noindex = false, scripts = [], ogType = 'website', crumbs }) {
@@ -102,17 +102,17 @@ ${scripts.map((s) => `<script src="${s}" defer></script>`).join('\n')}
 <header class="top">
   <div class="wrap top-in">
     <a class="brand" href="/" aria-label="Doctum home">
-      <picture><source srcset="/brand/logo-nav-dark.svg" media="(prefers-color-scheme: dark)"><img src="/brand/logo-nav.svg" alt="Doctum" width="144" height="40"></picture>
+      <img src="/brand/logo-nav-dark.svg" alt="Doctum" width="144" height="40">
     </a>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="sitenav">Menu</button>
-    <nav id="sitenav" class="sitenav" aria-label="Main">${nav.map(([u, t]) => `<a href="${u}"${p.startsWith(u) ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
+    <nav id="sitenav" class="sitenav" aria-label="Main">${nav.map(([u, t]) => `<a href="${u}"${(u === '/' ? p === '/' : p.startsWith(u)) ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
   </div>
 </header>
 <main id="main" class="wrap">
 ${crumbHtml}
 ${body}
 </main>
-<footer class="foot">
+<footer class="foot-site">
   <div class="wrap foot-in">
     <div>
       <img src="/brand/mark-dark.svg" alt="" width="36" height="36">
@@ -146,17 +146,34 @@ function fundPill(f) {
   const cls = f === 'Fully funded' ? 'pill-full' : f === 'Competition funded' ? 'pill-comp' : f === 'Self-funded' ? 'pill-self' : 'pill-other';
   return `<span class="pill ${cls}">${esc(f || 'Unknown')}</span>`;
 }
+const shortInst = (i) => String(i || '').replace(/^University of /, '').replace(/ University$/, '').replace(/^Queen's University Belfast$/, "Queen's");
+const ELIG_CHIP = { 'UK & International': 'Open to international', 'UK/Home only': 'UK / Home only' };
+const FUND_CLS = { 'Fully funded': 'funded', 'Competition funded': 'comp', 'Self-funded': 'self' };
+function closesChip(r, today) {
+  if (!r.deadline) return r.deadline_text ? `<span class="chip">${esc(trimWords(r.deadline_text, 6))}</span>` : '';
+  const d = days(r.deadline, today);
+  const when = d < 0 ? 'Closed' : d === 0 ? 'closes today' : d === 1 ? '1 day' : `${d} days`;
+  return `<span class="chip${d <= 14 ? ' urgent' : ''}">Closes <time datetime="${esc(r.deadline)}">${esc(ukDate(r.deadline))}</time> · ${when}</span>`;
+}
+// Rich result card. public/assets/search.js renders the same markup from /api/search.
 function cardHtml(r, today) {
-  return `<article class="card">
+  const funded = r.funding === 'Fully funded';
+  const disc = (r.disciplines || [])[0];
+  const sup = (r.supervisors || []).slice(0, 3), fun = (r.funders || []).slice(0, 3);
+  const foot = [sup.length && `Supervisor${sup.length > 1 ? 's' : ''}: ${esc(sup.join(', '))}`, fun.length && `Funder: ${esc(fun.join(', '))}`].filter(Boolean).join(' · ');
+  return `<article class="card${funded ? ' is-funded' : ''}" data-id="${esc(r.id)}">
+  <p class="meta"><strong>${esc(r.institution)}</strong>${r.school ? `<span>· ${esc(r.school)}</span>` : ''}${disc ? `<span>· ${esc(disc)}</span>` : ''}</p>
   <h3><a href="${esc(r.path)}">${esc(r.title)}</a></h3>
-  <p class="meta">${esc(r.institution)}${r.school ? ' · ' + esc(r.school) : ''}</p>
-  <p class="facts">${fundPill(r.funding)}${r.stipend ? ` <span class="pill pill-other">${money(r.stipend)} a year</span>` : ''} <span class="dl">Deadline: ${deadlineHtml(r, today)}</span></p>
+  <p class="chips"><span class="chip ${FUND_CLS[r.funding] || ''}">${esc(r.funding || 'Funding unknown')}</span>${r.stipend ? `<span class="chip money">${money(r.stipend)} / yr</span>` : ''}${closesChip(r, today)}${ELIG_CHIP[r.eligibility] ? `<span class="chip">${ELIG_CHIP[r.eligibility]}</span>` : ''}${r.programme ? `<span class="chip">${esc(trimWords(r.programme, 5))}</span>` : ''}${r.start ? `<span class="chip">Starts ${esc(trimWords(r.start, 4))}</span>` : ''}</p>
+  ${r.summary ? `<p class="sum">${esc(trimWords(r.summary, 55))}</p>` : ''}
+  <p class="more"><button type="button" class="btn-link" data-more="${esc(r.id)}">Read the full advert</button></p>
+  <div class="foot"><span class="sup">${foot}</span><span class="actions"><button type="button" data-save="${esc(r.id)}" aria-pressed="false">Save</button><a class="go" href="${esc(r.url)}" rel="nofollow noopener" target="_blank">Apply at ${esc(shortInst(r.institution))} ↗</a></span></div>
 </article>`;
 }
 const cardList = (list, today) => list.length ? `<div class="cards">${list.map((r) => cardHtml(r, today)).join('\n')}</div>` : '<p class="empty">No open listings right now. Check back after the next update.</p>';
-const searchForm = (q = '') => `<form class="searchbar" action="/search/" method="get" role="search">
+const searchForm = (q = '') => `<form class="searchbar" action="/" method="get" role="search">
   <label class="sr" for="q">Search PhDs</label>
-  <input id="q" name="q" type="search" value="${esc(q)}" placeholder="Try ‘machine learning’, ‘battery’, ‘Leeds’" maxlength="120">
+  <input id="q" name="q" type="search" value="${esc(q)}" placeholder="Topic, method or supervisor (e.g. tribology, hydrogen, Bayesian)" maxlength="120">
   <button type="submit">Search</button>
 </form>`;
 const itemList = (site, list, name) => ({
@@ -252,7 +269,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
     const firstDisc = (r.disciplines || [])[0];
     const body = `
 <article class="listing" data-id="${esc(r.id)}">
-  ${live ? '' : '<p class="notice notice-closed">This PhD is closed. It is kept here for reference. <a href="/search/">Search open PhDs</a>.</p>'}
+  ${live ? '' : '<p class="notice notice-closed">This PhD is closed. It is kept here for reference. <a href="/">Search open PhDs</a>.</p>'}
   <h1>${esc(r.title)}</h1>
   <p class="lead">${esc(r.institution)}${r.school ? ' · ' + esc(r.school) : ''}</p>
   <div class="listing-grid">
@@ -281,69 +298,78 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
     }), { sitemap: live, priority: r.funding === 'Fully funded' ? 0.7 : 0.5, lastmod: (r.last_changed || r.last_seen || builtAt).slice(0, 10) });
   }
 
-  // ── Home ──
-  // Newest first, but skip adverts closing within 3 days (they'd vanish before most visitors act).
-  const latest = funded.filter((r) => !r.deadline || days(r.deadline, today) > 3)
-    .sort((a, b) => (b.first_seen || '').slice(0, 10).localeCompare((a.first_seen || '').slice(0, 10)) || byDeadline(a, b)).slice(0, 6);
+  // ── Home = the search page ──
+  // Filter rail + first page of results are rendered here so Google and no-JS visitors
+  // get real content; /assets/search.js then takes over and calls /api/search.
   const discCount = (d) => open.filter((r) => (r.disciplines || []).includes(d)).length;
   const instCount = (i) => open.filter((r) => r.institution === i).length;
+  const FUND_ORDER = ['Fully funded', 'Competition funded', 'Partially funded', 'Self-funded', 'Unknown'];
+  const tally = (vals) => { const c = {}; for (const v of vals) c[v] = (c[v] || 0) + 1; return c; };
+  const facetData = {
+    funding: Object.entries(tally(open.map((r) => r.funding))).sort((a, b) => FUND_ORDER.indexOf(a[0]) - FUND_ORDER.indexOf(b[0])),
+    elig: Object.entries(tally(open.map((r) => ELIG[r.eligibility] || 'Not stated'))).sort((a, b) => b[1] - a[1]),
+    disc: Object.entries(tally(open.flatMap((r) => r.disciplines || []))).sort((a, b) => b[1] - a[1]),
+    inst: Object.entries(tally(open.map((r) => r.institution))).sort((a, b) => b[1] - a[1]),
+  };
+  const FACET_LABEL = { funding: 'Funding', disc: 'Subject', elig: 'Who can apply', inst: 'University' };
+  const facetsHtml = ['funding', 'disc', 'elig', 'inst'].map((k) => `<fieldset class="fgroup"><legend>${FACET_LABEL[k]}</legend>${facetData[k]
+    .map(([v, c]) => `<label><input type="checkbox" name="${k}" value="${esc(v)}"> ${esc(v)}<span class="n">${c}</span></label>`).join('')}</fieldset>`).join('');
+  const firstPage = open.slice(0, 20);
+  const pages = Math.min(25, Math.ceil(open.length / 20));
   write('/', shell({
     path: '/', title: 'Doctum | Funded UK PhDs, matched to you',
-    description: `Search ${n(open.length)} open PhDs from ${insts.length} UK universities, including ${n(funded.length)} fully funded. Filter by funding and eligibility, or match your CV to the right projects.`,
+    description: `Search ${n(open.length)} open PhDs from ${insts.length} UK universities, including ${n(funded.length)} fully funded. Filter by funding, subject and eligibility, or match your CV to the right projects.`,
     ld: [org, { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Doctum', url: site,
-      potentialAction: { '@type': 'SearchAction', target: site + '/search/?q={search_term_string}', 'query-input': 'required name=search_term_string' } }],
+      potentialAction: { '@type': 'SearchAction', target: site + '/?q={search_term_string}', 'query-input': 'required name=search_term_string' } },
+      itemList(site, firstPage, 'Open UK PhDs, closing soonest')],
+    scripts: ['/assets/search.js'],
     body: `
 <section class="hero">
+  <p class="eyebrow">Doctoral opportunities · United Kingdom</p>
   <h1>Funded UK PhDs, matched to you</h1>
-  <p class="lead">Doctum collects PhD adverts directly from UK university websites, twice a week. Search them in one place, see who can apply and what is funded, and match your CV to the projects that fit.</p>
-  ${searchForm()}
-  <p class="stats"><strong>${n(open.length)}</strong> open PhDs · <strong>${n(funded.length)}</strong> fully funded · <strong>${insts.length}</strong> universities · updated ${esc(updated)}</p>
-  <p class="quick"><a href="/fully-funded-phds/">Fully funded</a><a href="/funded-phds-international-students/">Open to international students</a><a href="/closing-soon/">Closing in 30 days</a></p>
+  <p class="lead">PhD adverts collected straight from university websites every Tuesday and Friday. No adverts, no paid placement.</p>
+  <div class="figures"><div><b>${n(open.length)}</b>open PhDs</div><div><b>${n(funded.length)}</b>fully funded</div><div><b>${insts.length}</b>universities</div><div><b>${esc(ukDate(builtAt).replace(/ \d{4}$/, ''))}</b>last updated</div></div>
 </section>
+<div class="search-app" id="search-app">
+  <div class="searchrow">
+    ${searchForm()}
+    <label class="sr" for="sort">Sort results</label>
+    <select id="sort"><option value="">Best match</option><option value="deadline">Deadline soonest</option><option value="stipend">Highest stipend</option><option value="newest">Newest</option></select>
+  </div>
+  <div class="quick" role="group" aria-label="Quick filters">
+    <button type="button" data-quick="funded" aria-pressed="false">Fully funded only</button>
+    <button type="button" data-quick="intl" aria-pressed="false">Open to international</button>
+    <button type="button" data-quick="soon" aria-pressed="false">Closing in 30 days</button>
+    <button type="button" id="shortlist-btn" aria-pressed="false">My shortlist (<span id="shortlist-n">0</span>)</button>
+    <button type="button" class="filters-toggle" aria-expanded="false" aria-controls="filters">Filters</button>
+  </div>
+  <div class="search-layout">
+    <aside class="filters" id="filters" aria-label="Filters">
+      <button type="button" class="reset" id="reset" hidden>Clear all filters</button>
+      <div id="facets">${facetsHtml}</div>
+    </aside>
+    <section class="results" aria-live="polite">
+      <div class="results-bar"><p id="count"><strong>${n(open.length)}</strong> open projects · ${n(funded.length)} fully funded</p><a class="btn btn-brass" href="/match/">Match my CV</a></div>
+      <div id="results">${cardList(firstPage, today)}</div>
+      <nav id="pager" class="pager" aria-label="Pages">${pages > 1 ? Array.from({ length: Math.min(pages, 7) }, (_, i) => `<button type="button" data-p="${i + 1}"${i === 0 ? ' aria-current="page"' : ''}>${i + 1}</button>`).join('') + '<button type="button" data-p="2">Next</button>' : ''}</nav>
+    </section>
+  </div>
+</div>
+<div class="rule-head"><h2>Browse by subject</h2></div>
+<ul class="chips-list">${discs.map((d) => `<li><a href="/subjects/${discSlug(d)}/">${esc(d)}<span>${discCount(d)}</span></a></li>`).join('')}</ul>
+<div class="rule-head"><h2>Browse by university</h2></div>
+<ul class="chips-list">${insts.map((i) => `<li><a href="/universities/${instSlug(i)}/">${esc(i)}<span>${instCount(i)}</span></a></li>`).join('')}</ul>
 <section class="cta">
   <div><h2>Match my CV</h2><p>Paste or upload your CV. Doctum compares it with every open advert in your subject and explains each match: the overlap, the gaps and anything that might rule you out. Your CV is not stored.</p></div>
   <a class="btn btn-brass" href="/match/">Match my CV</a>
 </section>
-<section><h2>Newest fully funded PhDs</h2>${cardList(latest, today)}<p><a href="/fully-funded-phds/">All fully funded PhDs →</a></p></section>
-<section><h2>Browse by subject</h2><ul class="chips">${discs.map((d) => `<li><a href="/subjects/${discSlug(d)}/">${esc(d)} <span>${discCount(d)}</span></a></li>`).join('')}</ul></section>
-<section><h2>Browse by university</h2><ul class="chips">${insts.map((i) => `<li><a href="/universities/${instSlug(i)}/">${esc(i)} <span>${instCount(i)}</span></a></li>`).join('')}</ul></section>
-<section class="principles"><h2>How Doctum works</h2>
-  <ul>
-    <li><strong>Straight from the source.</strong> Every listing links to the university's own advert.</li>
-    <li><strong>No paid ranking.</strong> Results are ordered by deadline or relevance. Nobody pays to appear higher.</li>
-    <li><strong>Clear funding and eligibility.</strong> Each advert is labelled so you can see at a glance whether it is funded and who can apply.</li>
-  </ul>
-  <p><a href="/about/">Read the methodology →</a></p>
-</section>`,
+<div class="rule-head"><h2>How Doctum works</h2></div>
+<ul class="principles">
+  <li><strong>Straight from the source</strong>Every listing is read from the university's own website and links back to the original advert.</li>
+  <li><strong>No paid ranking</strong>Results are ordered by deadline or relevance. Nobody pays to appear higher.</li>
+  <li><strong>Clear funding and eligibility</strong>Each advert is labelled so you can see at a glance whether it is funded and who can apply. <a href="/about/">Methodology</a></li>
+</ul>`,
   }), { priority: 1.0 });
-
-  // ── Search shell (filled by /assets/search.js from /api/search) ──
-  write('/search/', shell({
-    path: '/search/', title: 'Search UK PhDs | Doctum', description: `Search and filter ${n(open.length)} open UK PhDs by subject, funding, eligibility and university.`,
-    scripts: ['/assets/search.js'],
-    body: `
-<h1>Search PhDs</h1>
-<div class="search-app" id="search-app">
-  ${searchForm()}
-  <div class="search-layout">
-    <aside class="filters" id="filters" aria-label="Filters">
-      <fieldset><legend>Quick filters</legend>
-        <label><input type="checkbox" name="quick" value="funded"> Fully funded</label>
-        <label><input type="checkbox" name="quick" value="intl"> Open to international</label>
-        <label><input type="checkbox" name="quick" value="soon"> Closing in 30 days</label>
-      </fieldset>
-      <div id="facets"></div>
-    </aside>
-    <section class="results" aria-live="polite">
-      <div class="results-bar"><p id="count">Loading…</p>
-        <label>Sort <select id="sort"><option value="">Best</option><option value="deadline">Deadline</option><option value="stipend">Stipend</option><option value="newest">Newest</option></select></label>
-      </div>
-      <div id="results"><noscript><p>Search needs JavaScript. You can still browse by <a href="/subjects/">subject</a> or <a href="/universities/">university</a>.</p></noscript></div>
-      <nav id="pager" class="pager" aria-label="Pages"></nav>
-    </section>
-  </div>
-</div>`,
-  }), { priority: 0.8 });
 
   // ── Match page (filled by /assets/match.js, calls /api/match) ──
   write('/match/', shell({
@@ -382,13 +408,13 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   const hub = (p, title, h1, intro, list, crumbs, extra = '', priority = 0.8) => write(p, shell({
     path: p, title, description: intro.replace(/<[^>]+>/g, '').slice(0, 300), crumbs,
     ld: [itemList(site, pick(list), h1)],
-    body: `<h1>${esc(h1)}</h1><p class="lead">${intro}</p>${extra}${cardList(pick(list), today)}${list.length > 60 ? `<p class="more">Showing the 60 closing soonest of ${n(list.length)}. <a href="/search/">Search and filter all of them →</a></p>` : ''}`,
+    body: `<h1>${esc(h1)}</h1><p class="lead">${intro}</p>${extra}${cardList(pick(list), today)}${list.length > 60 ? `<p class="more-link">Showing the 60 closing soonest of ${n(list.length)}. <a href="/">Search and filter all of them →</a></p>` : ''}`,
   }), { priority });
 
   write('/subjects/', shell({
     path: '/subjects/', title: 'PhDs by subject | Doctum', description: 'Browse open UK PhDs by subject area, from engineering and computer science to medicine and the humanities.',
     crumbs: [['/subjects/', 'Subjects']],
-    body: `<h1>PhDs by subject</h1><ul class="chips big">${discs.map((d) => `<li><a href="/subjects/${discSlug(d)}/">${esc(d)} <span>${discCount(d)} open</span></a></li>`).join('')}</ul>`,
+    body: `<h1>PhDs by subject</h1><ul class="chips-list big">${discs.map((d) => `<li><a href="/subjects/${discSlug(d)}/">${esc(d)} <span>${discCount(d)} open</span></a></li>`).join('')}</ul>`,
   }), { priority: 0.7 });
   for (const d of discs) {
     const list = open.filter((r) => (r.disciplines || []).includes(d));
@@ -400,7 +426,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   write('/universities/', shell({
     path: '/universities/', title: 'PhDs by university | Doctum', description: `Open PhDs at ${insts.length} UK universities, collected directly from their websites.`,
     crumbs: [['/universities/', 'Universities']],
-    body: `<h1>PhDs by university</h1><p class="lead">Doctum currently collects adverts from these universities' own websites. More are being added.</p><ul class="chips big">${insts.map((i) => `<li><a href="/universities/${instSlug(i)}/">${esc(i)} <span>${instCount(i)} open</span></a></li>`).join('')}</ul>`,
+    body: `<h1>PhDs by university</h1><p class="lead">Doctum currently collects adverts from these universities' own websites. More are being added.</p><ul class="chips-list big">${insts.map((i) => `<li><a href="/universities/${instSlug(i)}/">${esc(i)} <span>${instCount(i)} open</span></a></li>`).join('')}</ul>`,
   }), { priority: 0.7 });
   for (const i of insts) {
     const list = open.filter((r) => r.institution === i);

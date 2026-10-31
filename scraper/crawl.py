@@ -37,16 +37,32 @@ def load_sources() -> list[dict]:
     return yaml.safe_load((ROOT / "scraper" / "sources.yaml").read_text())["sources"]
 
 
+_blocked: dict[str, str] = {}   # host -> why the site refused us (shown in the run log and manifest)
+DIAG: dict[str, str] = {}       # source id -> first problem seen this run
+
+
 def allowed(url: str) -> bool:
+    """Respect robots.txt. Fetched with our own User-Agent so a firewall block shows up as a block,
+    not as a silent "disallow everything" (urllib's robotparser treats 401/403 as disallow-all)."""
     host = urlparse(url).scheme + "://" + urlparse(url).netloc
     if host not in _robots:
         rp = urllib.robotparser.RobotFileParser(host + "/robots.txt")
         try:
-            rp.read()
-        except Exception:
-            rp = None
+            r = session.get(host + "/robots.txt", timeout=20)
+            if r.status_code in (401, 403, 429) or r.status_code >= 500:
+                _blocked[host] = f"site refused the crawler (HTTP {r.status_code} on robots.txt)"
+                rp = False
+            elif r.status_code >= 400:
+                rp = None  # no robots.txt: everything allowed
+            else:
+                rp.parse(r.text.splitlines())
+        except Exception as e:
+            _blocked[host] = f"couldn't reach the site ({type(e).__name__})"
+            rp = False
         _robots[host] = rp
     rp = _robots[host]
+    if rp is False:
+        raise PermissionError(_blocked[host])
     return True if rp is None else rp.can_fetch(UA, url)
 
 
@@ -54,7 +70,8 @@ def get(url: str) -> BeautifulSoup:
     if not allowed(url):
         raise PermissionError(f"robots.txt disallows {url}")
     r = session.get(url, timeout=30)
-    r.raise_for_status()
+    if r.status_code >= 400:
+        raise RuntimeError(f"HTTP {r.status_code}")
     return BeautifulSoup(r.text, "lxml")
 
 
@@ -99,6 +116,9 @@ def crawl_links(cfg: dict) -> list[dict]:
             doc = get(lu)
         except Exception as e:
             print("  list error", lu, e)
+            DIAG.setdefault(cfg["id"], str(e))
+            if isinstance(e, PermissionError):
+                break  # same answer for every page on this site
             continue
         added = 0
         cards = {id(c) for c in doc.select(cfg.get("card", "li,article,tr,.card,.teaser,.result"))}
@@ -115,6 +135,9 @@ def crawl_links(cfg: dict) -> list[dict]:
                 o["list_title"] = t
             if len(s) > len(o["list_snippet"]):
                 o["list_snippet"] = s
+        if not added and not seen:
+            title = clean(doc.title.get_text()) if doc.title else "no title"
+            DIAG.setdefault(cfg["id"], f"listing page loaded but no project links matched (page title: {title[:80]})")
         time.sleep(cfg.get("delay", 250) / 1000)
         if cfg.get("stopWhenEmpty") and not added:
             break
@@ -152,6 +175,7 @@ def crawl_inline(cfg: dict) -> list[dict]:
             d = get(lu)
         except Exception as e:
             print("  list error", lu, e)
+            DIAG.setdefault(cfg["id"], str(e))
             continue
         root = main_el(d, cfg.get("main"))
         if cfg["mode"] == "accordion":
@@ -190,6 +214,9 @@ def run(ids: list[str] | None = None):
         print(f"[{cfg['id']}] crawling…")
         items = crawl_inline(cfg) if cfg.get("mode") in ("accordion", "headings") else crawl_links(cfg)
         out = {"source": cfg, "scraped_at": datetime.now(timezone.utc).isoformat(), "items": items}
+        if not items and cfg["id"] in DIAG:
+            out["problem"] = DIAG[cfg["id"]]
+            print(f"[{cfg['id']}] PROBLEM: {DIAG[cfg['id']]}")
         (RAW / f"phdraw_{cfg['id']}.json").write_text(json.dumps(out, ensure_ascii=False))
         print(f"[{cfg['id']}] {len(items)} items, {sum('text' in i for i in items)} with detail")
 

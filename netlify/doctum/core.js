@@ -98,6 +98,7 @@ export function card(r) {
     funding: r.funding, stipend: r.stipend || null, deadline: r.deadline || null, deadline_text: r.deadline_text || '',
     start: r.start || '', eligibility: ELIG_LABEL[r.eligibility] || 'Not stated', degree: r.degree || 'PhD',
     programme: r.programme || '', disciplines: r.disciplines || [], supervisors: (r.supervisors || []).slice(0, 3),
+    funders: (r.funders || []).slice(0, 3),
     summary: r.summary || '', url: r.url, status: r.status,
   };
 }

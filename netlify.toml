@@ -12,6 +12,12 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# The search page moved to the home page (old links keep working, query string is kept).
+[[redirects]]
+  from = "/search/"
+  to = "/"
+  status = 301
+
 # Belt and braces: data and source files 404 even if someone guesses the name.
 [[redirects]]
   from = "/data/*"

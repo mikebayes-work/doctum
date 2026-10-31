@@ -20,6 +20,7 @@ from .extract import extract
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "data" / "phd.db"
 RAW = ROOT / "data" / "raw"
+STALE_DAYS = 21  # drop listings not re-checked for this long
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS listings (
@@ -125,6 +126,9 @@ def export(path: Path | None = None):
     path.parent.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
     cutoff = (date.today() - timedelta(days=60)).isoformat()
+    # A listing we haven't been able to re-check for STALE_DAYS (its source is blocked or broken)
+    # is left out of the site rather than shown as open on old information.
+    stale = (datetime.now(timezone.utc) - timedelta(days=STALE_DAYS)).isoformat()
     keep = ("id", "source_id", "institution", "region", "url", "title", "summary", "description", "school", "deadline",
             "deadline_text", "start", "funding", "stipend", "eligibility", "supervisors", "funders", "programme",
             "degree", "disciplines", "first_seen", "last_seen", "last_changed")
@@ -132,6 +136,8 @@ def export(path: Path | None = None):
     for r in rows(status=("open", "closed")):
         status = "closed" if r["deadline"] and r["deadline"] < today else r["status"]
         if status == "closed" and not (r["deadline"] and r["deadline"] >= cutoff):
+            continue
+        if (r["last_seen"] or "") < stale:
             continue
         d = {k: r[k] for k in keep if r[k] not in (None, "", [])}
         d["status"] = status
@@ -161,7 +167,11 @@ def manifest(path: Path | None = None):
         out[sid] = {"scraped": cur["n_raw"], "kept": cur["n_kept"], "open": open_now, "new": cur["n_new"],
                     "changed": cur["n_changed"], "gone": cur["n_gone"], "scraped_at": cur["scraped_at"]}
         if cur["n_raw"] == 0:
-            alerts.append(f"{sid}: returned 0 adverts")
+            why = ""
+            f = RAW / f"phdraw_{sid}.json"
+            if f.exists():
+                why = json.loads(f.read_text()).get("problem", "")
+            alerts.append(f"{sid}: returned 0 adverts" + (f" ({why})" if why else ""))
         elif prev and prev["n_kept"] and cur["n_kept"] < prev["n_kept"] * 0.5:
             alerts.append(f"{sid}: dropped from {prev['n_kept']} to {cur['n_kept']}")
     doc = {"run_date": datetime.now(timezone.utc).date().isoformat(), "alerts": alerts, "sources": out}

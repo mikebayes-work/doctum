@@ -19,7 +19,7 @@ import urllib.robotparser
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, parse_qs
 
 import requests
 import yaml
@@ -102,6 +102,20 @@ def main_el(doc: BeautifulSoup, sel: str | None = None):
         "main,[role=main],#main-content,#main,article,#content,.content") or doc.body or doc
 
 
+def unwrap(h: str) -> str:
+    """Search engines on university sites (Funnelback at Leeds, Oct 2026) wrap result links in a
+    click-tracking redirect: .../s/redirect?...&url=https%3A%2F%2Fphd.leeds.ac.uk%2Fproject%2F283-...
+    Return the real destination so `link:` patterns match it."""
+    if "redirect" not in h and "url=" not in h:
+        return h
+    q = parse_qs(urlparse(h).query)
+    for k in ("url", "u", "target", "dest"):
+        v = (q.get(k) or [""])[0]
+        if v.startswith(("http://", "https://")):
+            return v.split("#")[0]
+    return h
+
+
 def list_urls(cfg: dict) -> list[str]:
     urls = list(cfg.get("lists", []))
     if p := cfg.get("pages"):
@@ -128,7 +142,7 @@ def crawl_links(cfg: dict) -> list[dict]:
         added = 0
         cards = {id(c) for c in doc.select(cfg.get("card", "li,article,tr,.card,.teaser,.result"))}
         for a in doc.select((cfg.get("scope", "") + " a[href]").strip()):
-            h = urljoin(lu, a["href"]).split("#")[0]
+            h = unwrap(urljoin(lu, a["href"]).split("#")[0])
             if not link_re.search(h) or (ex_re and ex_re.search(h)) or h == lu:
                 continue
             t = clean(a.get_text(" "))
@@ -412,7 +426,7 @@ def crawl_auto(cfg: dict) -> list[dict]:
         lpath = _path(lu)
         added = 0
         for a in root.select("a[href]"):
-            h = urljoin(lu, a["href"]).split("#")[0]
+            h = unwrap(urljoin(lu, a["href"]).split("#")[0])
             if not h.startswith("http") or not _on_domain(h, domain) or h.rstrip("/") == lu.rstrip("/"):
                 continue
             if JUNK_URL.search(h) or (ex_re and ex_re.search(h)):

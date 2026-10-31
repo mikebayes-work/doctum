@@ -62,7 +62,8 @@ def labelled(text: str, labels: str, span: int = 3) -> str | None:
 # ---------------------------------------------------------------- fields
 DEADLINE_LABELS = r"application deadline|closing date|deadline for applications?|deadline for application|deadline|applications? close|apply by"
 START_LABELS = r"start date|project start dates?|project start date|expected start date|start"
-SUPERVISOR_LABELS = r"supervisors?|supervised by|potential supervisors?|lead supervisor|principal supervisor|supervisory team|primary supervisor"
+SUPERVISOR_LABELS = (r"supervisors?|supervised by|potential supervisors?|lead supervisors?|principal supervisors?|supervisory team|primary supervisors?|"
+                     r"main supervisors?|first supervisors?|second supervisors?|additional supervisors?|co-?supervisors?|supervisor\(s\)|project supervisors?")
 
 
 def get_deadline(text: str, snippet: str) -> tuple[date | None, str]:

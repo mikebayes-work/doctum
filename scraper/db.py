@@ -159,24 +159,32 @@ def manifest(path: Path | None = None):
     """
     path = path or ROOT / "_scrape_manifest.json"
     con = connect()
-    out, alerts = {}, []
+    out, alerts, pending = {}, [], {}
     for (sid,) in con.execute("SELECT DISTINCT source_id FROM scrape_runs"):
         runs = con.execute("SELECT * FROM scrape_runs WHERE source_id=? ORDER BY run_at DESC LIMIT 2", (sid,)).fetchall()
         cur = dict(runs[0]); prev = dict(runs[1]) if len(runs) > 1 else None
         open_now = con.execute("SELECT COUNT(*) FROM listings WHERE source_id=? AND status='open'", (sid,)).fetchone()[0]
         out[sid] = {"scraped": cur["n_raw"], "kept": cur["n_kept"], "open": open_now, "new": cur["n_new"],
                     "changed": cur["n_changed"], "gone": cur["n_gone"], "scraped_at": cur["scraped_at"]}
-        if cur["n_raw"] == 0:
-            why = ""
-            f = RAW / f"phdraw_{sid}.json"
-            if f.exists():
-                why = json.loads(f.read_text()).get("problem", "")
+        ever = con.execute("SELECT MAX(n_kept) FROM scrape_runs WHERE source_id=?", (sid,)).fetchone()[0] or 0
+        why = ""
+        f = RAW / f"phdraw_{sid}.json"
+        if f.exists():
+            why = json.loads(f.read_text()).get("problem", "")
+        if ever == 0:
+            # never produced a listing: a new source still to be tuned, not a breakage
+            pending[sid] = why or "crawled, but no page read like a PhD advert"
+        elif cur["n_raw"] == 0:
             alerts.append(f"{sid}: returned 0 adverts" + (f" ({why})" if why else ""))
         elif prev and prev["n_kept"] and cur["n_kept"] < prev["n_kept"] * 0.5:
             alerts.append(f"{sid}: dropped from {prev['n_kept']} to {cur['n_kept']}")
-    doc = {"run_date": datetime.now(timezone.utc).date().isoformat(), "alerts": alerts, "sources": out}
+    for sid in [s for s in out if s in pending]:
+        del out[sid]
+    skipped = {sid: s["disabled"] for sid, s in REGISTRY.items() if s.get("disabled")}
+    doc = {"run_date": datetime.now(timezone.utc).date().isoformat(), "alerts": alerts, "sources": out,
+           "not_working_yet": pending, "skipped": skipped}
     path.write_text(json.dumps(doc, indent=2))
-    print(f"manifest: {len(out)} sources, {len(alerts)} alerts")
+    print(f"manifest: {len(out)} working sources, {len(pending)} not working yet, {len(skipped)} skipped, {len(alerts)} alerts")
     for a in alerts:
         print("ALERT", a)
     return alerts

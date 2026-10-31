@@ -107,7 +107,8 @@ ${scripts.map((s) => `<script src="${A(s)}" defer></script>`).join('\n')}
 <header class="top">
   <div class="wrap top-in">
     <a class="brand" href="/" aria-label="Doctum home">
-      <img src="/brand/logo-nav-dark.svg" alt="Doctum" width="144" height="40">
+      <img src="/brand/logo-nav-dark.svg" alt="Doctum" width="166" height="46">
+      <span class="brand-sub">Powered by the Research Intelligence Engine</span>
     </a>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="sitenav">Menu</button>
     <nav id="sitenav" class="sitenav" aria-label="Main">${nav.map(([u, t]) => `<a href="${u}"${(u === '/' ? p === '/' : p.startsWith(u)) ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>

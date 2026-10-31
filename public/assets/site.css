@@ -54,8 +54,11 @@ main{padding-bottom:56px;min-height:60vh}
 
 /* ── Masthead ── */
 .top{background:var(--mast);color:var(--mast-ink);border-bottom:3px double var(--brass);position:relative}
-.top-in{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:70px}
-.brand img{display:block;height:40px;width:auto}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:76px}
+.brand{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;padding:8px 0}
+.brand img{display:block;height:46px;width:auto}
+.brand-sub{font:600 .6rem/1 var(--sans);letter-spacing:.17em;text-transform:uppercase;color:var(--brass);margin-left:48px;white-space:nowrap}
+@media (max-width:420px){.brand img{height:40px}.brand-sub{font-size:.5rem;letter-spacing:.12em;margin-left:41px}}
 .sitenav{display:flex;gap:2px;flex-wrap:wrap}
 .sitenav a{color:var(--mast-ink);text-decoration:none;padding:8px 12px;font-weight:500;font-size:.93rem;border-bottom:2px solid transparent}
 .sitenav a:hover{color:#fff;border-bottom-color:var(--brass)}

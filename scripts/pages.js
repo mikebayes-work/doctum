@@ -50,7 +50,12 @@ const FUNDING_NOTE = {
 
 // ── Page shell ───────────────────────────────────────────────────────
 function makeShell(ctx) {
-  const { site, index, gaId, builtAt } = ctx;
+  const { site, index, gaId, builtAt, root } = ctx;
+  // Cache-busting: each asset URL carries a hash of its contents, so a new deploy
+  // never pairs fresh HTML with a stylesheet or script the browser cached earlier.
+  const crypto = require('crypto');
+  const ver = (f) => crypto.createHash('sha1').update(fs.readFileSync(path.join(root, 'public', f))).digest('hex').slice(0, 10);
+  const A = (u) => u.startsWith('/assets/') ? `${u}?v=${ver(u.slice(1))}` : u;
   const nav = [
     ['/', 'Search'], ['/match/', 'Match my CV'], ['/subjects/', 'Subjects'],
     ['/universities/', 'Universities'], ['/guides/', 'Guides'], ['/about/', 'About'],
@@ -92,10 +97,10 @@ function makeShell(ctx) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="${A('/assets/site.css')}">
 ${[...crumbLd, ...ld].map(jsonld).join('\n')}
-${gaId ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${gaId}"></script>\n<script src="/assets/site.js" data-ga="${gaId}"></script>` : '<script src="/assets/site.js" defer></script>'}
-${scripts.map((s) => `<script src="${s}" defer></script>`).join('\n')}
+${gaId ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${gaId}"></script>\n<script src="${A('/assets/site.js')}" data-ga="${gaId}"></script>` : `<script src="${A('/assets/site.js')}" defer></script>`}
+${scripts.map((s) => `<script src="${A(s)}" defer></script>`).join('\n')}
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -203,7 +208,7 @@ function readGuides(dir) {
 // ── Build ────────────────────────────────────────────────────────────
 function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   const today = new Date().toISOString().slice(0, 10);
-  const shell = makeShell({ site, index, gaId, builtAt });
+  const shell = makeShell({ site, index, gaId, builtAt, root });
   const sitemap = [];
   let count = 0;
   const write = (p, html, { sitemap: sm = true, priority = 0.6, lastmod = builtAt.slice(0, 10) } = {}) => {

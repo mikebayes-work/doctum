@@ -152,7 +152,7 @@ export function search(I, q, today) {
     stipend: (a, b) => (b.r.stipend || 0) - (a.r.stipend || 0) || dl(a.r).localeCompare(dl(b.r)),
     newest: (a, b) => (b.r.first_seen || '').localeCompare(a.r.first_seen || ''),
   };
-  list.sort(sorters[q.sort] || (terms.length ? sorters.relevance : sorters.deadline));
+  list.sort(sorters[q.sort] || (terms.length ? sorters.relevance : (a, b) => recommended(a.r, b.r, today)));
   const total = list.length;
   const pages = Math.max(1, Math.min(MAX_PAGE, Math.ceil(total / PAGE_SIZE)));
   const page = Math.min(Math.max(1, parseInt(q.page, 10) || 1), pages);
@@ -162,6 +162,17 @@ export function search(I, q, today) {
     results: list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((x) => card(x.r)),
     facets,
   };
+}
+
+// Default order with no search: fully funded first, then other funding, then the rest;
+// within each, deadline soonest. Adverts closing in the next 3 days go last (they are
+// in "Closing in 30 days" for anyone in a hurry) so the first impression isn't a PhD
+// you can't realistically apply for.
+const FUND_RANK = { 'Fully funded': 0, 'Competition funded': 1, 'Partially funded': 1 };
+export function recommended(a, b, today) {
+  const late = (r) => (r.deadline && daysBetween(r.deadline, today) < 3 ? 1 : 0);
+  const fr = (r) => FUND_RANK[r.funding] ?? 2;
+  return late(a) - late(b) || fr(a) - fr(b) || (a.deadline || '9999').localeCompare(b.deadline || '9999');
 }
 
 export function stats(I) {

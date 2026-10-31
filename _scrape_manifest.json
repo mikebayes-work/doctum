@@ -1,10 +1,9 @@
 {
   "run_date": "2026-10-31",
   "alerts": [
-    "cranfield: returned 0 adverts",
-    "durham: returned 0 adverts",
-    "leeds: returned 0 adverts",
-    "qub: returned 0 adverts"
+    "durham: returned 0 adverts (site refused the crawler (HTTP 403 on robots.txt))",
+    "leeds: returned 0 adverts (listing page loaded but no project links matched (page title: Search results | PhD | University of Leeds))",
+    "qub: returned 0 adverts (site refused the crawler (HTTP 403 on robots.txt))"
   ],
   "sources": {
     "bristol": {
@@ -14,25 +13,25 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-31T10:46:33.739620+00:00"
+      "scraped_at": "2026-10-31T14:02:38.732613+00:00"
     },
     "cambridge": {
       "scraped": 25,
       "kept": 25,
       "open": 25,
-      "new": 18,
-      "changed": 1,
-      "gone": 6,
-      "scraped_at": "2026-10-31T10:45:41.427898+00:00"
-    },
-    "cranfield": {
-      "scraped": 0,
-      "kept": 0,
-      "open": 34,
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-31T10:43:20.749998+00:00"
+      "scraped_at": "2026-10-31T14:02:38.472016+00:00"
+    },
+    "cranfield": {
+      "scraped": 39,
+      "kept": 39,
+      "open": 38,
+      "new": 10,
+      "changed": 0,
+      "gone": 18,
+      "scraped_at": "2026-10-31T14:03:07.733969+00:00"
     },
     "durham": {
       "scraped": 0,
@@ -41,16 +40,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-31T10:46:34.199309+00:00"
+      "scraped_at": "2026-10-31T14:02:38.324067+00:00"
     },
     "imperial": {
       "scraped": 71,
       "kept": 53,
       "open": 51,
       "new": 0,
-      "changed": 3,
+      "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-31T10:46:32.157003+00:00"
+      "scraped_at": "2026-10-31T14:03:21.774977+00:00"
     },
     "leeds": {
       "scraped": 0,
@@ -59,7 +58,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-31T10:46:10.548937+00:00"
+      "scraped_at": "2026-10-31T14:03:03.977502+00:00"
     },
     "liverpool": {
       "scraped": 4,
@@ -68,25 +67,25 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-31T10:46:36.206620+00:00"
+      "scraped_at": "2026-10-31T14:02:40.510350+00:00"
     },
     "loughborough": {
-      "scraped": 84,
-      "kept": 84,
-      "open": 84,
-      "new": 20,
-      "changed": 4,
-      "gone": 3,
-      "scraped_at": "2026-10-31T10:45:29.753576+00:00"
+      "scraped": 85,
+      "kept": 85,
+      "open": 85,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:51.792694+00:00"
     },
     "nottingham": {
       "scraped": 14,
       "kept": 14,
       "open": 14,
-      "new": 10,
+      "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-31T10:45:48.880624+00:00"
+      "scraped_at": "2026-10-31T14:02:36.660166+00:00"
     },
     "qub": {
       "scraped": 0,
@@ -95,34 +94,471 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-31T10:46:15.159702+00:00"
+      "scraped_at": "2026-10-31T14:02:36.964195+00:00"
     },
     "southampton": {
       "scraped": 272,
       "kept": 270,
       "open": 130,
-      "new": 128,
-      "changed": 1,
-      "gone": 60,
-      "scraped_at": "2026-10-31T10:45:03.953201+00:00"
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:12.594550+00:00"
     },
     "surrey": {
       "scraped": 7,
       "kept": 6,
       "open": 6,
-      "new": 4,
+      "new": 0,
       "changed": 0,
-      "gone": 4,
-      "scraped_at": "2026-10-31T10:45:35.840325+00:00"
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:02:37.072586+00:00"
     },
     "swansea": {
       "scraped": 12,
       "kept": 12,
       "open": 12,
+      "new": 0,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:02:37.998250+00:00"
+    },
+    "anglia-ruskin": {
+      "scraped": 30,
+      "kept": 30,
+      "open": 30,
+      "new": 30,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:03:41.463208+00:00"
+    },
+    "arts-bournemouth": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:03:39.856419+00:00"
+    },
+    "aston": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:03:05.366869+00:00"
+    },
+    "bath": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:03:22.025031+00:00"
+    },
+    "bcu": {
+      "scraped": 36,
+      "kept": 35,
+      "open": 22,
+      "new": 35,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:16.719458+00:00"
+    },
+    "birkbeck": {
+      "scraped": 16,
+      "kept": 15,
+      "open": 13,
+      "new": 15,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:03.768156+00:00"
+    },
+    "birmingham": {
+      "scraped": 2,
+      "kept": 2,
+      "open": 2,
+      "new": 2,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:03:49.580278+00:00"
+    },
+    "bradford": {
+      "scraped": 3,
+      "kept": 3,
+      "open": 3,
+      "new": 3,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:04.152761+00:00"
+    },
+    "brighton": {
+      "scraped": 10,
+      "kept": 10,
+      "open": 5,
       "new": 10,
       "changed": 0,
-      "gone": 2,
-      "scraped_at": "2026-10-31T10:46:14.630534+00:00"
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:02.186233+00:00"
+    },
+    "bristol-all": {
+      "scraped": 12,
+      "kept": 12,
+      "open": 11,
+      "new": 12,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:34.437863+00:00"
+    },
+    "brookes": {
+      "scraped": 2,
+      "kept": 2,
+      "open": 1,
+      "new": 2,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:28.911708+00:00"
+    },
+    "brunel": {
+      "scraped": 210,
+      "kept": 210,
+      "open": 11,
+      "new": 210,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:11:37.322940+00:00"
+    },
+    "cardiff-met": {
+      "scraped": 2,
+      "kept": 2,
+      "open": 2,
+      "new": 2,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:21.202939+00:00"
+    },
+    "chester": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 0,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:22.710114+00:00"
+    },
+    "courtauld": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:04:34.277844+00:00"
+    },
+    "coventry": {
+      "scraped": 14,
+      "kept": 14,
+      "open": 9,
+      "new": 14,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:05:25.719985+00:00"
+    },
+    "derby": {
+      "scraped": 27,
+      "kept": 26,
+      "open": 26,
+      "new": 26,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:05:00.479895+00:00"
+    },
+    "exeter": {
+      "scraped": 20,
+      "kept": 20,
+      "open": 14,
+      "new": 20,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:05:08.280887+00:00"
+    },
+    "goldsmiths": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:05:06.952931+00:00"
+    },
+    "heriot-watt": {
+      "scraped": 10,
+      "kept": 10,
+      "open": 5,
+      "new": 10,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:05:18.203744+00:00"
+    },
+    "lancaster": {
+      "scraped": 9,
+      "kept": 8,
+      "open": 8,
+      "new": 8,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:05:47.172745+00:00"
+    },
+    "leeds-beckett": {
+      "scraped": 33,
+      "kept": 33,
+      "open": 14,
+      "new": 33,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:55.079361+00:00"
+    },
+    "lincoln": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:05:49.328122+00:00"
+    },
+    "liverpool-all": {
+      "scraped": 18,
+      "kept": 18,
+      "open": 18,
+      "new": 18,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:10.642105+00:00"
+    },
+    "mmu": {
+      "scraped": 2,
+      "kept": 2,
+      "open": 2,
+      "new": 2,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:24.356557+00:00"
+    },
+    "plymouth": {
+      "scraped": 24,
+      "kept": 24,
+      "open": 24,
+      "new": 24,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:43.218918+00:00"
+    },
+    "qmu": {
+      "scraped": 3,
+      "kept": 3,
+      "open": 3,
+      "new": 3,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:29.578157+00:00"
+    },
+    "qmul": {
+      "scraped": 11,
+      "kept": 11,
+      "open": 11,
+      "new": 11,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:39.492887+00:00"
+    },
+    "rca": {
+      "scraped": 3,
+      "kept": 3,
+      "open": 3,
+      "new": 3,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:54.504709+00:00"
+    },
+    "rgu": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:06:32.434000+00:00"
+    },
+    "shu": {
+      "scraped": 17,
+      "kept": 17,
+      "open": 11,
+      "new": 17,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:07:55.823054+00:00"
+    },
+    "sruc": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:07:03.122853+00:00"
+    },
+    "sunderland": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:07:28.269600+00:00"
+    },
+    "trinity-laban": {
+      "scraped": 1,
+      "kept": 1,
+      "open": 1,
+      "new": 1,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:07:43.699310+00:00"
+    },
+    "uwl": {
+      "scraped": 36,
+      "kept": 36,
+      "open": 36,
+      "new": 36,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:08:03.080827+00:00"
+    },
+    "westminster": {
+      "scraped": 4,
+      "kept": 4,
+      "open": 3,
+      "new": 4,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:07:58.147209+00:00"
+    },
+    "worcester": {
+      "scraped": 2,
+      "kept": 2,
+      "open": 1,
+      "new": 2,
+      "changed": 0,
+      "gone": 0,
+      "scraped_at": "2026-10-31T14:08:04.497012+00:00"
     }
+  },
+  "not_working_yet": {
+    "aberdeen": "listing pages use the FindAPhD widget - not scraped",
+    "abertay": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "aberystwyth": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "bangor": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "bath-spa": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "bedfordshire": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "bishop-grosseteste": "couldn't reach the site (SSLError)",
+    "bolton": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "bournemouth": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "buckingham": "found 1 listing page(s) and 1 candidate links, but none read like a PhD advert - needs proper rules",
+    "bucks": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "canterbury-cc": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "cardiff": "site refused the crawler (HTTP 403 on robots.txt)",
+    "chichester": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "city-st-georges": "site refused the crawler (HTTP 403 on robots.txt)",
+    "cumbria": "found 2 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "dmu": "crawler error: AttributeError: 'NoneType' object has no attribute 'select'",
+    "dundee": "site refused the crawler (HTTP 403 on robots.txt)",
+    "durham-all": "site refused the crawler (HTTP 403 on robots.txt)",
+    "edge-hill": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "essex": "couldn't reach the site (SSLError)",
+    "falmouth": "site refused the crawler (HTTP 403 on robots.txt)",
+    "gcu": "site refused the crawler (HTTP 403 on robots.txt)",
+    "glasgow": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "gloucestershire": "site refused the crawler (HTTP 403 on robots.txt)",
+    "greenwich": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "gsa": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "guildhall": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "harper-adams": "found 3 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "hartpury": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "hertfordshire": "site refused the crawler (HTTP 403 on robots.txt)",
+    "huddersfield": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "hull": "found 4 listing page(s) and 9 candidate links, but none read like a PhD advert - needs proper rules",
+    "icr": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "kcl": "crawler error: AttributeError: 'NoneType' object has no attribute 'select'",
+    "keele": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "kent": "found 2 listing page(s) and 2 candidate links, but none read like a PhD advert - needs proper rules",
+    "kingston": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "leeds-trinity": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "leicester": "site refused the crawler (HTTP 403 on robots.txt)",
+    "liverpool-hope": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "ljmu": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "london-met": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "lsbu": "site refused the crawler (HTTP 403 on robots.txt)",
+    "lse": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "lshtm": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "lstm": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "middlesex": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "napier": "found 10 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "newcastle": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "newman": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "northampton": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "northumbria": "found 12 listing page(s) and 28 candidate links, but none read like a PhD advert - needs proper rules",
+    "ntu": "site refused the crawler (HTTP 403 on robots.txt)",
+    "nua": "couldn't reach the site (ConnectTimeout)",
+    "open": "site refused the crawler (HTTP 403 on robots.txt)",
+    "oxford": "site refused the crawler (HTTP 403 on robots.txt)",
+    "portsmouth": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "ram": "site refused the crawler (HTTP 403 on robots.txt)",
+    "rau": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "rcm": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "rcs": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "reading": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "rncm": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "roehampton": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "royal-holloway": "found 6 listing page(s) and 2 candidate links, but none read like a PhD advert - needs proper rules",
+    "rvc": "site refused the crawler (HTTP 403 on robots.txt)",
+    "salford": "found 2 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "sas": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "soas": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "solent": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "south-wales": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "st-andrews": "found 10 listing page(s) and 4 candidate links, but none read like a PhD advert - needs proper rules",
+    "st-marys": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "staffordshire": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "stirling": "found 5 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "strathclyde": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "suffolk": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "sussex": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "teesside": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "ual": "site refused the crawler (HTTP 403 on robots.txt)",
+    "uca": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "ucl": "found 2 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "uclan": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "uea": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "uel": "found 3 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
+    "uhi": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "ulster": "site refused the crawler (HTTP 403 on robots.txt)",
+    "uwe": "found 7 listing page(s) and 5 candidate links, but none read like a PhD advert - needs proper rules",
+    "uws": "listing pages use the FindAPhD widget - not scraped",
+    "uwtsd": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "warwick": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "winchester": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "wolverhampton": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "wrexham": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "york-st-john": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
+    "york": "no PhD listing page found (sitemap and common paths) - add `seeds:`"
+  },
+  "skipped": {
+    "edinburgh": "project directory is a FindAPhD widget (pilot, Oct 2026)",
+    "manchester": "FSE project directory is a FindAPhD widget (pilot, Oct 2026)",
+    "sheffield": "project directory is a FindAPhD widget (pilot, Oct 2026)"
   }
 }

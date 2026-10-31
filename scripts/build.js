@@ -108,7 +108,7 @@ fs.writeFileSync(path.join(DIST, '_headers'), `/*
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
 ${INDEX ? '' : '  X-Robots-Tag: noindex\n'}
 /assets/*
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 /brand/*
   Cache-Control: public, max-age=604800
 `);

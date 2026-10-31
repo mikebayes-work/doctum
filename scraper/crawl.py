@@ -97,7 +97,7 @@ def text_of(el) -> str:
 
 def main_el(doc: BeautifulSoup, sel: str | None = None):
     return (sel and doc.select_one(sel)) or doc.select_one(
-        "main,[role=main],#main-content,#main,article,#content,.content") or doc.body
+        "main,[role=main],#main-content,#main,article,#content,.content") or doc.body or doc
 
 
 def list_urls(cfg: dict) -> list[str]:
@@ -223,12 +223,13 @@ def crawl_inline(cfg: dict) -> list[dict]:
 # Once a university's first run shows what its site looks like, give it proper rules and drop `mode: auto`.
 
 LISTING_RE = re.compile(
-    r"(phd|doctoral|doctorate|research-degree|postgraduate-research|pgr|research-students?)[^?#]*"
+    r"(phd|doctoral|doctorate|research-degree|postgraduate-research|pgr|research-students?)[^?#]{0,25}?"
     r"(opportunit|project|studentship|vacanc|position|funded|scholarship|available)"
     r"|(^|/)(funded-)?(phd-)?studentships?(/|$|\.)|funded-phd|phd-funding|phd-projects?(/|$|\.)", re.I)
 DETAIL_HINT = re.compile(r"phd|studentship|doctoral|project|scholarship|funded|epsrc|bbsrc|nerc|esrc|ahrc|mrc|ukri|cdt|dtp", re.I)
 JUNK_URL = re.compile(
-    r"(apply|application-process|how-to|entry-requirements|fees|tuition|contact|news|events?/|blog|staff|people|profiles?/|"
+    r"(postdoc|post-doc|fellowship-opportunit|iambrunel|/stories/|case-stud|-leads-|alumnus|alumni|"
+    r"apply|application-process|how-to|entry-requirements|(?<![a-z])fees(?![-a-z/]*(studentship|scholarship|phd))|tuition|contact|news|events?/|blog|staff|people|profiles?/|"
     r"login|signin|search\?|faq|privacy|cookie|accessib|sitemap|terms|policy|policies|alumni|visit|open-day|accommodation|"
     r"undergraduate|international/|clearing|careers?/|jobs/(?!.*studentship)|calendar|feed|rss|/tag/|/category/|share=|print=)"
     r"|\.(pdf|docx?|xlsx?|pptx?|zip|jpe?g|png|gif|svg|mp4)$|^mailto:|^tel:", re.I)
@@ -341,7 +342,9 @@ def discover(cfg: dict) -> tuple[list[str], list[str]]:
     seeds, details = [], []
     # a listing page with 3+ children in the sitemap: the children are the adverts
     for parent, kids in sorted(by_parent.items(), key=lambda kv: -len(kv[1])):
-        if len(kids) >= 3 and (LISTING_RE.search(_path(parent)) or parent.rstrip("/") in hit_set):
+        # 3+ children under a listing-looking parent, or 6+ listing-looking siblings (e.g. Napier's
+        # /phds/pg-research-project-362236): the children are the adverts
+        if (len(kids) >= 3 and (LISTING_RE.search(_path(parent)) or parent.rstrip("/") in hit_set)) or len(kids) >= 6:
             seeds.append(parent)
             details += kids
     # listing-looking pages themselves, shallowest first
@@ -401,10 +404,7 @@ def crawl_auto(cfg: dict) -> list[dict]:
             print(f"  [{cfg['id']}] list error {lu} {e}")
             continue
         page_html = str(r_doc)
-        if FINDAPHD_RE.search(page_html):
-            findaphd += 1
-            print(f"  [{cfg['id']}] FindAPhD widget on {lu} - skipped")
-            continue
+        has_findaphd = bool(FINDAPHD_RE.search(page_html))
         root = main_el(r_doc, cfg.get("main"))
         cards = {id(c) for c in r_doc.select(cards_sel)}
         lpath = _path(lu)
@@ -440,6 +440,11 @@ def crawl_auto(cfg: dict) -> list[dict]:
                 o["list_title"] = t
             if len(s) > len(o["list_snippet"]):
                 o["list_snippet"] = s
+        if not added and has_findaphd:
+            findaphd += 1
+            print(f"  [{cfg['id']}] FindAPhD widget on {lu} and no on-site adverts - skipped")
+            time.sleep(cfg.get("delay", 250) / 1000)
+            continue
         if not added:
             # maybe a one-page listing: one advert per heading
             for head in ("h2", "h3"):
@@ -448,6 +453,12 @@ def crawl_auto(cfg: dict) -> list[dict]:
                 if len(got) >= 2:
                     inline_items += got
                     break
+            else:
+                # a "listing" page that is really one advert (sitemap hit with no project links of its own)
+                t1 = clean(r_doc.h1.get_text(" ")) if r_doc.h1 else ""
+                txt = text_of(root)[:9000]
+                if len(t1) >= 15 and lu not in found and looks_like_advert(txt, t1):
+                    inline_items.append({"url": lu, "list_title": t1, "h1": t1, "text": txt, "list_snippet": ""})
         time.sleep(cfg.get("delay", 250) / 1000)
     if findaphd and not found and not inline_items:
         DIAG.setdefault(cfg["id"], "listing pages use the FindAPhD widget - not scraped")

@@ -3,6 +3,8 @@ browser bootstrap crawler, so extract.py doesn't care which one produced the fil
 
     python -m scraper.crawl                 # all sources
     python -m scraper.crawl cranfield qub   # just these
+    python -m scraper.crawl --runner cloud  # GitHub: everything except `runner: home` sources
+    python -m scraper.crawl --runner home   # Mike's PC: only `runner: home` sources -> data/raw-home/
 
 Sources run in parallel (CRAWLER_JOBS, default 8); each source stays polite to its own site.
 Sources marked `mode: auto` need only a domain - see the auto mode section below.
@@ -519,12 +521,24 @@ def crawl_one(cfg: dict) -> None:
           f"{_counts.get(cfg['id'], 0)} auto requests, {time.time() - t0:.0f}s")
 
 
-def run(ids: list[str] | None = None):
+def run(ids: list[str] | None = None, runner: str | None = None):
+    """runner=None: everything (local runs). "cloud": skip `runner: home` sources. "home": only those."""
+    global RAW
+    if runner == "home":
+        RAW = ROOT / "data" / "raw-home"   # committed, so the cloud build can use it
     RAW.mkdir(parents=True, exist_ok=True)
-    todo = [c for c in load_sources() if not ids or c["id"] in ids]
+    todo = [c for c in load_sources() if (not ids or c["id"] in ids)
+            and (runner is None or (c.get("runner") == "home") == (runner == "home"))]
+    print(f"{len(todo)} sources to crawl" + (f" ({runner} runner)" if runner else ""))
     with ThreadPoolExecutor(SOURCE_JOBS) as ex:
         list(ex.map(crawl_one, todo))
 
 
 if __name__ == "__main__":
-    run(sys.argv[1:] or None)
+    args = sys.argv[1:]
+    runner = None
+    if "--runner" in args:
+        i = args.index("--runner")
+        runner = args[i + 1]
+        del args[i:i + 2]
+    run(args or None, runner)

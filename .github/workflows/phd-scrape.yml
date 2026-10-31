@@ -44,7 +44,7 @@ jobs:
           CRAWLER_CONTACT: ${{ secrets.CRAWLER_CONTACT }}
           CRAWLER_JOBS: '8'      # universities crawled at once (each site still gets one polite worker pool)
           CRAWLER_BUDGET: '600'  # max requests per auto-mode university per run
-        run: python -m scraper.crawl ${{ github.event.inputs.sources }}
+        run: python -m scraper.crawl --runner cloud ${{ github.event.inputs.sources }}   # runner: home sources come from data/raw-home/ (phd-scrape-home.yml)
 
       - name: Update database and export
         run: |

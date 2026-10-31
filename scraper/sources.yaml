@@ -10,6 +10,9 @@
 #              follows pagination and sub-listings; keeps only pages that read like a PhD advert. Optional:
 #              seeds, base (if the site has no www.), link (detail regex), exclude, max_lists, budget.
 #
+#   runner: home   crawled from Mike's PC (phd-scrape-home.yml, self-hosted runner) because the site
+#                  refuses GitHub's servers. Its raw file is committed to data/raw-home/.
+#
 #   disabled: "<reason>"   kept in the registry but never crawled (e.g. FindAPhD widget sites)
 #
 # Keys
@@ -81,6 +84,7 @@ sources:
 
   - id: qub
     institution: Queen's University Belfast
+    runner: home   # refuses GitHub's servers (HTTP 403, Oct 2026)
     region: Northern Ireland
     lists: ["https://www.qub.ac.uk/courses/postgraduate-research/phd-opportunities/"]
     link: 'qub\.ac\.uk/courses/postgraduate-research/phd-opportunities/[^/]+\.html$'
@@ -110,6 +114,7 @@ sources:
 
   - id: durham
     institution: Durham University
+    runner: home   # refuses GitHub's servers (HTTP 403, Oct 2026)
     region: England
     mode: headings
     head: h3
@@ -152,41 +157,41 @@ sources:
   - {id: buckingham, institution: "University of Buckingham", region: England, mode: auto, domain: buckingham.ac.uk}
   - {id: bucks, institution: "Buckinghamshire New University", region: England, mode: auto, domain: bucks.ac.uk}
   - {id: canterbury-cc, institution: "Canterbury Christ Church University", region: England, mode: auto, domain: canterbury.ac.uk}
-  - {id: cardiff, institution: "Cardiff University", region: Wales, mode: auto, domain: cardiff.ac.uk}
+  - {id: cardiff, institution: "Cardiff University", region: Wales, mode: auto, domain: cardiff.ac.uk, runner: home}
   - {id: cardiff-met, institution: "Cardiff Metropolitan University", region: Wales, mode: auto, domain: cardiffmet.ac.uk}
   - {id: uclan, institution: "University of Central Lancashire", region: England, mode: auto, domain: uclan.ac.uk}
   - {id: chester, institution: "University of Chester", region: England, mode: auto, domain: chester.ac.uk}
   - {id: chichester, institution: "University of Chichester", region: England, mode: auto, domain: chi.ac.uk}
-  - {id: city-st-georges, institution: "City St George's, University of London", region: England, mode: auto, domain: citystgeorges.ac.uk}
+  - {id: city-st-georges, institution: "City St George's, University of London", region: England, mode: auto, domain: citystgeorges.ac.uk, runner: home}
   - {id: courtauld, institution: "The Courtauld", region: England, mode: auto, domain: courtauld.ac.uk}
   - {id: coventry, institution: "Coventry University", region: England, mode: auto, domain: coventry.ac.uk}
   - {id: uca, institution: "University for the Creative Arts", region: England, mode: auto, domain: uca.ac.uk}
   - {id: cumbria, institution: "University of Cumbria", region: England, mode: auto, domain: cumbria.ac.uk}
   - {id: dmu, institution: "De Montfort University", region: England, mode: auto, domain: dmu.ac.uk}
   - {id: derby, institution: "University of Derby", region: England, mode: auto, domain: derby.ac.uk}
-  - {id: dundee, institution: "University of Dundee", region: Scotland, mode: auto, domain: dundee.ac.uk}
-  - {id: durham-all, institution: "Durham University", region: England, mode: auto, domain: durham.ac.uk, exclude: 'condensed-matter-physics/phd-projects'}
-  - {id: uea, institution: "University of East Anglia", region: England, mode: auto, domain: uea.ac.uk}
+  - {id: dundee, institution: "University of Dundee", region: Scotland, mode: auto, domain: dundee.ac.uk, runner: home}
+  - {id: durham-all, institution: "Durham University", region: England, mode: auto, domain: durham.ac.uk, exclude: 'condensed-matter-physics/phd-projects', runner: home}
+  - {id: uea, institution: "University of East Anglia", region: England, mode: auto, domain: uea.ac.uk, seeds: ["https://www.uea.ac.uk/study/postgraduate/research-degrees/phds-and-studentships", "https://www.uea.ac.uk/research/research-with-us/postgraduate-research/latest-phds-and-research-studentships"], link: 'uea\.ac\.uk/course/phd-doctorate/'}
   - {id: uel, institution: "University of East London", region: England, mode: auto, domain: uel.ac.uk}
   - {id: edge-hill, institution: "Edge Hill University", region: England, mode: auto, domain: edgehill.ac.uk}
   - {id: edinburgh, institution: "University of Edinburgh", region: Scotland, mode: auto, domain: ed.ac.uk, disabled: "project directory is a FindAPhD widget (pilot, Oct 2026)"}
   - {id: napier, institution: "Edinburgh Napier University", region: Scotland, mode: auto, domain: napier.ac.uk}
   - {id: essex, institution: "University of Essex", region: England, mode: auto, domain: essex.ac.uk}
   - {id: exeter, institution: "University of Exeter", region: England, mode: auto, domain: exeter.ac.uk}
-  - {id: falmouth, institution: "Falmouth University", region: England, mode: auto, domain: falmouth.ac.uk}
-  - {id: glasgow, institution: "University of Glasgow", region: Scotland, mode: auto, domain: gla.ac.uk}
-  - {id: gcu, institution: "Glasgow Caledonian University", region: Scotland, mode: auto, domain: gcu.ac.uk}
+  - {id: falmouth, institution: "Falmouth University", region: England, mode: auto, domain: falmouth.ac.uk, runner: home}
+  - {id: glasgow, institution: "University of Glasgow", region: Scotland, mode: auto, domain: gla.ac.uk, seeds: ["https://www.gla.ac.uk/colleges/mvls/graduateschool/phd-research-opportunities/funded-research-opportunities", "https://www.gla.ac.uk/schools/computing/postgraduateresearch/prospectivestudents/studentshipinformation"]}
+  - {id: gcu, institution: "Glasgow Caledonian University", region: Scotland, mode: auto, domain: gcu.ac.uk, runner: home}
   - {id: gsa, institution: "Glasgow School of Art", region: Scotland, mode: auto, domain: gsa.ac.uk}
-  - {id: gloucestershire, institution: "University of Gloucestershire", region: England, mode: auto, domain: glos.ac.uk}
+  - {id: gloucestershire, institution: "University of Gloucestershire", region: England, mode: auto, domain: glos.ac.uk, runner: home}
   - {id: goldsmiths, institution: "Goldsmiths, University of London", region: England, mode: auto, domain: gold.ac.uk}
   - {id: greenwich, institution: "University of Greenwich", region: England, mode: auto, domain: gre.ac.uk}
   - {id: guildhall, institution: "Guildhall School of Music & Drama", region: England, mode: auto, domain: gsmd.ac.uk}
   - {id: harper-adams, institution: "Harper Adams University", region: England, mode: auto, domain: harper-adams.ac.uk}
   - {id: hartpury, institution: "Hartpury University", region: England, mode: auto, domain: hartpury.ac.uk}
   - {id: heriot-watt, institution: "Heriot-Watt University", region: Scotland, mode: auto, domain: hw.ac.uk}
-  - {id: hertfordshire, institution: "University of Hertfordshire", region: England, mode: auto, domain: herts.ac.uk}
+  - {id: hertfordshire, institution: "University of Hertfordshire", region: England, mode: auto, domain: herts.ac.uk, runner: home}
   - {id: uhi, institution: "University of the Highlands and Islands", region: Scotland, mode: auto, domain: uhi.ac.uk}
-  - {id: huddersfield, institution: "University of Huddersfield", region: England, mode: auto, domain: hud.ac.uk}
+  - {id: huddersfield, institution: "University of Huddersfield", region: England, mode: auto, domain: hud.ac.uk, seeds: ["https://www.hud.ac.uk/postgraduate/research/research-scholarships/"]}
   - {id: hull, institution: "University of Hull", region: England, mode: auto, domain: hull.ac.uk}
   - {id: icr, institution: "The Institute of Cancer Research", region: England, mode: auto, domain: icr.ac.uk}
   - {id: keele, institution: "Keele University", region: England, mode: auto, domain: keele.ac.uk}
@@ -196,7 +201,7 @@ sources:
   - {id: lancaster, institution: "Lancaster University", region: England, mode: auto, domain: lancaster.ac.uk}
   - {id: leeds-beckett, institution: "Leeds Beckett University", region: England, mode: auto, domain: leedsbeckett.ac.uk}
   - {id: leeds-trinity, institution: "Leeds Trinity University", region: England, mode: auto, domain: leedstrinity.ac.uk}
-  - {id: leicester, institution: "University of Leicester", region: England, mode: auto, domain: le.ac.uk}
+  - {id: leicester, institution: "University of Leicester", region: England, mode: auto, domain: le.ac.uk, runner: home}
   - {id: lincoln, institution: "University of Lincoln", region: England, mode: auto, domain: lincoln.ac.uk}
   - {id: liverpool-all, institution: "University of Liverpool", region: England, mode: auto, domain: liverpool.ac.uk, exclude: '/chemistry/study/postgraduate/postgraduate-research/opportunities'}
   - {id: liverpool-hope, institution: "Liverpool Hope University", region: England, mode: auto, domain: hope.ac.uk}
@@ -205,33 +210,33 @@ sources:
   - {id: london-met, institution: "London Metropolitan University", region: England, mode: auto, domain: londonmet.ac.uk}
   - {id: lse, institution: "London School of Economics", region: England, mode: auto, domain: lse.ac.uk}
   - {id: lshtm, institution: "London School of Hygiene & Tropical Medicine", region: England, mode: auto, domain: lshtm.ac.uk}
-  - {id: lsbu, institution: "London South Bank University", region: England, mode: auto, domain: lsbu.ac.uk}
+  - {id: lsbu, institution: "London South Bank University", region: England, mode: auto, domain: lsbu.ac.uk, runner: home}
   - {id: manchester, institution: "University of Manchester", region: England, mode: auto, domain: manchester.ac.uk, disabled: "FSE project directory is a FindAPhD widget (pilot, Oct 2026)"}
   - {id: mmu, institution: "Manchester Metropolitan University", region: England, mode: auto, domain: mmu.ac.uk}
   - {id: middlesex, institution: "Middlesex University", region: England, mode: auto, domain: mdx.ac.uk}
-  - {id: newcastle, institution: "Newcastle University", region: England, mode: auto, domain: ncl.ac.uk}
+  - {id: newcastle, institution: "Newcastle University", region: England, mode: auto, domain: ncl.ac.uk, seeds: ["https://www.ncl.ac.uk/postgraduate/fees-funding/search-funding/"]}
   - {id: northampton, institution: "University of Northampton", region: England, mode: auto, domain: northampton.ac.uk}
   - {id: northumbria, institution: "Northumbria University", region: England, mode: auto, domain: northumbria.ac.uk}
   - {id: nua, institution: "Norwich University of the Arts", region: England, mode: auto, domain: nua.ac.uk}
-  - {id: ntu, institution: "Nottingham Trent University", region: England, mode: auto, domain: ntu.ac.uk}
-  - {id: open, institution: "The Open University", region: England, mode: auto, domain: open.ac.uk}
-  - {id: oxford, institution: "University of Oxford", region: England, mode: auto, domain: ox.ac.uk}
+  - {id: ntu, institution: "Nottingham Trent University", region: England, mode: auto, domain: ntu.ac.uk, runner: home}
+  - {id: open, institution: "The Open University", region: England, mode: auto, domain: open.ac.uk, runner: home}
+  - {id: oxford, institution: "University of Oxford", region: England, mode: auto, domain: ox.ac.uk, runner: home}
   - {id: brookes, institution: "Oxford Brookes University", region: England, mode: auto, domain: brookes.ac.uk}
   - {id: plymouth, institution: "University of Plymouth", region: England, mode: auto, domain: plymouth.ac.uk}
-  - {id: portsmouth, institution: "University of Portsmouth", region: England, mode: auto, domain: port.ac.uk}
+  - {id: portsmouth, institution: "University of Portsmouth", region: England, mode: auto, domain: port.ac.uk, seeds: ["https://www.port.ac.uk/study/postgraduate-research/research-degrees/phd/explore-our-projects", "https://www.port.ac.uk/study/postgraduate-research/funding-your-research-degree/phd-scholarships"], link: 'port\.ac\.uk/study/postgraduate-research/research-degrees/phd/explore-our-projects/[a-z0-9-]+$'}
   - {id: qmu, institution: "Queen Margaret University", region: Scotland, mode: auto, domain: qmu.ac.uk}
   - {id: qmul, institution: "Queen Mary University of London", region: England, mode: auto, domain: qmul.ac.uk}
   - {id: rgu, institution: "Robert Gordon University", region: Scotland, mode: auto, domain: rgu.ac.uk}
-  - {id: reading, institution: "University of Reading", region: England, mode: auto, domain: reading.ac.uk}
+  - {id: reading, institution: "University of Reading", region: England, mode: auto, domain: reading.ac.uk, seeds: ["https://www.reading.ac.uk/doctoral-researcher-college/funding/phd-studentships"]}
   - {id: roehampton, institution: "University of Roehampton", region: England, mode: auto, domain: roehampton.ac.uk}
-  - {id: ram, institution: "Royal Academy of Music", region: England, mode: auto, domain: ram.ac.uk}
+  - {id: ram, institution: "Royal Academy of Music", region: England, mode: auto, domain: ram.ac.uk, runner: home}
   - {id: rau, institution: "Royal Agricultural University", region: England, mode: auto, domain: rau.ac.uk}
   - {id: rca, institution: "Royal College of Art", region: England, mode: auto, domain: rca.ac.uk}
   - {id: rcm, institution: "Royal College of Music", region: England, mode: auto, domain: rcm.ac.uk}
   - {id: rcs, institution: "Royal Conservatoire of Scotland", region: Scotland, mode: auto, domain: rcs.ac.uk}
   - {id: royal-holloway, institution: "Royal Holloway, University of London", region: England, mode: auto, domain: royalholloway.ac.uk}
   - {id: rncm, institution: "Royal Northern College of Music", region: England, mode: auto, domain: rncm.ac.uk}
-  - {id: rvc, institution: "Royal Veterinary College", region: England, mode: auto, domain: rvc.ac.uk}
+  - {id: rvc, institution: "Royal Veterinary College", region: England, mode: auto, domain: rvc.ac.uk, runner: home}
   - {id: salford, institution: "University of Salford", region: England, mode: auto, domain: salford.ac.uk}
   - {id: sas, institution: "School of Advanced Study, University of London", region: England, mode: auto, domain: sas.ac.uk}
   - {id: sheffield, institution: "University of Sheffield", region: England, mode: auto, domain: sheffield.ac.uk, disabled: "project directory is a FindAPhD widget (pilot, Oct 2026)"}
@@ -244,17 +249,23 @@ sources:
   - {id: st-marys, institution: "St Mary's University, Twickenham", region: England, mode: auto, domain: stmarys.ac.uk}
   - {id: staffordshire, institution: "Staffordshire University", region: England, mode: auto, domain: staffs.ac.uk}
   - {id: stirling, institution: "University of Stirling", region: Scotland, mode: auto, domain: stir.ac.uk}
-  - {id: strathclyde, institution: "University of Strathclyde", region: Scotland, mode: auto, domain: strath.ac.uk}
+  - {id: strathclyde, institution: "University of Strathclyde", region: Scotland, mode: auto, domain: strath.ac.uk, seeds: ["https://www.strath.ac.uk/studywithus/postgraduateresearchphdopportunities/engineering/", "https://www.strath.ac.uk/studywithus/postgraduateresearchphdopportunities/science/", "https://www.strath.ac.uk/studywithus/postgraduateresearchphdopportunities/business/", "https://www.strath.ac.uk/studywithus/postgraduateresearchphdopportunities/humanitiessocialsciences/"]}
   - {id: suffolk, institution: "University of Suffolk", region: England, mode: auto, domain: uos.ac.uk}
   - {id: sunderland, institution: "University of Sunderland", region: England, mode: auto, domain: sunderland.ac.uk}
-  - {id: sussex, institution: "University of Sussex", region: England, mode: auto, domain: sussex.ac.uk}
-  - {id: teesside, institution: "Teesside University", region: England, mode: auto, domain: tees.ac.uk}
+  - id: sussex
+    institution: University of Sussex
+    region: England
+    # funding database: PhD-level items, 15 per page; some are schemes rather than single projects
+    pages: {url: "https://www.sussex.ac.uk/study/fees-funding/phd-funding/browse/page/{page}", from: 1, to: 8}
+    stopWhenEmpty: true
+    link: 'sussex\.ac\.uk/study/fees-funding/phd-funding/view/\d+-'
+  - {id: teesside, institution: "Teesside University", region: England, mode: auto, domain: tees.ac.uk, seeds: ["https://www.tees.ac.uk/sections/research/funded_opportunities.cfm"]}
   - {id: trinity-laban, institution: "Trinity Laban Conservatoire", region: England, mode: auto, domain: trinitylaban.ac.uk}
-  - {id: ual, institution: "University of the Arts London", region: England, mode: auto, domain: arts.ac.uk}
+  - {id: ual, institution: "University of the Arts London", region: England, mode: auto, domain: arts.ac.uk, runner: home}
   - {id: ucl, institution: "University College London", region: England, mode: auto, domain: ucl.ac.uk}
-  - {id: ulster, institution: "Ulster University", region: Northern Ireland, mode: auto, domain: ulster.ac.uk}
+  - {id: ulster, institution: "Ulster University", region: Northern Ireland, mode: auto, domain: ulster.ac.uk, runner: home}
   - {id: uwtsd, institution: "University of Wales Trinity Saint David", region: Wales, mode: auto, domain: uwtsd.ac.uk}
-  - {id: warwick, institution: "University of Warwick", region: England, mode: auto, domain: warwick.ac.uk, base: "https://warwick.ac.uk"}
+  - {id: warwick, institution: "University of Warwick", region: England, mode: auto, domain: warwick.ac.uk, base: "https://warwick.ac.uk", seeds: ["https://warwick.ac.uk/engineeringscholarships", "https://warwick.ac.uk/services/dc/schols_fund/"]}
   - {id: uwe, institution: "University of the West of England", region: England, mode: auto, domain: uwe.ac.uk}
   - {id: uwl, institution: "University of West London", region: England, mode: auto, domain: uwl.ac.uk}
   - {id: uws, institution: "University of the West of Scotland", region: Scotland, mode: auto, domain: uws.ac.uk}

@@ -57,7 +57,7 @@ const author = (id, name, inst, o = {}) => ({ id: 'https://openalex.org/' + id, 
   last_known_institutions: [{ display_name: inst }], affiliations: [{ institution: { display_name: inst } }], topics: (o.topics || ['Morphology', 'Inflection']).map((t) => ({ display_name: t, field: { display_name: 'Arts' } })) });
 
 const REPORT = (refs) => JSON.stringify({
-  atAGlance: { whyFit: ['Your computer vision MSc matches the multi-camera work.', 'Python and PyTorch match the learning methods.', 'Your dissertation used optics.'], gaps: ['No ray tracing experience yet.', 'No publications.'], thisWeek: ['Read the three papers below.', 'Learn the basics of lens aberrations.', 'Check the deadline.'] },
+  atAGlance: { whyFit: ['Your computer vision MSc matches the multi-camera work.', 'Python and PyTorch match the learning methods.', 'Your dissertation used optics.'], gaps: ['No ray tracing experience yet.', 'No publications.'], thisWeek: ['Read P2, P1 and W1 first.', 'Learn the basics of lens aberrations.', 'Check the deadline.'] },
   supervisorSummary: 'Works on multi-camera capture and learning-based optical design.',
   profileQuote: 'My research sits between computer vision and graphics.',
   coSupervisors: [{ name: co1, note: 'Co-author on several capture papers.' }],
@@ -152,6 +152,7 @@ ok(B.papers?.P1?.title.includes('Optical lens aberration'), 'most advert-relevan
 ok(B.hadCv === true && !JSON.stringify(b).includes('Internship at a VFX'), 'job JSON does not contain the CV text');
 ok(calls.model === 1, 'exactly one model call');
 ok(B.report?.coSupervisors.length >= 1, 'co-supervisor note present');
+ok(!/\b[PW]\d\b/.test(B.report.atAGlance.thisWeek[0]) && B.report.atAGlance.thisWeek[0].includes('Optical lens aberration'), `paper ids in text replaced by titles: "${B.report?.atAGlance.thisWeek[0]}"`);
 
 // ── scenario 2: no profile, namesakes elsewhere → asks the student first, no AI cost ──
 const before = calls.model;

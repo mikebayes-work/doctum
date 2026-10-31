@@ -383,6 +383,7 @@ STRICT RULES
 - Use ONLY the material supplied: the advert, the supervisor's university profile excerpt, the numbered papers (P1, P2 … with abstracts; W1, W2 … titles only), the co-supervisor evidence and, if given, the applicant's CV.
 - Every factual claim about the supervisor's work must cite paper ids in "refs" (e.g. ["P2","W7"]) or say it comes from the profile or advert. Never cite an id that was not supplied.
 - Papers marked W have titles only: never describe their findings, only their topic.
+- Paper ids (P1, W3 …) are for the "ref" and "refs" fields ONLY. Never write an id in any text: the student never sees them. In text, refer to a paper by a short version of its title and its year, e.g. "the 2025 dual spherical harmonics paper".
 - Do not invent methods, results, collaborators, facilities, grants, student numbers or personal details. If something is not in the material, leave it out or say it is not stated.
 - Professional research information only. Nothing about the supervisor's private life.
 - "bigPicture" is general sector background. Keep it short and factual. It is labelled as general background on the page.
@@ -393,7 +394,7 @@ STRICT RULES
 Return ONLY this JSON (no markdown):
 {"atAGlance":{"whyFit":["<=25 words",3 items],"gaps":["<=25 words",2-3 items],"thisWeek":["<=25 words",3 items]},
 "supervisorSummary":"<=60 words: what the group works on, from the profile and papers",
-"profileQuote":"<a sentence copied EXACTLY from the profile excerpt, or empty string>",
+"profileQuote":"<one full sentence (not a list of keywords) copied EXACTLY from the profile excerpt, or empty string>",
 "coSupervisors":[{"name":"","note":"<=30 words, only from the evidence given"}],
 "readFirst":[{"ref":"P#","why":"<=60 words: what it found and why it matters for THIS project"}],
 "alsoSkim":[{"ref":"P# or W#","why":"<=25 words"}],
@@ -435,11 +436,28 @@ const S = (v, n) => (typeof v === 'string' ? cap(v, n) : '');
 const A = (v, k) => (Array.isArray(v) ? v.slice(0, k) : []);
 
 // Validate the model's JSON: cap lengths, drop unknown refs, check the quote.
-export function validateReport(j, { refs, profileText }) {
+// Ids that slip into text become "the 2025 paper “Dual Spherical Harmonics for…”".
+export function deRef(text, papers) {
+  if (!text || !papers) return text;
+  const label = (id) => { const p = papers.get(id); if (!p) return null; const w = p.title.split(/\s+/); return `“${w.slice(0, 6).join(' ')}${w.length > 6 ? '…' : ''}” (${p.year})`; };
+  return text
+    .replace(/\b(?:papers?\s+)?((?:[PW]\d{1,2})(?:\s*(?:,|and|or|&)\s*[PW]\d{1,2})*)\b/g, (m, list) => {
+      const ids = list.split(/\s*(?:,|and|or|&)\s*/);
+      const labels = ids.map(label);
+      if (labels.some((x) => !x)) return m.replace(/\b[PW]\d{1,2}\b/g, (id) => label(id) || 'one of their papers');
+      const joiner = /\bor\b/.test(list) ? ' or ' : ' and ';
+      return labels.length > 1 ? labels.slice(0, -1).join(', ') + joiner + labels[labels.length - 1] : labels[0];
+    })
+    .replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ');
+}
+
+export function validateReport(j, { refs, profileText, papers }) {
   const ok = (r) => typeof r === 'string' && refs.has(r);
   const R = (v) => A(v, 6).filter(ok);
+  const S = (v, n) => (typeof v === 'string' ? cap(deRef(v, papers), n) : '');
   const quote = S(j?.profileQuote, 400);
-  const quoteOk = quote && profileText && clean(profileText).toLowerCase().includes(clean(quote).replace(/[“”"]/g, '').replace(/…$/, '').toLowerCase());
+  const isSentence = quote.split(/\s+/).length >= 8 && (quote.match(/;/g) || []).length < 2;
+  const quoteOk = isSentence && profileText && clean(profileText).toLowerCase().includes(clean(quote).replace(/[“”"]/g, '').replace(/…$/, '').toLowerCase());
   const STAT = new Set(['matched', 'partial', 'gap', 'unknown']);
   const out = {
     atAGlance: { whyFit: A(j?.atAGlance?.whyFit, 4).map((x) => S(x, 220)), gaps: A(j?.atAGlance?.gaps, 4).map((x) => S(x, 220)), thisWeek: A(j?.atAGlance?.thisWeek, 4).map((x) => S(x, 220)) },
@@ -497,13 +515,14 @@ export async function buildBriefing({ net, fetchFn, listing, identity, cv = '', 
   progress('Writing your briefing');
   const content = promptMaterial({ listing, identity, ranked: detailed, others, coSup, cv });
   const refs = new Set([...detailed, ...others].map((w) => w.ref));
+  const titles = new Map([...detailed, ...others].map((w) => [w.ref, { title: w.title, year: w.year }]));
   let report, usage = null, lastErr;
   for (let attempt = 0; attempt < 2 && !report; attempt++) {
     try {
       const r = await callModel(fetchFn, { key, model, system: BRIEFING_SYSTEM, content });
       usage = r.usage;
       const t = r.text;
-      report = validateReport(JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1)), { refs, profileText: identity.profile?.interests || '' });
+      report = validateReport(JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1)), { refs, profileText: identity.profile?.interests || '', papers: titles });
     } catch (e) { lastErr = e; console.warn('briefing write attempt failed', e.message); }
   }
   if (!report) throw lastErr || new Error('write-failed');

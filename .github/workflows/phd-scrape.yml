@@ -34,9 +34,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Install
-        run: pip install requests beautifulsoup4 lxml pyyaml python-dateutil
+        run: pip install -r requirements.txt
 
       - name: Crawl university sites
         env:

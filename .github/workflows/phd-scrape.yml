@@ -26,7 +26,7 @@ concurrency:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
 
@@ -42,6 +42,8 @@ jobs:
       - name: Crawl university sites
         env:
           CRAWLER_CONTACT: ${{ secrets.CRAWLER_CONTACT }}
+          CRAWLER_JOBS: '8'      # universities crawled at once (each site still gets one polite worker pool)
+          CRAWLER_BUDGET: '600'  # max requests per auto-mode university per run
         run: python -m scraper.crawl ${{ github.event.inputs.sources }}
 
       - name: Update database and export
@@ -58,9 +60,15 @@ jobs:
           python - <<'PY'
           import json, os
           m = json.load(open('_scrape_manifest.json'))
-          lines = ['## PhD scrape ' + m['run_date'], '', '| Source | Scraped | Open | New | Changed | Gone |', '|---|---|---|---|---|---|']
+          lines = ['## PhD scrape ' + m['run_date'], '', f"{len(m['sources'])} universities/sources working", '', '| Source | Scraped | Open | New | Changed | Gone |', '|---|---|---|---|---|---|']
           for sid, s in sorted(m['sources'].items()):
               lines.append(f"| {sid} | {s['scraped']} | {s['open']} | {s['new']} | {s['changed']} | {s['gone']} |")
+          nw = m.get('not_working_yet', {})
+          if nw:
+              lines += ['', f'### Not working yet ({len(nw)}) - need rules or seeds in sources.yaml', '', '| Source | Why |', '|---|---|']
+              lines += [f'| {sid} | {why} |' for sid, why in sorted(nw.items())]
+          if m.get('skipped'):
+              lines += ['', '### Skipped on purpose'] + [f'- {sid}: {why}' for sid, why in sorted(m['skipped'].items())]
           if m['alerts']:
               lines += ['', '### Alerts'] + [f'- {a}' for a in m['alerts']]
               for a in m['alerts']:

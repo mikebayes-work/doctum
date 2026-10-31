@@ -20,6 +20,7 @@ from .extract import extract
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "data" / "phd.db"
 RAW = ROOT / "data" / "raw"
+RAW_HOME = ROOT / "data" / "raw-home"
 STALE_DAYS = 21  # drop listings not re-checked for this long
 
 SCHEMA = """
@@ -62,7 +63,23 @@ def connect() -> sqlite3.Connection:
 def build():
     con = connect()
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    for f in sorted(RAW.glob("phdraw_*.json")):
+    files = sorted(RAW.glob("phdraw_*.json"))
+    # sources crawled from Mike's PC (runner: home) are committed to data/raw-home/. Use them only while
+    # fresh, so a PC that was off doesn't keep re-applying an old crawl. Same-named files in raw/ win.
+    cutoff = datetime.now(timezone.utc).timestamp() - 4 * 86400
+    have = {f.name for f in files}
+    for f in sorted(RAW_HOME.glob("phdraw_*.json")):
+        if f.name in have:
+            continue
+        try:
+            at = datetime.fromisoformat(json.loads(f.read_text()).get("scraped_at", "")).timestamp()
+        except ValueError:
+            at = 0
+        if at >= cutoff:
+            files.append(f)
+        else:
+            print(f"{f.stem.removeprefix('phdraw_'):<14} skipped: home crawl is more than 4 days old")
+    for f in files:
         raw = json.loads(f.read_text())
         sid = f.stem.removeprefix("phdraw_")
         src = {**raw.get("source", {}), **REGISTRY.get(sid, {}), "id": sid}
@@ -169,6 +186,8 @@ def manifest(path: Path | None = None):
         ever = con.execute("SELECT MAX(n_kept) FROM scrape_runs WHERE source_id=?", (sid,)).fetchone()[0] or 0
         why = ""
         f = RAW / f"phdraw_{sid}.json"
+        if not f.exists():
+            f = RAW_HOME / f"phdraw_{sid}.json"
         if f.exists():
             why = json.loads(f.read_text()).get("problem", "")
         if ever == 0:

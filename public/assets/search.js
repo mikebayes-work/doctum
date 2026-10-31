@@ -55,7 +55,7 @@
       (c.start ? '<span class="chip">Starts ' + esc(words(c.start, 4)) + '</span>' : '') + '</p>' +
       (c.summary && !(extra && extra.html) ? '<p class="sum">' + esc(words(c.summary, 55)) + '</p>' : '') +
       (extra && extra.html ? extra.html : '<p class="more"><button type="button" class="btn-link" data-more="' + esc(c.id) + '">Read the full advert</button></p>') +
-      '<div class="foot"><span class="sup">' + foot + '</span><span class="actions"><button type="button" data-save="' + esc(c.id) + '" aria-pressed="' + (isSaved(c.id) ? 'true' : 'false') + '">' + (isSaved(c.id) ? 'Saved' : 'Save') + '</button>' +
+      '<div class="foot"><span class="sup">' + foot + '</span><span class="actions">' + (c.status === 'open' ? '<a class="brief" href="/briefing/?id=' + esc(c.id) + '" rel="nofollow" title="Opportunity briefing: the supervisor\u2019s key papers, research thread and interview prep">Briefing</a>' : '') + '<button type="button" data-save="' + esc(c.id) + '" aria-pressed="' + (isSaved(c.id) ? 'true' : 'false') + '">' + (isSaved(c.id) ? 'Saved' : 'Save') + '</button>' +
       '<a class="go" href="' + esc(c.url) + '" rel="nofollow noopener" target="_blank">Apply at ' + esc(shortInst(c.institution)) + ' ↗</a></span></div></article>';
   }
   window.Doctum = { esc: esc, api: api, cardHtml: cardHtml };

@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { explainerBody } = require('./explainer.js');
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const esc = (s) => String(s == null ? '' : s)
@@ -58,7 +59,7 @@ function makeShell(ctx) {
   const A = (u) => u.startsWith('/assets/') ? `${u}?v=${ver(u.slice(1))}` : u;
   const nav = [
     ['/', 'Search'], ['/match/', 'Match my CV'], ['/subjects/', 'Subjects'],
-    ['/universities/', 'Universities'], ['/guides/', 'Guides'], ['/about/', 'About'],
+    ['/universities/', 'Universities'], ['/opportunity-briefing/', 'Briefings'], ['/guides/', 'Guides'], ['/about/', 'About'],
   ];
   return function shell({ path: p, title, description, body, ld = [], noindex = false, scripts = [], ogType = 'website', crumbs }) {
     const url = site + p;
@@ -108,7 +109,7 @@ ${scripts.map((s) => `<script src="${A(s)}" defer></script>`).join('\n')}
   <div class="wrap top-in">
     <a class="brand" href="/" aria-label="Doctum home">
       <img src="/brand/logo-nav-dark.svg" alt="Doctum" width="166" height="46">
-      <span class="brand-sub">Powered by the Research Intelligence Engine</span>
+      <span class="brand-sub motto" title="Make yourself learned" lang="la">Fac te doctum</span>
     </a>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="sitenav">Menu</button>
     <nav id="sitenav" class="sitenav" aria-label="Main">${nav.map(([u, t]) => `<a href="${u}"${(u === '/' ? p === '/' : p.startsWith(u)) ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
@@ -122,13 +123,15 @@ ${body}
   <div class="wrap foot-in">
     <div>
       <img src="/brand/mark-dark.svg" alt="" width="36" height="36">
-      <p><strong>Doctum</strong>: funded UK PhDs, matched to you.</p>
+      <p><strong>Doctum</strong>: funded UK PhDs, matched to you. <span lang="la"><em>Fac te doctum</em></span>: make yourself learned.</p>
+      <p class="small">Powered by the Research Intelligence Engine.</p>
       <p class="small">Listings are collected from university websites and checked twice a week. Always confirm details on the university's own page before applying. Last updated ${esc(ukDate(builtAt))}.</p>
     </div>
     <nav aria-label="Footer">
       <a href="/fully-funded-phds/">Fully funded PhDs</a>
       <a href="/funded-phds-international-students/">PhDs open to international students</a>
       <a href="/closing-soon/">Closing soon</a>
+      <a href="/opportunity-briefing/">Opportunity briefings</a>
       <a href="/data/uk-phd-stipends/">UK PhD stipend data</a>
       <a href="/about/">About and methodology</a>
       <a href="/privacy/">Privacy</a>
@@ -173,7 +176,7 @@ function cardHtml(r, today) {
   <p class="chips"><span class="chip ${FUND_CLS[r.funding] || ''}">${esc(r.funding || 'Funding unknown')}</span>${r.stipend ? `<span class="chip money">${money(r.stipend)} / yr</span>` : ''}${closesChip(r, today)}${ELIG_CHIP[r.eligibility] ? `<span class="chip">${ELIG_CHIP[r.eligibility]}</span>` : ''}${r.programme ? `<span class="chip">${esc(trimWords(r.programme, 5))}</span>` : ''}${r.start ? `<span class="chip">Starts ${esc(trimWords(r.start, 4))}</span>` : ''}</p>
   ${r.summary ? `<p class="sum">${esc(trimWords(r.summary, 55))}</p>` : ''}
   <p class="more"><button type="button" class="btn-link" data-more="${esc(r.id)}">Read the full advert</button></p>
-  <div class="foot"><span class="sup">${foot}</span><span class="actions"><button type="button" data-save="${esc(r.id)}" aria-pressed="false">Save</button><a class="go" href="${esc(r.url)}" rel="nofollow noopener" target="_blank">Apply at ${esc(shortInst(r.institution))} ↗</a></span></div>
+  <div class="foot"><span class="sup">${foot}</span><span class="actions"><a class="brief" href="/briefing/?id=${esc(r.id)}" rel="nofollow" title="Opportunity briefing: the supervisor’s key papers, research thread and interview prep">Briefing</a><button type="button" data-save="${esc(r.id)}" aria-pressed="false">Save</button><a class="go" href="${esc(r.url)}" rel="nofollow noopener" target="_blank">Apply at ${esc(shortInst(r.institution))} ↗</a></span></div>
 </article>`;
 }
 const cardList = (list, today) => list.length ? `<div class="cards">${list.map((r) => cardHtml(r, today)).join('\n')}</div>` : '<p class="empty">No open listings right now. Check back after the next update.</p>';
@@ -294,7 +297,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
       <dl class="facts-list">${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
       ${live ? `<a class="btn btn-brass" href="/match/?id=${esc(r.id)}">Check my CV against this PhD</a>
       <a class="btn btn-ghost" href="/briefing/?id=${esc(r.id)}" rel="nofollow" style="margin-top:8px">Get an opportunity briefing</a>
-      <p class="side-note">The supervisor’s key papers, research thread and interview prep.</p>` : ''}
+      <p class="side-note">The supervisor’s key papers, research thread and interview prep. <a href="/opportunity-briefing/">What’s in a briefing?</a></p>` : ''}
     </aside>
   </div>
   ${sim.length ? `<section><h2>Similar PhDs${firstDisc ? ' in ' + esc(firstDisc) : ''}</h2>${cardList(sim, today)}</section>` : ''}
@@ -422,9 +425,18 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
 <div id="briefing">
 <h1>Opportunity briefing</h1>
 <p class="lead">Before you contact a supervisor, know their work. Doctum reads the supervisor’s university profile and recent papers and turns them into a briefing for one PhD: which three papers to read first, how their research has developed, the skills they will look for (checked against your CV if you add it), open questions and interview preparation.</p>
+<p><a href="/opportunity-briefing/">See an example briefing</a>, then open any PhD and choose <strong>Briefing</strong>.</p>
 <noscript><p>Briefings need JavaScript.</p></noscript>
 </div>`,
   }), { sitemap: false });
+
+  // ── What's in a briefing (public, indexable explainer with an anonymised example) ──
+  write('/opportunity-briefing/', shell({
+    path: '/opportunity-briefing/', title: 'Opportunity briefings: know your PhD supervisor’s work | Doctum',
+    description: 'A briefing on one PhD: the supervisor’s three key papers, their research thread, the skills they look for, open questions and interview prep. See an example.',
+    crumbs: [['/opportunity-briefing/', 'Opportunity briefings']],
+    body: explainerBody({ openCount: n(open.length) }),
+  }), { priority: 0.8 });
 
   // ── Hubs ──
   const hub = (p, title, h1, intro, list, crumbs, extra = '', priority = 0.8) => write(p, shell({
@@ -595,6 +607,7 @@ When citing a listing, link to its Doctum page and remind readers to confirm det
 - [PhDs closing in the next 30 days](${site}/closing-soon/)
 - [UK PhD stipends: what open adverts pay](${site}/data/uk-phd-stipends/)
 - [Open UK PhDs by subject and funding](${site}/data/funded-phds-open-now/)
+- [Opportunity briefings: what a supervisor briefing contains](${site}/opportunity-briefing/)
 - [Sources and methodology](${site}/about/)
 
 ## Subjects

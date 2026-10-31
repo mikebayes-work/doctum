@@ -1,6 +1,11 @@
 {
   "run_date": "2026-10-31",
-  "alerts": [],
+  "alerts": [
+    "cranfield: returned 0 adverts",
+    "durham: returned 0 adverts",
+    "leeds: returned 0 adverts",
+    "qub: returned 0 adverts"
+  ],
   "sources": {
     "bristol": {
       "scraped": 5,
@@ -9,52 +14,52 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-04T07:59:24.430Z"
+      "scraped_at": "2026-10-31T10:46:33.739620+00:00"
     },
     "cambridge": {
-      "scraped": 13,
-      "kept": 13,
-      "open": 7,
-      "new": 0,
-      "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-10-04T07:41:52.866Z"
+      "scraped": 25,
+      "kept": 25,
+      "open": 25,
+      "new": 18,
+      "changed": 1,
+      "gone": 6,
+      "scraped_at": "2026-10-31T10:45:41.427898+00:00"
     },
     "cranfield": {
-      "scraped": 48,
-      "kept": 47,
-      "open": 33,
+      "scraped": 0,
+      "kept": 0,
+      "open": 34,
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-04T07:38:07.079Z"
+      "scraped_at": "2026-10-31T10:43:20.749998+00:00"
     },
     "durham": {
-      "scraped": 19,
-      "kept": 16,
+      "scraped": 0,
+      "kept": 0,
       "open": 16,
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-04T07:58:47.558Z"
+      "scraped_at": "2026-10-31T10:46:34.199309+00:00"
     },
     "imperial": {
       "scraped": 71,
       "kept": 53,
       "open": 51,
       "new": 0,
-      "changed": 0,
+      "changed": 3,
       "gone": 0,
-      "scraped_at": "2026-10-04T07:57:12.731Z"
+      "scraped_at": "2026-10-31T10:46:32.157003+00:00"
     },
     "leeds": {
-      "scraped": 289,
-      "kept": 288,
-      "open": 280,
+      "scraped": 0,
+      "kept": 0,
+      "open": 284,
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-04T07:44:39.373Z"
+      "scraped_at": "2026-10-31T10:46:10.548937+00:00"
     },
     "liverpool": {
       "scraped": 4,
@@ -63,61 +68,61 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-04T07:59:23.594Z"
+      "scraped_at": "2026-10-31T10:46:36.206620+00:00"
     },
     "loughborough": {
-      "scraped": 67,
-      "kept": 67,
-      "open": 65,
-      "new": 0,
-      "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-10-04T07:40:22.225Z"
+      "scraped": 84,
+      "kept": 84,
+      "open": 84,
+      "new": 20,
+      "changed": 4,
+      "gone": 3,
+      "scraped_at": "2026-10-31T10:45:29.753576+00:00"
     },
     "nottingham": {
-      "scraped": 4,
-      "kept": 4,
-      "open": 4,
-      "new": 0,
+      "scraped": 14,
+      "kept": 14,
+      "open": 14,
+      "new": 10,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-04T07:42:02.865Z"
+      "scraped_at": "2026-10-31T10:45:48.880624+00:00"
     },
     "qub": {
-      "scraped": 1156,
-      "kept": 1151,
-      "open": 402,
+      "scraped": 0,
+      "kept": 0,
+      "open": 407,
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-10-04T07:58:00.576Z"
+      "scraped_at": "2026-10-31T10:46:15.159702+00:00"
     },
     "southampton": {
-      "scraped": 202,
-      "kept": 202,
-      "open": 57,
-      "new": 0,
-      "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-10-04T07:40:12.114Z"
+      "scraped": 272,
+      "kept": 270,
+      "open": 130,
+      "new": 128,
+      "changed": 1,
+      "gone": 60,
+      "scraped_at": "2026-10-31T10:45:03.953201+00:00"
     },
     "surrey": {
       "scraped": 7,
       "kept": 6,
-      "open": 4,
-      "new": 0,
+      "open": 6,
+      "new": 4,
       "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-10-04T07:40:46.225Z"
+      "gone": 4,
+      "scraped_at": "2026-10-31T10:45:35.840325+00:00"
     },
     "swansea": {
-      "scraped": 4,
-      "kept": 4,
-      "open": 2,
-      "new": 0,
+      "scraped": 12,
+      "kept": 12,
+      "open": 12,
+      "new": 10,
       "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-10-04T07:49:02.758Z"
+      "gone": 2,
+      "scraped_at": "2026-10-31T10:46:14.630534+00:00"
     }
   }
 }

@@ -292,7 +292,9 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
     </div>
     <aside class="listing-side">
       <dl class="facts-list">${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
-      ${live ? `<a class="btn btn-brass" href="/match/?id=${esc(r.id)}">Check my CV against this PhD</a>` : ''}
+      ${live ? `<a class="btn btn-brass" href="/match/?id=${esc(r.id)}">Check my CV against this PhD</a>
+      <a class="btn btn-ghost" href="/briefing/?id=${esc(r.id)}" rel="nofollow" style="margin-top:8px">Get an opportunity briefing</a>
+      <p class="side-note">The supervisor’s key papers, research thread and interview prep.</p>` : ''}
     </aside>
   </div>
   ${sim.length ? `<section><h2>Similar PhDs${firstDisc ? ' in ' + esc(firstDisc) : ''}</h2>${cardList(sim, today)}</section>` : ''}
@@ -409,6 +411,20 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
 <section id="match-results" aria-live="polite"></section>
 <noscript><p>CV matching needs JavaScript.</p></noscript>`,
   }), { priority: 0.9 });
+
+  // ── Opportunity briefing (filled by /assets/briefing.js, calls /api/briefing) ──
+  // Per-person pages behind ?id= / ?rid=: never indexed, not in the sitemap.
+  write('/briefing/', shell({
+    path: '/briefing/', title: 'Opportunity briefing | Doctum', noindex: true,
+    description: 'A briefing on one PhD: the supervisor’s key papers, their research thread, the skills they look for and interview preparation.',
+    scripts: ['/assets/search.js', '/assets/briefing.js'],
+    body: `
+<div id="briefing">
+<h1>Opportunity briefing</h1>
+<p class="lead">Before you contact a supervisor, know their work. Doctum reads the supervisor’s university profile and recent papers and turns them into a briefing for one PhD: which three papers to read first, how their research has developed, the skills they will look for (checked against your CV if you add it), open questions and interview preparation.</p>
+<noscript><p>Briefings need JavaScript.</p></noscript>
+</div>`,
+  }), { sitemap: false });
 
   // ── Hubs ──
   const hub = (p, title, h1, intro, list, crumbs, extra = '', priority = 0.8) => write(p, shell({
@@ -534,6 +550,9 @@ ${byInst.map(([i, s]) => `<tr><td><a href="/universities/${instSlug(i)}/">${esc(
 <p>First, hard filters remove adverts you can't apply for: closed ones, ones outside your chosen subjects, ones limited to UK fee status if you're international, and ones outside your funding choice. Then Doctum compares the words and phrases in your CV with each advert, weighting distinctive terms more than common ones, and explains each match: the overlap, the gaps, and any stated requirements (such as a First or a Master's) you may not meet. This step does not use AI.</p>
 <h2>How AI is used</h2>
 <p>An optional detailed analysis of one CV against one advert uses an AI model (Anthropic's Claude) with a fixed set of instructions. It is told to use only your CV and the advert text and not to invent facts. Treat it as a second opinion, not a decision.</p>
+<h2>Opportunity briefings</h2>
+<p>A briefing looks at one PhD's lead supervisor. Doctum first confirms who they are: the supervisor's university profile linked from the advert, their ORCID record, and their publication record in <a href="https://openalex.org">OpenAlex</a>, a free open index of research papers. Where OpenAlex has mixed in papers by a different person with a similar name, those papers are removed and listed. If the match isn't certain, you are asked to pick the right person before anything is written.</p>
+<p>Doctum then ranks the supervisor's papers from the last ten years against the advert, and an AI model (Anthropic's Claude) writes the briefing using only the profile, the paper titles and abstracts, the advert and, if you add it, your CV. Every statement about the supervisor's work links to the paper it comes from. Only public, professional research information is used. Doctum does not use Google Scholar.</p>
 <h2>Corrections</h2>
 <p>If a listing is wrong or should be removed, email <a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a>.</p></article>`,
   }), { priority: 0.5 });
@@ -543,6 +562,8 @@ ${byInst.map(([i, s]) => `<tr><td><a href="/universities/${instSlug(i)}/">${esc(
     body: `<article class="prose"><h1>Privacy</h1>
 <h2>Your CV</h2><p>When you use CV matching, your CV text is sent to Doctum's server, used to find matches for that request and then discarded. It is not saved, logged or used to train anything. If you upload a PDF, the text is extracted in your browser and only the text is sent.</p>
 <h2>Detailed analysis</h2><p>If you ask for a detailed analysis, your CV text and the advert are sent to Anthropic, the provider of the Claude AI model, to produce that analysis. Anthropic processes it under its commercial terms, which do not allow it to train models on this data by default.</p>
+<h2>Opportunity briefings</h2><p>If you add your CV to a briefing request, the CV text is sent to Doctum's server and to Anthropic to write that briefing, then discarded. The CV itself is not saved. The finished briefing (which includes short notes on how your CV matches the project) is stored for 30 days under a private, unguessable link so you can come back to it, then deleted. You can delete it sooner from the briefing page. In your browser, the CV you pasted is kept in this tab's session storage so you don't have to paste it twice; it is cleared when you close the tab.</p>
+<p>Briefings use public, professional information about supervisors only: their university profile, ORCID record and published papers (via OpenAlex). If you are a supervisor and something is wrong, email <a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a>.</p>
 <h2>Analytics</h2><p>${gaId ? 'Doctum uses Google Analytics to count visits and see which pages are useful. It does not receive your CV.' : 'Doctum does not currently use analytics cookies.'}</p>
 <h2>Contact</h2><p><a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a></p></article>`,
   }), { priority: 0.3 });

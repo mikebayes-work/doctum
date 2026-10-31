@@ -90,7 +90,12 @@ Sources live in `scraper/sources.yaml`.
    |---|---|
    | `SITE_URL` | `https://doctum.co.uk` |
    | `ALLOW_INDEXING` | leave unset until launch, then `true` |
-   | `ANTHROPIC_API_KEY` | optional: turns on "Detailed analysis" |
+   | `ANTHROPIC_API_KEY` | optional: turns on "Detailed analysis" and Opportunity briefings |
+   | `BRIEFING_ACCESS_CODE` | optional: if set, briefings need this code (use it for a closed test) |
+   | `BRIEFING_DAILY_LIMIT` / `BRIEFING_PER_IP` | optional caps while briefings are free (defaults 30 a day in total, 3 per IP) |
+   | `BRIEFING_MODEL` | optional: model for briefings (default `claude-sonnet-5-5`) |
+   | `BRIEFINGS` | set to `off` to switch briefings off without removing the key |
+   | `OPENALEX_API_KEY` | optional: OpenAlex key, if you register one |
    | `GA_ID` | optional: Google Analytics 4 id |
 3. **Domain**: add doctum.co.uk in Netlify → Domain management, point 123-reg's
    DNS at Netlify (or switch nameservers), and let Netlify issue the certificate.
@@ -99,6 +104,28 @@ Sources live in `scraper/sources.yaml`.
    save the URL as the GitHub secret `NETLIFY_BUILD_HOOK`.
 5. **Launch**: set `ALLOW_INDEXING=true`, redeploy, then submit
    `https://doctum.co.uk/sitemap.xml` in Google Search Console and Bing Webmaster Tools.
+
+## Opportunity briefings (supervisor deep dive)
+
+`/briefing/?id=<listing>` asks which supervisor (and, optionally, a CV), then `/api/briefing`
+(netlify/functions/briefing.mjs) starts `briefing-background` (a Netlify Background Function,
+up to 15 minutes) with a signed request. The worker:
+
+1. finds the supervisor's university profile through the advert's own link (robots.txt respected),
+2. matches them to OpenAlex by the ORCID on the profile, or by name + institution with an ORCID
+   employment or profile-DOI cross-check, giving high / medium / low confidence,
+3. on low confidence stops and asks the student to pick the right researcher, before any AI cost,
+4. fetches ten years of works, removes papers from merged namesakes (co-author/affiliation graph),
+   ranks papers against the advert,
+5. makes one AI call that may use only that material, then drops any citation to a paper that
+   wasn't supplied and any profile "quote" that isn't verbatim.
+
+Jobs, results and caches live in Netlify Blobs (store `briefings`): results for 30 days, identity
+and works per supervisor for 14 days. The CV is never stored. Logic is in `netlify/doctum/briefing.js`
+and `netlify/doctum/jobs.js`; `node scripts/test-briefing.mjs` runs the whole flow offline against
+a local Blobs server and mocked OpenAlex, ORCID, university pages and Anthropic.
+
+Paywall later: the entitlement check goes where the access-code check is in `briefing.mjs`.
 
 ## Writing guides
 

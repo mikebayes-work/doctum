@@ -10,13 +10,26 @@
   edge_functions = "netlify/edge-functions"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
+
+# Node functions (the Opportunity Briefing): /api/briefing and its background worker.
+# Shared code lives in netlify/doctum/, so only the files in netlify/functions/ become functions.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 # The search page moved to the home page (old links keep working, query string is kept).
 [[redirects]]
   from = "/search/"
   to = "/"
   status = 301
+
+# Briefing pages are per-person and live behind ?rid= — never cached by the CDN.
+[[headers]]
+  for = "/briefing/*"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex"
 
 # Belt and braces: data and source files 404 even if someone guesses the name.
 [[redirects]]

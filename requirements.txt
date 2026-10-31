@@ -1,0 +1,6 @@
+# Scraper dependencies (used by .github/workflows/phd-scrape.yml)
+requests
+beautifulsoup4
+lxml
+pyyaml
+python-dateutil

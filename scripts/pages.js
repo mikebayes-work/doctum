@@ -282,7 +282,9 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   }
 
   // ── Home ──
-  const latest = [...funded].sort((a, b) => (b.first_seen || '').localeCompare(a.first_seen || '')).slice(0, 6);
+  // Newest first, but skip adverts closing within 3 days (they'd vanish before most visitors act).
+  const latest = funded.filter((r) => !r.deadline || days(r.deadline, today) > 3)
+    .sort((a, b) => (b.first_seen || '').slice(0, 10).localeCompare((a.first_seen || '').slice(0, 10)) || byDeadline(a, b)).slice(0, 6);
   const discCount = (d) => open.filter((r) => (r.disciplines || []).includes(d)).length;
   const instCount = (i) => open.filter((r) => r.institution === i).length;
   write('/', shell({

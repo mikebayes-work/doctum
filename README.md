@@ -69,7 +69,7 @@ node scripts/dev-server.mjs    # http://localhost:8888 with the APIs running
 Scraper:
 
 ```
-pip install requests beautifulsoup4 lxml pyyaml python-dateutil
+pip install -r requirements.txt
 python -m scraper.crawl            # all sources (or: python -m scraper.crawl leeds qub)
 python -m scraper.db build && python -m scraper.db export && python -m scraper.db manifest
 ```

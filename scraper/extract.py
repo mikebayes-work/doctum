@@ -149,14 +149,47 @@ def get_eligibility(text: str, snippet: str, funding: str = "") -> str:
 NAME_RE = re.compile(r"\b(?:Dr|Prof(?:essor)?|Professor|Mr|Ms|Mrs|Assoc\.? Prof\.?)\.?\s+[A-Z][A-Za-z'’\-]+(?:\s+(?:[A-Z]\.?\s*)?[A-Z][A-Za-z'’\-]+){0,3}")
 
 
+# A plain name with no title, e.g. Swansea lists "Supervisors:" then one name per bullet.
+_W = r"(?:[A-Z][a-z]*['’][A-Z][a-z]+|[A-Z][a-z'’]+(?:-[A-Z]?[a-z'’]+)*|[A-Z]\.)"  # Smith, O'Neill, Jean-Yves, J.
+PLAIN_NAME_RE = re.compile(rf"^{_W}(?:\s+(?:(?:van|von|de|del|der|den|da|di|du|le|la|bin|al)\s+){{0,2}}{_W}){{1,3}}$")
+NOT_A_NAME = re.compile(r"\b(University|School|Department|Faculty|Centre|Center|Institute|College|Campus|Programme|Program|Physics|Engineering|"
+                        r"Science|Sciences|Research|Group|Laboratory|Lab|Project|Funding|Study|Studies|Mode|Place|Full|Part|Time|Contact|"
+                        r"Email|Apply|Application|Deadline|Closing|Start|Date|Open|Key|Information|Overview|Details|Team|Supervisor|Supervisors|PhD|Doctor|"
+                        r"Entry|Requirements?|Fees?|Find|How|Home|News|Events?|About|Students?|Staff|Alumni|International|Postgraduate|"
+                        r"Undergraduate|Scholarships?|Library|Search|Menu|Accessibility|Support|Wellbeing|Business|Our|Your|More|Read|View|"
+                        r"Profile|Website|Page|Policy|Privacy|Cookies?|Terms|Award|Studentship|Funded|Stipend|Eligibility|Location)\b")
+
+
+def plain_names(lines: list[str]) -> list[str]:
+    """Names on the lines straight after a 'Supervisors:' label (or after the colon on the
+    same line), stopping at the next 'Label:' line. Only short Title-Case lines count."""
+    out = []
+    for raw in lines[:8]:
+        ln = norm_ws(re.sub(r"^[\s•·\-–*]+", "", raw))
+        if not ln:
+            continue
+        if re.match(r"^[A-Z][\w ()/&'’\-]{1,40}:\s*\S", ln) or (out and ln.endswith(":")):
+            break  # next field, e.g. "Aligned programme of study: Physics, PhD"
+        for part in re.split(r"\s*(?:,|;|\band\b|&)\s*", ln):
+            part = part.strip(" .")
+            if PLAIN_NAME_RE.match(part) and not NOT_A_NAME.search(part) and part not in out:
+                out.append(part)
+    return out
+
+
 def get_supervisors(text: str, snippet: str) -> list[str]:
     block = ""
     lines = text.split("\n")
     lab = re.compile(rf"^\s*(?:{SUPERVISOR_LABELS})\b", re.I)
+    plain = []
     for i, ln in enumerate(lines):
         if lab.match(ln):
-            block += " ".join(lines[i:i + 8]) + " "
+            block += " ; ".join(lines[i:i + 8]) + " ; "  # ';' stops a name running into the next line's
+            after = re.sub(rf"^\s*(?:{SUPERVISOR_LABELS})\b\s*(?:\(s\))?\s*:?", "", ln, flags=re.I)
+            plain += plain_names(([after] if after.strip() else []) + lines[i + 1:i + 9])
     names = NAME_RE.findall(block) or NAME_RE.findall(snippet.split("|")[-1] if snippet else "")
+    if not names and plain:
+        return plain[:4]
     out = []
     for n in names:
         n = norm_ws(n.replace("Professor", "Prof"))

@@ -5,6 +5,7 @@
 import DB from '../doctum/listings.generated.js';
 import { buildIndex, search } from '../doctum/core.js';
 import { guard, today } from '../doctum/http.js';
+import { record, cleanQuery, bucket } from '../doctum/insights.js';
 
 let INDEX;
 
@@ -19,7 +20,15 @@ export default async function handler(request, context) {
     page: p.get('page') || '1',
     funding: p.getAll('funding'), disc: p.getAll('disc'), elig: p.getAll('elig'), inst: p.getAll('inst'), quick: p.getAll('quick'),
   };
-  return g.respond(200, search(INDEX, q, today()), { 'Cache-Control': 'private, max-age=120' });
+  const res = search(INDEX, q, today());
+  // Anonymous demand analytics: first page of a real search only (no identifiers; see insights.js).
+  const words = cleanQuery(q.q);
+  const filtered = q.funding.length || q.disc.length || q.elig.length || q.inst.length || q.quick.length;
+  if ((parseInt(q.page, 10) || 1) === 1 && (words || filtered) && !p.has('saved')) {
+    const cap = (a) => a.filter((v) => typeof v === 'string').slice(0, 6).map((v) => v.slice(0, 80));
+    record(request, context, { t: 's', q: words, f: cap(q.funding), d: cap(q.disc), e: cap(q.elig), i: cap(q.inst), k: cap(q.quick), o: ['deadline', 'stipend', 'newest'].includes(q.sort) ? q.sort : '', r: bucket(res.total) });
+  }
+  return g.respond(200, res, { 'Cache-Control': 'private, max-age=120' });
 }
 
 export const config = {

@@ -136,3 +136,19 @@ See `guides/README.md`. Same header format as The Grid's briefings.
 `brand/`: logo (light/dark, with and without tagline), mark, favicon, app icons,
 og-image (1200×630). Navy `#1B2A4A`, brass `#B08A4E`, parchment `#F6F1E7`.
 Headings Cormorant Garamond, body IBM Plex Sans.
+
+## Doctum Observatory (/observatory/)
+
+A live, public tracker of the UK PhD market built from our own adverts. After each scrape, `python -m scraper.observatory` appends a dated snapshot to `data/observatory.json` (server-only, never published). `scripts/observatory.js` draws the page at build time: headline figures, funding, eligibility, deadlines by month, subjects, stipend bands against the UKRI minimum, what adverts disclose, top universities, nations, and a trend line once there are three or more snapshots. "New" adverts exclude anything found by a source's first productive run or by a run whose new count jumps past 40% of that source's size (coverage changes, not new PhDs), and only count from the date tracking started. Update the UKRI rate in `scripts/observatory.js` each year.
+
+## Demand insights (private): what applicants look for
+
+Anonymous counts of searches, filters, CV-match choices and advert interest, plus coarse CV categories from applicants who tick "Count me" on the CV match form. No identifiers are ever stored (no IP, hash, cookie or session id). See `netlify/doctum/insights.js` for the full privacy design and `/privacy/#statistics` for the public wording.
+
+- Logged by `/api/search`, `/api/match`, `/api/briefing` (preparation pack starts) and `/api/event` (advert viewed, apply clicked, saved; sent by `assets/search.js` with `navigator.sendBeacon`).
+- Stored in Netlify Blobs, store `insights`. `insights-rollup` (scheduled, 03:17 UTC daily) folds each day into `week/<yyyy-Www>` counts and deletes the raw events.
+- Reports: `GET /api/insights?report=…` with header `x-doctum-admin: <INSIGHTS_ADMIN_KEY>` (404 without it). Reports: summary, terms, filters, demand, applicants (dims), skills, listings (optionally `inst=`), search (dims). Any applicant figure under 10 is suppressed.
+- Download everything as CSV: `set INSIGHTS_ADMIN_KEY=…` then `node scripts/insights-report.mjs 2026-W45 2026-W52 ["University name"]` → `reports/insights/` (gitignored).
+- Environment: `INSIGHTS_ADMIN_KEY` (at least 24 characters) to enable reports; `INSIGHTS=off` stops all logging.
+- Test offline: `node scripts/test-insights.mjs`.
+

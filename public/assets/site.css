@@ -55,17 +55,30 @@ main{padding-bottom:56px;min-height:60vh}
 /* ── Masthead ── */
 .top{background:var(--mast);color:var(--mast-ink);border-bottom:3px double var(--brass);position:relative}
 .top-in{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:76px}
-.brand{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-decoration:none;padding:8px 0}
+.brand{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-decoration:none;padding:8px 0}
 .brand img{display:block;height:46px;width:auto}
-.brand-sub{font:600 .6rem/1 var(--sans);letter-spacing:.17em;text-transform:uppercase;color:var(--brass);margin-left:48px;white-space:nowrap}
-.brand-sub.motto{font:italic 500 1.02rem/1 var(--serif);letter-spacing:.06em;text-transform:none}
-@media (max-width:420px){.brand img{height:40px}.brand-sub{font-size:.5rem;letter-spacing:.12em;margin-left:41px}.brand-sub.motto{font-size:.9rem;letter-spacing:.04em}}
+/* Motto: left edge lines up with the book mark; Latin in brass serif italic, English in small caps beside it */
+.motto{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 10px;padding-left:2px;white-space:nowrap}
+.motto em{font:italic 500 1.02rem/1.1 var(--serif);letter-spacing:.05em;color:var(--brass)}
+.motto-en{font:500 .62rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mast-muted)}
+.motto-en::before{content:'·';margin-right:10px;color:var(--brass)}
+/* "Powered by" line: sits above the nav on desktop, as a slim full-width line on mobile */
+.top-in{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"brand engine" "brand nav";column-gap:24px;align-items:center}
+.brand{grid-area:brand}
+.engine{grid-area:engine;justify-self:end;align-self:end;margin:10px 12px 0 0;font:500 .66rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mast-muted)}
+.engine strong{color:var(--brass);font-weight:600}
+.sitenav{grid-area:nav;justify-self:end;align-self:start}
+.menu-btn{grid-area:menu}
+@media (max-width:520px){.motto{flex-direction:column;align-items:flex-start;gap:4px}.motto-en::before{content:none}}
+@media (max-width:420px){.brand img{height:40px}.motto em{font-size:.95rem;letter-spacing:.03em}.motto-en{font-size:.56rem;letter-spacing:.1em}}
 .sitenav{display:flex;gap:2px;flex-wrap:wrap}
 .sitenav a{color:var(--mast-ink);text-decoration:none;padding:8px 12px;font-weight:500;font-size:.93rem;border-bottom:2px solid transparent}
 .sitenav a:hover{color:#fff;border-bottom-color:var(--brass)}
 .sitenav a[aria-current]{border-bottom-color:var(--brass)}
 .menu-btn{display:none;background:none;border:1px solid rgba(246,241,231,.35);border-radius:4px;padding:6px 12px;font:inherit;color:var(--mast-ink)}
 @media (max-width:780px){
+  .top-in{grid-template-columns:1fr auto;grid-template-areas:"brand menu" "engine engine";row-gap:0}
+  .engine{justify-self:stretch;margin:0 -16px;padding:7px 16px;border-top:1px solid rgba(176,138,78,.28);font-size:.6rem;letter-spacing:.12em;text-align:left}
   .menu-btn{display:block}
   .sitenav{display:none;position:absolute;left:0;right:0;top:100%;background:var(--mast);flex-direction:column;padding:8px 16px 16px;z-index:20;border-bottom:3px double var(--brass)}
   .sitenav.open{display:flex}
@@ -326,9 +339,59 @@ blockquote cite{display:block;font:400 .82rem var(--sans);font-style:normal;colo
   .hero{padding-top:26px}
   .figures div{padding:8px 14px 8px 0;margin-right:14px}
   .figures b{font-size:1.5rem}
-  .steps-strip{display:none}
+  .steps-strip{gap:0;margin:18px 0 4px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)}
+  .steps-strip li{border:0;border-radius:0;background:none;padding:10px 12px;font-size:.84rem;line-height:1.45}
+  .steps-strip li+li{border-top:1px solid var(--line)}
+  .steps-strip strong{font-size:1.02rem}
+  .steps-strip li>span{width:24px;height:24px;font-size:.8rem}
   .cv-card{padding:16px 16px 10px}.cv-card h2{font-size:1.4rem}
   .results-bar .btn{padding:9px 14px;font-size:.88rem}
   .card{padding:14px 14px 12px}.card.is-funded{padding-left:12px}
   .card h3{font-size:1.25rem}
 }
+
+/* ── Doctum Observatory (/observatory/) ── */
+.ptiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0 10px}
+.ptiles div{background:var(--surface);border:1px solid var(--line);border-top:3px double var(--brass);border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.ptiles b{font:600 2.2rem/1.05 var(--serif);color:var(--ink);font-variant-numeric:lining-nums tabular-nums}
+.ptiles span{font-size:.92rem;color:var(--ink)}
+.ptiles small{font-size:.8rem;color:var(--muted)}
+.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 40px}
+.pbars{list-style:none;margin:8px 0 10px;padding:0}
+.pbars li{display:grid;grid-template-columns:minmax(120px,13rem) minmax(0,1fr) 6.2rem;gap:10px;align-items:center;padding:6px 0;font-size:.9rem}
+.pbars li:hover{background:var(--surface-2)}
+.pl{color:var(--ink);line-height:1.25}
+.pl a{color:var(--ink)}
+.pb{position:relative;height:14px}
+.pb i,.pb b{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;min-width:2px}
+.pb i{background:var(--brass)}
+.pbars.two .pb i{background:color-mix(in srgb,var(--brass) 45%,transparent)}
+.pb b{background:var(--brass);top:3px;bottom:3px}
+.pv{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
+.pv small{display:inline-block;min-width:2.6em;margin-left:6px;font-size:.76rem;color:var(--muted);font-weight:400}
+.pulse-eyebrow{margin-top:18px}
+.pkey,.ptrend figcaption{font-size:.84rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.key{display:inline-block;width:14px;height:10px;border-radius:2px;margin-left:8px}
+.key:first-child{margin-left:0}
+.key-open{background:color-mix(in srgb,var(--brass) 45%,transparent)}
+.key-funded{background:var(--brass)}
+.ptrend{margin:8px 0 6px}
+.ptrend svg{width:100%;height:auto;display:block}
+.ptrend .grid{stroke:var(--line);stroke-width:1}
+.ptrend .ax,.ptrend .lbl{fill:var(--muted);font:10px var(--sans)}
+.ptrend .lbl{fill:var(--ink);font-weight:500}
+.ptrend .l-open{fill:none;stroke:color-mix(in srgb,var(--brass) 55%,transparent);stroke-width:2;stroke-linejoin:round}
+.ptrend .l-funded{fill:none;stroke:var(--brass);stroke-width:2;stroke-linejoin:round}
+.ptrend .hit{fill:transparent;stroke:none}
+.ptrend .hit:hover{fill:var(--brass);fill-opacity:.35}
+.ptrend .key-open,.ptrend .key-funded{height:3px}
+.pulse-wait{background:var(--surface-2);border:1px dashed var(--line-2);border-radius:4px;padding:14px 16px;color:var(--muted);max-width:70ch}
+.ptable summary{cursor:pointer;font-size:.88rem;color:var(--brass-ink)}
+@media (max-width:860px){.ptiles{grid-template-columns:repeat(2,minmax(0,1fr))}.pgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){.ptiles b{font-size:1.75rem}.pbars li{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l v" "b b";row-gap:3px}.pl{grid-area:l}.pv{grid-area:v}.pb{grid-area:b;height:10px}}
+.share .check{display:flex;gap:10px;align-items:flex-start;font-weight:500;margin:0 0 6px}
+.share .check input{margin-top:5px;accent-color:var(--brass)}
+.share .small{max-width:72ch}
+.share .fdc{display:block;margin-top:6px}
+.share .fdc[hidden]{display:none}
+.share select{font:inherit;padding:8px 10px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);color:var(--ink);margin-left:6px;max-width:100%}

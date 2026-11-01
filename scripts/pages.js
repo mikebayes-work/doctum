@@ -16,6 +16,15 @@ const fs = require('fs');
 const path = require('path');
 const { explainerBody } = require('./explainer.js');
 const { recommended } = require('./recommended.js');
+const { observatoryBody } = require('./observatory.js');
+const COUNTRIES = [
+  ['GB', 'United Kingdom'], ['IE', 'Ireland'], ['IN', 'India'], ['CN', 'China'], ['PK', 'Pakistan'], ['NG', 'Nigeria'], ['GH', 'Ghana'], ['KE', 'Kenya'],
+  ['EG', 'Egypt'], ['SA', 'Saudi Arabia'], ['AE', 'United Arab Emirates'], ['IR', 'Iran'], ['TR', 'Turkey'], ['BD', 'Bangladesh'], ['LK', 'Sri Lanka'],
+  ['NP', 'Nepal'], ['MY', 'Malaysia'], ['SG', 'Singapore'], ['ID', 'Indonesia'], ['VN', 'Vietnam'], ['TH', 'Thailand'], ['HK', 'Hong Kong'], ['TW', 'Taiwan'],
+  ['JP', 'Japan'], ['KR', 'South Korea'], ['US', 'United States'], ['CA', 'Canada'], ['MX', 'Mexico'], ['BR', 'Brazil'], ['CO', 'Colombia'], ['CL', 'Chile'],
+  ['AU', 'Australia'], ['NZ', 'New Zealand'], ['ZA', 'South Africa'], ['DE', 'Germany'], ['FR', 'France'], ['IT', 'Italy'], ['ES', 'Spain'], ['PT', 'Portugal'],
+  ['NL', 'Netherlands'], ['GR', 'Greece'], ['CY', 'Cyprus'], ['PL', 'Poland'], ['RO', 'Romania'], ['SE', 'Sweden'],
+]; // keep in step with netlify/doctum/facets.js COUNTRIES
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const esc = (s) => String(s == null ? '' : s)
@@ -60,7 +69,7 @@ function makeShell(ctx) {
   const A = (u) => u.startsWith('/assets/') ? `${u}?v=${ver(u.slice(1))}` : u;
   const nav = [
     ['/', 'Search'], ['/match/', 'CV match'], ['/subjects/', 'Subjects'],
-    ['/universities/', 'Universities'], ['/opportunity-briefing/', 'Briefings'], ['/guides/', 'Guides'], ['/about/', 'About'],
+    ['/universities/', 'Universities'], ['/phd-preparation-pack/', 'Prep packs'], ['/observatory/', 'Observatory'], ['/guides/', 'Guides'], ['/about/', 'About'],
   ];
   return function shell({ path: p, title, description, body, ld = [], noindex = false, scripts = [], ogType = 'website', crumbs }) {
     const url = site + p;
@@ -110,8 +119,9 @@ ${scripts.map((s) => `<script src="${A(s)}" defer></script>`).join('\n')}
   <div class="wrap top-in">
     <a class="brand" href="/" aria-label="Doctum home">
       <img src="/brand/logo-nav-dark.svg" alt="Doctum" width="166" height="46">
-      <span class="brand-sub motto" title="Make yourself learned" lang="la">Fac te doctum</span>
+      <span class="motto"><em lang="la">Fac te doctum</em><span class="motto-en">Make yourself learned</span></span>
     </a>
+    <p class="engine">Powered by the <strong>Research Intelligence Engine</strong></p>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="sitenav">Menu</button>
     <nav id="sitenav" class="sitenav" aria-label="Main">${nav.map(([u, t]) => `<a href="${u}"${(u === '/' ? p === '/' : p.startsWith(u)) ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
   </div>
@@ -125,14 +135,14 @@ ${body}
     <div>
       <img src="/brand/mark-dark.svg" alt="" width="36" height="36">
       <p><strong>Doctum</strong>: funded UK PhDs, matched to you. <span lang="la"><em>Fac te doctum</em></span>: make yourself learned.</p>
-      <p class="small">Powered by the Research Intelligence Engine.</p>
       <p class="small">Listings are collected from university websites and checked twice a week. Always confirm details on the university's own page before applying. Last updated ${esc(ukDate(builtAt))}.</p>
     </div>
     <nav aria-label="Footer">
       <a href="/fully-funded-phds/">Fully funded PhDs</a>
       <a href="/funded-phds-international-students/">PhDs open to international students</a>
       <a href="/closing-soon/">Closing soon</a>
-      <a href="/opportunity-briefing/">Opportunity briefings</a>
+      <a href="/phd-preparation-pack/">PhD preparation packs</a>
+      <a href="/observatory/">Doctum Observatory: the UK PhD market</a>
       <a href="/data/uk-phd-stipends/">UK PhD stipend data</a>
       <a href="/about/">About and methodology</a>
       <a href="/privacy/">Privacy</a>
@@ -177,7 +187,7 @@ function cardHtml(r, today) {
   <p class="chips"><span class="chip ${FUND_CLS[r.funding] || ''}">${esc(r.funding || 'Funding unknown')}</span>${r.stipend ? `<span class="chip money">${money(r.stipend)} / yr</span>` : ''}${closesChip(r, today)}${ELIG_CHIP[r.eligibility] ? `<span class="chip">${ELIG_CHIP[r.eligibility]}</span>` : ''}${r.programme ? `<span class="chip">${esc(trimWords(r.programme, 5))}</span>` : ''}${r.start ? `<span class="chip">Starts ${esc(trimWords(r.start, 4))}</span>` : ''}</p>
   ${r.summary ? `<p class="sum">${esc(trimWords(r.summary, 55))}</p>` : ''}
   <p class="more"><button type="button" class="btn-link" data-more="${esc(r.id)}">Read the full advert</button></p>
-  <div class="foot"><span class="sup">${foot}</span><span class="actions"><a class="brief" href="/briefing/?id=${esc(r.id)}" rel="nofollow" title="Opportunity briefing: the supervisor’s key papers, research thread and interview prep">Briefing</a><button type="button" data-save="${esc(r.id)}" aria-pressed="false">Save</button><a class="go" href="${esc(r.url)}" rel="nofollow noopener" target="_blank">Apply at ${esc(shortInst(r.institution))} ↗</a></span></div>
+  <div class="foot"><span class="sup">${foot}</span><span class="actions"><a class="brief" href="/briefing/?id=${esc(r.id)}" rel="nofollow" title="PhD preparation pack: the key papers, research thread and interview prep for this PhD">Prep pack</a><button type="button" data-save="${esc(r.id)}" aria-pressed="false">Save</button><a class="go" href="${esc(r.url)}" rel="nofollow noopener" target="_blank">Apply at ${esc(shortInst(r.institution))} ↗</a></span></div>
 </article>`;
 }
 const cardList = (list, today) => list.length ? `<div class="cards">${list.map((r) => cardHtml(r, today)).join('\n')}</div>` : '<p class="empty">No open listings right now. Check back after the next update.</p>';
@@ -191,7 +201,7 @@ const itemList = (site, list, name) => ({
   itemListElement: list.slice(0, 50).map((r, i) => ({ '@type': 'ListItem', position: i + 1, url: site + r.path, name: r.title })),
 });
 
-// ── Briefings / guides (same frontmatter as The Grid's briefings/) ───
+// ── Preparation packs / guides (same frontmatter as The Grid's briefings/) ───
 function readGuides(dir) {
   if (!fs.existsSync(dir)) return [];
   const out = [];
@@ -297,8 +307,8 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
     <aside class="listing-side">
       <dl class="facts-list">${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
       ${live ? `<a class="btn btn-brass" href="/match/?id=${esc(r.id)}">Check my CV against this PhD</a>
-      <a class="btn btn-ghost" href="/briefing/?id=${esc(r.id)}" rel="nofollow" style="margin-top:8px">Get an opportunity briefing</a>
-      <p class="side-note">The supervisor’s key papers, research thread and interview prep. <a href="/opportunity-briefing/">What’s in a briefing?</a></p>` : ''}
+      <a class="btn btn-ghost" href="/briefing/?id=${esc(r.id)}" rel="nofollow" style="margin-top:8px">Get a preparation pack</a>
+      <p class="side-note">The key papers behind this project, the skills to show and interview prep. <a href="/phd-preparation-pack/">What’s in a preparation pack?</a></p>` : ''}
     </aside>
   </div>
   ${sim.length ? `<section><h2>Similar PhDs${firstDisc ? ' in ' + esc(firstDisc) : ''}</h2>${cardList(sim, today)}</section>` : ''}
@@ -354,7 +364,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
 </section>
 <ol class="steps-strip" aria-label="How Doctum works">
   <li><span>1</span><div><strong>Match your CV</strong>Your best-fit funded PhDs, with the reasons.</div></li>
-  <li><span>2</span><div><strong>Get a briefing</strong>The supervisor’s key papers, research thread and interview prep. <a href="/opportunity-briefing/">See an example</a></div></li>
+  <li><span>2</span><div><strong>Get a preparation pack</strong>The key papers behind the project, the skills to show and interview prep. <a href="/phd-preparation-pack/">See an example</a></div></li>
   <li><span>3</span><div><strong>Apply prepared</strong>Write to the supervisor knowing their work.</div></li>
 </ol>
 <div class="search-app" id="search-app">
@@ -424,6 +434,11 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
     </fieldset>
     <label>Funding <select name="funding" id="funding"><option value="full">Fully funded only</option><option value="any">Any funding (incl. competition)</option><option value="all">Include self-funded</option></select></label>
   </div>
+  <div class="step share"><h2><span>4</span> Help shape future PhDs <small>(optional)</small></h2>
+    <label class="check"><input type="checkbox" id="share"> Count me, anonymously, in Doctum's applicant statistics</label>
+    <p class="small">Doctum adds a tally to broad categories only: your highest degree and class, the subject area of your first degree, whether your CV mentions publications, a research project or industry experience, and which of 18 skill groups it mentions (for example "Python" or "Experimental lab work"). No CV text, name or contact details are kept, and nothing links the tally to you. Universities see totals only, never a group smaller than 10. <a href="/privacy/#statistics">How this works</a></p>
+    <label class="fdc" hidden>Country of your first degree <small>(optional)</small> <select id="fdc"><option value="">Prefer not to say</option>${COUNTRIES.map(([c, nm]) => `<option value="${c}">${esc(nm)}</option>`).join('')}<option value="OTHER">Other</option></select></label>
+  </div>
   <button class="btn btn-brass" type="submit">Find my matches</button>
   <p class="error" id="match-error" role="alert"></p>
 </form>
@@ -431,26 +446,26 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
 <noscript><p>CV matching needs JavaScript.</p></noscript>`,
   }), { priority: 0.9 });
 
-  // ── Opportunity briefing (filled by /assets/briefing.js, calls /api/briefing) ──
+  // ── PhD preparation pack (filled by /assets/briefing.js, calls /api/briefing) ──
   // Per-person pages behind ?id= / ?rid=: never indexed, not in the sitemap.
   write('/briefing/', shell({
-    path: '/briefing/', title: 'Opportunity briefing | Doctum', noindex: true,
-    description: 'A briefing on one PhD: the supervisor’s key papers, their research thread, the skills they look for and interview preparation.',
+    path: '/briefing/', title: 'PhD preparation pack | Doctum', noindex: true,
+    description: 'A preparation pack for one PhD: the supervisor’s key papers, their research thread, the skills they look for and interview preparation.',
     scripts: ['/assets/search.js', '/assets/briefing.js'],
     body: `
 <div id="briefing">
-<h1>Opportunity briefing</h1>
-<p class="lead">Before you contact a supervisor, know their work. Doctum reads the supervisor’s university profile and recent papers and turns them into a briefing for one PhD: which three papers to read first, how their research has developed, the skills they will look for (checked against your CV if you add it), open questions and interview preparation.</p>
-<p><a href="/opportunity-briefing/">See an example briefing</a>, then open any PhD and choose <strong>Briefing</strong>.</p>
-<noscript><p>Briefings need JavaScript.</p></noscript>
+<h1>PhD preparation pack</h1>
+<p class="lead">Before you contact a supervisor, know their work. Doctum reads the supervisor’s university profile and recent papers and turns them into a preparation pack for one PhD: which three papers to read first, how their research has developed, the skills they will look for (checked against your CV if you add it), open questions and interview preparation.</p>
+<p><a href="/phd-preparation-pack/">See an example pack</a>, then open any PhD and choose <strong>Prep pack</strong>.</p>
+<noscript><p>Preparation packs need JavaScript.</p></noscript>
 </div>`,
   }), { sitemap: false });
 
-  // ── What's in a briefing (public, indexable explainer with an anonymised example) ──
-  write('/opportunity-briefing/', shell({
-    path: '/opportunity-briefing/', title: 'Opportunity briefings: know your PhD supervisor’s work | Doctum',
-    description: 'A briefing on one PhD: the supervisor’s three key papers, their research thread, the skills they look for, open questions and interview prep. See an example.',
-    crumbs: [['/opportunity-briefing/', 'Opportunity briefings']],
+  // ── What's in a pack (public, indexable explainer with an anonymised example) ──
+  write('/phd-preparation-pack/', shell({
+    path: '/phd-preparation-pack/', title: 'PhD preparation packs: the research behind a PhD, ready for your application | Doctum',
+    description: 'A preparation pack for one PhD: the supervisor’s three key papers, their research thread, the skills they look for, open questions and interview prep. See an example.',
+    crumbs: [['/phd-preparation-pack/', 'PhD preparation packs']],
     body: explainerBody({ openCount: n(open.length) }),
   }), { priority: 0.8 });
 
@@ -537,12 +552,22 @@ ${byInst.map(([i, s]) => `<tr><td><a href="/universities/${instSlug(i)}/">${esc(
 <p class="small">An advert can be in more than one subject. Coverage is currently ${insts.length} universities, so these counts describe Doctum's sources, not every PhD in the UK. See <a href="/about/#sources">sources</a>.</p>`,
   }), { priority: 0.7 });
 
+  // ── Doctum Observatory (live market tracker; see scripts/observatory.js) ──
+  const obs = observatoryBody({ open, today, updated, esc, n, money, ukDate, slugify, cardList, root });
+  write('/observatory/', shell({
+    path: '/observatory/', title: 'Doctum Observatory: the UK PhD market, measured | Doctum',
+    description: obs.description,
+    crumbs: [['/observatory/', 'Doctum Observatory']],
+    ld: [dataset('Doctum Observatory: UK PhD market tracker', 'Counts of open UK PhD adverts by funding, eligibility, deadline month, subject, nation and stipend, plus new and closed adverts, measured from university websites twice a week.', '/observatory/')],
+    body: obs.html,
+  }), { priority: 0.9 });
+
   // ── Guides (blog) ──
   const guides = readGuides(path.join(root, 'guides'));
   write('/guides/', shell({
-    path: '/guides/', title: 'PhD guides and data briefings | Doctum', description: 'Practical guides to finding and applying for a funded PhD in the UK, plus data briefings from the Doctum database.',
+    path: '/guides/', title: 'PhD guides and data | Doctum', description: 'Practical guides to finding and applying for a funded PhD in the UK, plus data reports from the Doctum database.',
     crumbs: [['/guides/', 'Guides']],
-    body: `<h1>Guides and briefings</h1>${guides.length ? `<div class="cards">${guides.map((g) => `<article class="card"><p class="meta">${esc(g.tag)} · <time datetime="${g.date}">${esc(ukDate(g.date))}</time></p><h3><a href="/guides/${g.slug}/">${esc(g.title)}</a></h3><p>${esc(g.excerpt)}</p></article>`).join('')}</div>` : '<p class="empty">The first guides are on their way.</p>'}`,
+    body: `<h1>Guides</h1>${guides.length ? `<div class="cards">${guides.map((g) => `<article class="card"><p class="meta">${esc(g.tag)} · <time datetime="${g.date}">${esc(ukDate(g.date))}</time></p><h3><a href="/guides/${g.slug}/">${esc(g.title)}</a></h3><p>${esc(g.excerpt)}</p></article>`).join('')}</div>` : '<p class="empty">The first guides are on their way.</p>'}`,
   }), { priority: 0.6 });
   for (const g of guides) {
     const p = `/guides/${g.slug}/`;
@@ -578,9 +603,9 @@ ${byInst.map(([i, s]) => `<tr><td><a href="/universities/${instSlug(i)}/">${esc(
 <p>First, hard filters remove adverts you can't apply for: closed ones, ones outside your chosen subjects, ones limited to UK fee status if you're international, and ones outside your funding choice. Then Doctum compares the words and phrases in your CV with each advert, weighting distinctive terms more than common ones, and explains each match: the overlap, the gaps, and any stated requirements (such as a First or a Master's) you may not meet. This step does not use AI.</p>
 <h2>How AI is used</h2>
 <p>An optional detailed analysis of one CV against one advert uses an AI model (Anthropic's Claude) with a fixed set of instructions. It is told to use only your CV and the advert text and not to invent facts. Treat it as a second opinion, not a decision.</p>
-<h2>Opportunity briefings</h2>
-<p>A briefing looks at one PhD's lead supervisor. Doctum first confirms who they are: the supervisor's university profile linked from the advert, their ORCID record, and their publication record in <a href="https://openalex.org">OpenAlex</a>, a free open index of research papers. Where OpenAlex has mixed in papers by a different person with a similar name, those papers are removed and listed. If the match isn't certain, you are asked to pick the right person before anything is written.</p>
-<p>Doctum then ranks the supervisor's papers from the last ten years against the advert, and an AI model (Anthropic's Claude) writes the briefing using only the profile, the paper titles and abstracts, the advert and, if you add it, your CV. Every statement about the supervisor's work links to the paper it comes from. Only public, professional research information is used. Doctum does not use Google Scholar.</p>
+<h2>PhD preparation packs</h2>
+<p>A preparation pack looks at one PhD's lead supervisor. Doctum first confirms who they are: the supervisor's university profile linked from the advert, their ORCID record, and their publication record in <a href="https://openalex.org">OpenAlex</a>, a free open index of research papers. Where OpenAlex has mixed in papers by a different person with a similar name, those papers are removed and listed. If the match isn't certain, you are asked to pick the right person before anything is written.</p>
+<p>Doctum then ranks the supervisor's papers from the last ten years against the advert, and an AI model (Anthropic's Claude) writes the pack using only the profile, the paper titles and abstracts, the advert and, if you add it, your CV. Every statement about the supervisor's work links to the paper it comes from. Only public, professional research information is used. Doctum does not use Google Scholar.</p>
 <h2>Corrections</h2>
 <p>If a listing is wrong or should be removed, email <a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a>.</p></article>`,
   }), { priority: 0.5 });
@@ -590,9 +615,18 @@ ${byInst.map(([i, s]) => `<tr><td><a href="/universities/${instSlug(i)}/">${esc(
     body: `<article class="prose"><h1>Privacy</h1>
 <h2>Your CV</h2><p>When you use CV matching, your CV text is sent to Doctum's server, used to find matches for that request and then discarded. It is not saved, logged or used to train anything. If you upload a PDF, the text is extracted in your browser and only the text is sent.</p>
 <h2>Detailed analysis</h2><p>If you ask for a detailed analysis, your CV text and the advert are sent to Anthropic, the provider of the Claude AI model, to produce that analysis. Anthropic processes it under its commercial terms, which do not allow it to train models on this data by default.</p>
-<h2>Opportunity briefings</h2><p>If you add your CV to a briefing request, the CV text is sent to Doctum's server and to Anthropic to write that briefing, then discarded. The CV itself is not saved. The finished briefing (which includes short notes on how your CV matches the project) is stored for 30 days under a private, unguessable link so you can come back to it, then deleted. You can delete it sooner from the briefing page. In your browser, the CV you pasted is kept in this tab's session storage so you don't have to paste it twice; it is cleared when you close the tab.</p>
-<p>Briefings use public, professional information about supervisors only: their university profile, ORCID record and published papers (via OpenAlex). If you are a supervisor and something is wrong, email <a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a>.</p>
-<h2>Analytics</h2><p>${gaId ? 'Doctum uses Google Analytics to count visits and see which pages are useful. It does not receive your CV.' : 'Doctum does not currently use analytics cookies.'}</p>
+<h2>PhD preparation packs</h2><p>If you add your CV to a preparation pack request, the CV text is sent to Doctum's server and to Anthropic to write that pack, then discarded. The CV itself is not saved. The finished pack (which includes short notes on how your CV matches the project) is stored for 30 days under a private, unguessable link so you can come back to it, then deleted. You can delete it sooner from the pack page. In your browser, the CV you pasted is kept in this tab's session storage so you don't have to paste it twice; it is cleared when you close the tab.</p>
+<p>Preparation packs use public, professional information about supervisors only: their university profile, ORCID record and published papers (via OpenAlex). If you are a supervisor and something is wrong, email <a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a>.</p>
+<h2 id="statistics">Anonymous statistics</h2>
+<p>Doctum counts what applicants look for, so that we (and universities planning PhDs) can see where demand is. These counts contain no identifiers: no IP address, cookie, account, session or device id, and nothing finer than the day. Two of your searches cannot be linked to each other or to you.</p>
+<ul>
+<li><strong>Searches:</strong> the words you search for (cleaned of anything that looks like an email address, phone number or link), the filters you choose, how many results were found, and the country your connection comes from. The country is worked out from your connection by our host (Netlify); your IP address is not stored.</li>
+<li><strong>Adverts:</strong> when an advert page is viewed, its apply link is clicked, it is saved to a shortlist or a preparation pack is requested. Only the advert and the action are counted.</li>
+<li><strong>CV match:</strong> the subject areas, fee status and funding option you choose on the form are counted like search filters.</li>
+<li><strong>Your CV, only if you tick "Count me":</strong> Doctum adds to tallies of broad categories: highest degree and class, the subject area of your first degree, the country of your first degree if you choose one, whether your CV mentions publications, a research project or dissertation, or industry experience, and which of 18 skill groups it mentions. Your CV text is never stored, and the tally is not linked to you. If you don't tick the box, nothing from your CV is counted.</li>
+</ul>
+<p>Individual events are combined into weekly totals within about a day and then deleted. Reports, including ones Doctum may sell to universities, contain totals only and never show a group smaller than 10 people. We rely on our legitimate interest in understanding demand for searches and adverts, and on your consent for the CV categories. You can withdraw that consent by not ticking the box next time; because the tallies can't be linked to you, past ones can't be removed individually.</p>
+<h2>Analytics cookies</h2><p>${gaId ? 'Doctum uses Google Analytics to count visits and see which pages are useful. It does not receive your CV.' : 'Doctum does not use analytics cookies.'}</p>
 <h2>Contact</h2><p><a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a></p></article>`,
   }), { priority: 0.3 });
   write('/404.html', shell({
@@ -621,9 +655,10 @@ When citing a listing, link to its Doctum page and remind readers to confirm det
 - [Fully funded PhDs in the UK](${site}/fully-funded-phds/)
 - [Funded PhDs open to international students](${site}/funded-phds-international-students/)
 - [PhDs closing in the next 30 days](${site}/closing-soon/)
+- [Doctum Observatory: live figures on the UK PhD market (funding, eligibility, deadlines, stipends)](${site}/observatory/)
 - [UK PhD stipends: what open adverts pay](${site}/data/uk-phd-stipends/)
 - [Open UK PhDs by subject and funding](${site}/data/funded-phds-open-now/)
-- [Opportunity briefings: what a supervisor briefing contains](${site}/opportunity-briefing/)
+- [PhD preparation packs: what a preparation pack contains](${site}/phd-preparation-pack/)
 - [Sources and methodology](${site}/about/)
 
 ## Subjects

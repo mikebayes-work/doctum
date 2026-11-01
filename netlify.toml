@@ -24,6 +24,17 @@
   to = "/"
   status = 301
 
+[[redirects]]
+  from = "/pulse/*"
+  to = "/observatory/"
+  status = 301
+
+# "Opportunity briefings" were renamed "PhD preparation packs" (1 Nov 2026).
+[[redirects]]
+  from = "/opportunity-briefing/*"
+  to = "/phd-preparation-pack/"
+  status = 301
+
 # Briefing pages are per-person and live behind ?rid= — never cached by the CDN.
 [[headers]]
   for = "/briefing/*"

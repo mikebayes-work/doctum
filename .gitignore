@@ -12,3 +12,4 @@ data/raw/
 # Commit/pull helpers (built from tools/doctumtools)
 DoctumCommit.exe
 DoctumPull.exe
+reports/

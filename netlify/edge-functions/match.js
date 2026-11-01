@@ -11,6 +11,8 @@
 import DB from '../doctum/listings.generated.js';
 import { buildIndex, match, readProfile, analyseRequest } from '../doctum/core.js';
 import { guard, env, today } from '../doctum/http.js';
+import { record, bucket } from '../doctum/insights.js';
+import { firstDegreeSubject, skillsIn, researchFlags, COUNTRY_CODES } from '../doctum/facets.js';
 
 const MAX_BODY = 60000, MAX_CV = 30000;
 const MODEL = 'claude-haiku-4-5-20251001';
@@ -45,7 +47,20 @@ export default async function handler(request, context) {
     const fee = body.fee === 'intl' ? 'intl' : body.fee === 'uk' ? 'uk' : null;
     if (!fee) return g.respond(400, { error: 'Choose your fee status.' });
     const funding = ['full', 'any', 'all'].includes(body.funding) ? body.funding : 'full';
-    return g.respond(200, match(INDEX, { cv, disc, fee, funding, today: today() }));
+    const res = match(INDEX, { cv, disc, fee, funding, today: today() });
+    // Anonymous demand analytics. The choices made on the form are always counted (like
+    // search filters). Facts read from the CV are counted ONLY if the applicant ticked
+    // "count me in", and only as category names: never CV text. See insights.js.
+    const ev = { t: 'm', d: disc, fee, fund: funding, r: bucket(res.considered), opt: body.share === true ? 1 : 0 };
+    if (body.share === true) {
+      const fl = researchFlags(cv);
+      Object.assign(ev, {
+        lvl: res.profile.degree || 'unknown', cls: res.profile.cls || 'unknown', ug: firstDegreeSubject(cv) || 'unknown',
+        fdc: COUNTRY_CODES.has(body.fdc) ? body.fdc : 'unknown', pub: fl.pub ? 1 : 0, proj: fl.proj ? 1 : 0, ind: fl.ind ? 1 : 0, sk: skillsIn(cv),
+      });
+    }
+    record(request, context, ev);
+    return g.respond(200, res);
   }
 
   if (body.action === 'analyse') {

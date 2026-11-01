@@ -14,6 +14,7 @@
 // goes where the access-code check is now.
 import DB from '../doctum/listings.generated.js';
 import { guard } from '../doctum/http.js';
+import { record } from '../doctum/insights.js';
 import { parseName } from '../doctum/briefing.js';
 import { settings, store, newRid, sign, ipHash, sameCode, readJob, patchJob, getCount, bump, publicJob, RID_RE } from '../doctum/jobs.js';
 
@@ -37,9 +38,9 @@ export default async function handler(request, context) {
   if (request.method === 'GET') {
     if (u.searchParams.has('config')) return g.respond(200, { enabled: cfg.enabled, needsCode: !!cfg.accessCode });
     const rid = u.searchParams.get('rid') || '';
-    if (!RID_RE.test(rid)) return g.respond(404, { error: 'Briefing not found' });
+    if (!RID_RE.test(rid)) return g.respond(404, { error: 'Preparation pack not found' });
     const j = await readJob(s, rid);
-    if (!j) return g.respond(404, { error: 'This briefing has expired or been deleted.' });
+    if (!j) return g.respond(404, { error: 'This preparation pack has expired or been deleted.' });
     return g.respond(200, publicJob(j), { 'Cache-Control': j.state === 'done' ? 'private, max-age=300' : 'no-store' });
   }
 
@@ -53,12 +54,12 @@ export default async function handler(request, context) {
 
   if (body.action === 'delete') {
     const rid = str(body.rid, 24);
-    if (!RID_RE.test(rid)) return g.respond(404, { error: 'Briefing not found' });
+    if (!RID_RE.test(rid)) return g.respond(404, { error: 'Preparation pack not found' });
     await s.delete('job/' + rid);
     return g.respond(200, { ok: true });
   }
 
-  if (!cfg.enabled) return g.respond(501, { error: 'Opportunity briefings are not switched on yet.' });
+  if (!cfg.enabled) return g.respond(501, { error: 'Preparation packs are not switched on yet.' });
 
   if (body.action === 'start') {
     if (cfg.accessCode && !sameCode(str(body.code, 100).trim(), cfg.accessCode)) return g.respond(403, { error: 'That access code is not right.' });
@@ -72,8 +73,8 @@ export default async function handler(request, context) {
     if (cv && cv.length < 200) return g.respond(400, { error: 'Add a few more lines of your CV, or leave it blank.' });
 
     const ip = ipHash(cfg.key, context?.ip || request.headers.get('x-nf-client-connection-ip') || 'unknown');
-    if ((await getCount(s, 'all')) >= cfg.dailyLimit) return g.respond(429, { error: 'Today’s free briefings have all been used. Please try again tomorrow.' });
-    if ((await getCount(s, ip)) >= cfg.perIp) return g.respond(429, { error: `You can request ${cfg.perIp} briefings a day while this is free. Please try again tomorrow.` });
+    if ((await getCount(s, 'all')) >= cfg.dailyLimit) return g.respond(429, { error: 'Today’s free preparation packs have all been used. Please try again tomorrow.' });
+    if ((await getCount(s, ip)) >= cfg.perIp) return g.respond(429, { error: `You can request ${cfg.perIp} preparation packs a day while this is free. Please try again tomorrow.` });
     await bump(s, ip);
 
     const rid = newRid();
@@ -81,8 +82,9 @@ export default async function handler(request, context) {
       rid, state: 'queued', step: 'Queued', created: new Date().toISOString(),
       listing: { id: r.id, path: r.path, title: r.title, institution: r.institution }, supervisor: name.full, supervisorRaw: supervisor,
     });
+    record(request, context, { t: 'l', a: 'pp', id: r.id, u: r.institution, d: (r.disciplines || [])[0] || '' });
     try { await kick(request, cfg, { rid, phase: 'identify', cv }); }
-    catch (e) { console.error('briefing kick', e.message); await patchJob(s, rid, { state: 'error', error: 'The briefing service could not start. Please try again shortly.' }); }
+    catch (e) { console.error('briefing kick', e.message); await patchJob(s, rid, { state: 'error', error: 'The preparation pack service could not start. Please try again shortly.' }); }
     return g.respond(200, { rid });
   }
 
@@ -91,12 +93,12 @@ export default async function handler(request, context) {
     const author = str(body.author, 20);
     if (!RID_RE.test(rid) || !(author === 'none' || /^A\d{4,15}$/.test(author))) return g.respond(400, { error: 'Invalid request' });
     const j = await readJob(s, rid);
-    if (!j || j.state !== 'confirm') return g.respond(409, { error: 'This briefing is not waiting for a choice.' });
+    if (!j || j.state !== 'confirm') return g.respond(409, { error: 'This preparation pack is not waiting for a choice.' });
     const allowed = new Set([...(j.candidates || []).map((c) => c.id), 'none']);
     if (!allowed.has(author)) return g.respond(400, { error: 'Pick one of the researchers listed.' });
     await patchJob(s, rid, { state: 'queued', step: 'Queued', candidates: [] });
     try { await kick(request, cfg, { rid, phase: 'write', author, cv }); }
-    catch (e) { console.error('briefing kick', e.message); await patchJob(s, rid, { state: 'error', error: 'The briefing service could not start. Please try again shortly.' }); }
+    catch (e) { console.error('briefing kick', e.message); await patchJob(s, rid, { state: 'error', error: 'The preparation pack service could not start. Please try again shortly.' }); }
     return g.respond(200, { rid });
   }
 

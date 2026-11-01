@@ -1,5 +1,5 @@
-// scripts/explainer.js — the /opportunity-briefing/ page: what a briefing is, how it is
-// made, and an example. The example is a real Doctum briefing (31 Oct 2026) with the
+// scripts/explainer.js — the /phd-preparation-pack/ page: what a pack is, how it is
+// made, and an example. The example is a real Doctum preparation pack (31 Oct 2026) with the
 // supervisors, university, project title and paper titles removed, so nobody is identifiable.
 // Rendered with the same markup and classes as public/assets/briefing.js.
 
@@ -8,7 +8,7 @@ const ref = (y) => `<span class="ref">${y}</span>`;
 
 const SAMPLE = `
 <article class="briefing">
-<p class="eyebrow">Opportunity briefing · example</p>
+<p class="eyebrow">PhD preparation pack · example</p>
 <h2 style="margin-top:.2em;font-size:clamp(1.6rem,3.4vw,2.3rem)">${A('AI tools for optical and camera design')}</h2>
 <p class="lead">${A('A UK university')} · lead supervisor ${A('Supervisor A')}</p>
 <p class="chips"><span class="chip funded">Fully funded</span><span class="chip">Closes ${A('in January')}</span><span class="chip">General (no CV)</span></p>
@@ -31,7 +31,7 @@ const SAMPLE = `
 
 <section><h2>The supervisors</h2>
 <div class="sup"><h3>${A('Supervisor A')}</h3><p>The profile lists computer vision, graphics, machine learning, media production, digital humans and volumetric video. Recent papers focus on 3D Gaussian splatting: lighting, efficiency and avatars. Earlier work covers multi-view and light-field video capture, human reconstruction and super-resolution.</p>
-<p class="small">Profile · ORCID · OpenAlex record (links in the real briefing)</p></div>
+<p class="small">Profile · ORCID · OpenAlex record (links in the real pack)</p></div>
 <div class="sup"><h3>${A('Supervisor B')}</h3><p>Shares several recent papers with ${A('Supervisor A')}, including most of the Gaussian splatting work below. Their specific role in this project is not stated.</p></div>
 </section>
 
@@ -43,7 +43,7 @@ const SAMPLE = `
 <li class="paper"><span class="num">3</span><div><h3>${A('A 2026 preprint on efficient 3D head avatars for phones')}</h3><p class="small">Preprint · 2026</p>
 <p>Efficient generator for 3D Gaussian heads, evaluated on image quality, multi-view consistency, training cost and deployment. Shows how the group judges learned models beyond one metric, which matters for mapping lens parameters to image quality.</p></div></li>
 </ol>
-<p class="small">The real briefing links each paper’s DOI and lists four more “worth skimming”.</p></section>
+<p class="small">The real pack links each paper’s DOI and lists four more “worth skimming”.</p></section>
 
 <section><h2>The research thread</h2><p class="small">How the strand of work behind this project has developed. Each step links to dated papers.</p><ol class="thread">
 <li><span class="when">2016–17</span><p>Early work on view-dependent shape and appearance from multi-view video, and on temporally coherent light-field video. The group’s base in appearance capture. ${ref(2016)} ${ref(2017)}</p></li>
@@ -71,18 +71,18 @@ const SAMPLE = `
 <div><h3>Questions you may be asked</h3><ul><li>What do you know about differentiable rendering? How would you model a camera lens in it?</li><li>How would you judge whether a learned model of lens behaviour is trustworthy against ray tracing?</li><li>Why this project rather than a general computer vision PhD?</li></ul></div>
 <div><h3>Questions to ask them</h3><ul><li>Who is the industry partner, and what access to lens data or designs is expected?</li><li>What would a strong first-year outcome look like?</li><li>What compute resources and training support are available?</li></ul></div>
 </div>
-<p class="small">The full briefing continues with the bigger picture (general background), approach angles for your first email, and sources and method.</p></section>
+<p class="small">The full pack continues with the bigger picture (general background), approach angles for your first email, and sources and method.</p></section>
 </article>`;
 
 function explainerBody({ openCount }) {
   return `
 <article>
-<p class="eyebrow">Opportunity briefings</p>
-<h1>Know the supervisor before you write to them</h1>
-<p class="lead">Supervisors notice the applicants who have read their work. An opportunity briefing does that groundwork for one PhD: who the supervisor is, which of their papers matter for this project, how their research got here, what they’ll look for, and what to ask. Every point links to the paper it comes from.</p>
-<p><a class="btn btn-brass" href="/">Find a PhD to brief</a> <a class="btn btn-ghost" href="#example">See an example</a></p>
+<p class="eyebrow">PhD preparation packs</p>
+<h1>Walk into your PhD application prepared</h1>
+<p class="lead">Supervisors notice the applicants who have read their work. A PhD preparation pack does that groundwork for one PhD: who is on the supervisory team, which of their papers matter for this project, how their research got here, what they’ll look for, and what to ask. Every point links to the paper it comes from.</p>
+<p><a class="btn btn-brass" href="/">Find a PhD</a> <a class="btn btn-ghost" href="#example">See an example</a></p>
 
-<div class="rule-head"><h2>What’s in a briefing</h2></div>
+<div class="rule-head"><h2>What’s in a preparation pack</h2></div>
 <ul class="principles">
 <li><strong>At a glance</strong>Why you fit (or what a strong applicant brings), the biggest gaps, and what to do this week.</li>
 <li><strong>Read these first</strong>The three papers closest to the project, each with what it found and why it matters to you.</li>
@@ -98,7 +98,7 @@ function explainerBody({ openCount }) {
 <li><strong>Find the right people</strong>Doctum follows the advert’s link to each supervisor’s university profile, then confirms them through ORCID and their publication record. Industry supervisors are found through the company named in the advert.</li>
 <li><strong>Check it’s really them</strong>Papers by namesakes are removed and listed. If the match isn’t certain, you pick the right researcher before anything is written.</li>
 <li><strong>Read their recent work</strong>Up to ten years of papers from OpenAlex, ranked against the advert (and your CV, if you add it).</li>
-<li><strong>Write the briefing</strong>An AI model writes from that material only. Any reference to a paper that wasn’t supplied, or a quote that isn’t word for word, is removed automatically.</li>
+<li><strong>Write the pack</strong>An AI model writes from that material only. Any reference to a paper that wasn’t supplied, or a quote that isn’t word for word, is removed automatically.</li>
 </ol>
 
 <div class="rule-head"><h2>What it won’t do</h2></div>
@@ -109,21 +109,21 @@ function explainerBody({ openCount }) {
 <li><strong>It doesn’t replace the advert.</strong> The university’s page is always the authority on eligibility, funding and deadlines.</li>
 </ul>
 
-<div class="rule-head" id="example"><h2>An example briefing</h2></div>
-<p>This is a real Doctum briefing for a fully funded computer vision PhD, generated without a CV. We’ve removed the supervisors’ names, the university, the project title, the paper titles and other identifying details, and shortened some sections. Everything else is as the student would see it.</p>
+<div class="rule-head" id="example"><h2>An example preparation pack</h2></div>
+<p>This is a real Doctum preparation pack for a fully funded computer vision PhD, generated without a CV. We’ve removed the supervisors’ names, the university, the project title, the paper titles and other identifying details, and shortened some sections. Everything else is as the student would see it.</p>
 <div class="sample"><span class="sample-label">Example · names and titles removed</span>${SAMPLE}</div>
 
 <div class="rule-head"><h2>Questions</h2></div>
 <dl class="faq">
-<dt>How much does it cost?</dt><dd>Briefings are free while we test them, with a small daily limit per person.</dd>
+<dt>How much does it cost?</dt><dd>Preparation packs are free while we test them, with a small daily limit per person.</dd>
 <dt>How long does it take?</dt><dd>Usually one to three minutes. You get a private link and can come back to it.</dd>
-<dt>Do I need to add my CV?</dt><dd>No. Without one you get a general briefing; with one, the skills table and “why you fit” are about you.</dd>
-<dt>What happens to my CV?</dt><dd>It is used to write your briefing and then discarded. The briefing itself is kept for 30 days under a private link, and you can delete it sooner. See <a href="/privacy/">Privacy</a>.</dd>
-<dt>What if it picks the wrong supervisor?</dt><dd>If Doctum isn’t sure, it asks you to choose before writing anything. Each briefing states how the supervisor was identified and how confident the match is.</dd>
+<dt>Do I need to add my CV?</dt><dd>No. Without one you get a general pack; with one, the skills table and “why you fit” are about you.</dd>
+<dt>What happens to my CV?</dt><dd>It is used to write your pack and then discarded. The pack itself is kept for 30 days under a private link, and you can delete it sooner. See <a href="/privacy/">Privacy</a>.</dd>
+<dt>What if it picks the wrong supervisor?</dt><dd>If Doctum isn’t sure, it asks you to choose before writing anything. Each pack states how the supervisor was identified and how confident the match is.</dd>
 <dt>I’m a supervisor and something is wrong.</dt><dd>Email <a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a> and we’ll correct it.</dd>
 </dl>
 
-<aside class="cta"><div><h2>Brief yourself on a PhD</h2><p>Open any of the ${openCount} open PhDs and choose <strong>Briefing</strong>.</p></div><a class="btn btn-brass" href="/">Search PhDs</a></aside>
+<aside class="cta"><div><h2>Prepare for a PhD</h2><p>Open any of the ${openCount} open PhDs and choose <strong>Prep pack</strong>.</p></div><a class="btn btn-brass" href="/">Search PhDs</a></aside>
 </article>`;
 }
 

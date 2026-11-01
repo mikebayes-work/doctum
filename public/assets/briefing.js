@@ -1,6 +1,6 @@
 // Doctum — Opportunity Briefing page (/briefing/). Needs search.js (window.Doctum) first.
 //   /briefing/?id=<listing id>  → request form (supervisor, optional CV, optional access code)
-//   /briefing/?rid=<job id>     → progress, "is this the right person?" step, then the briefing
+//   /briefing/?rid=<job id>     → progress, "is this the right person?" step, then the pack
 // The CV stays in this browser tab (sessionStorage) and is sent only with the request
 // that needs it. Nothing here builds prompts or ranks papers: that is all server side.
 (function () {
@@ -19,25 +19,25 @@
   var li = function (a, f) { return (a || []).map(function (x) { return '<li>' + (f ? f(x) : esc(x)) + '</li>'; }).join(''); };
 
   if (rid) return poll();
-  if (!id) { root.innerHTML = '<p class="lead">Open a PhD listing and choose <strong>Get an opportunity briefing</strong> to start one.</p><p><a class="btn" href="/">Search PhDs</a></p>'; return; }
+  if (!id) { root.innerHTML = '<p class="lead">Open a PhD listing and choose <strong>Get a preparation pack</strong> to start one.</p><p><a class="btn" href="/">Search PhDs</a></p>'; return; }
 
   // ── Request form ──
   Promise.all([api('/api/phd?id=' + id), api('/api/briefing?config=1')]).then(function (r) {
     var d = r[0], cfg = r[1];
-    if (!cfg.enabled) { root.innerHTML = '<p class="lead">Opportunity briefings are not switched on yet. Please check back soon.</p><p><a href="' + esc(d.path) + '">Back to the PhD</a></p>'; return; }
+    if (!cfg.enabled) { root.innerHTML = '<p class="lead">PhD preparation packs are not switched on yet. Please check back soon.</p><p><a href="' + esc(d.path) + '">Back to the PhD</a></p>'; return; }
     var sups = d.supervisors || [];
     root.innerHTML =
-      '<p class="profile">Briefing for <a href="' + esc(d.path) + '">' + esc(d.title) + '</a> (' + esc(d.institution) + ').</p>' +
+      '<p class="profile">Preparation pack for <a href="' + esc(d.path) + '">' + esc(d.title) + '</a> (' + esc(d.institution) + ').</p>' +
       '<form id="brief-form" class="match-form">' +
-      '<div class="step"><h2><span>1</span> Lead supervisor</h2><p class="small">Everyone named on the advert is included in the briefing. Choose who leads the project.</p>' +
+      '<div class="step"><h2><span>1</span> Lead supervisor</h2><p class="small">Everyone named on the advert is included in the pack. Choose who leads the project.</p>' +
       (sups.length ? '<div class="radios">' + sups.map(function (s, i) { return '<label><input type="radio" name="sup" value="' + esc(s) + '"' + (i === 0 ? ' checked' : '') + '> ' + esc(s) + (i === 0 ? ' <span class="small">(usually the lead)</span>' : '') + '</label>'; }).join('') +
         '<label><input type="radio" name="sup" value=""> Someone else</label></div>' : '<p class="small">The advert doesn’t name a supervisor. Type the name from the advert or the university website.</p>') +
       '<label class="sr" for="sup-other">Supervisor name</label><input type="text" id="sup-other" class="text" maxlength="100" placeholder="e.g. Dr Jane Smith"' + (sups.length ? ' hidden' : '') + '></div>' +
       '<div class="step"><h2><span>2</span> Your CV <small>(optional, makes the skills table personal)</small></h2>' +
       '<label class="file">Upload a PDF or text file <input type="file" id="cv-file" accept=".pdf,.txt,.md"></label>' +
-      '<label for="cv" class="sr">CV text</label><textarea id="cv" rows="8" maxlength="30000" placeholder="…or paste your CV here. Leave blank for a general briefing."></textarea><p class="small" id="cv-status"></p></div>' +
-      (cfg.needsCode ? '<div class="step"><h2><span>3</span> Access code</h2><p class="small">Briefings are in testing. Enter the code you were given.</p><label class="sr" for="code">Access code</label><input type="text" id="code" class="text" maxlength="100" autocomplete="off"></div>' : '') +
-      '<button class="btn btn-brass" type="submit">Prepare my briefing</button> <span class="small">Takes about two minutes.</span>' +
+      '<label for="cv" class="sr">CV text</label><textarea id="cv" rows="8" maxlength="30000" placeholder="…or paste your CV here. Leave blank for a general pack."></textarea><p class="small" id="cv-status"></p></div>' +
+      (cfg.needsCode ? '<div class="step"><h2><span>3</span> Access code</h2><p class="small">Preparation packs are in testing. Enter the code you were given.</p><label class="sr" for="code">Access code</label><input type="text" id="code" class="text" maxlength="100" autocomplete="off"></div>' : '') +
+      '<button class="btn btn-brass" type="submit">Prepare my pack</button> <span class="small">Takes about two minutes.</span>' +
       '<p class="error" id="brief-error" role="alert"></p></form>';
     var form = document.getElementById('brief-form'), other = document.getElementById('sup-other'), cvEl = document.getElementById('cv');
     cvEl.value = getCv();
@@ -57,7 +57,7 @@
       setCv(cv);
       post({ action: 'start', id: id, supervisor: sup, cv: cv, code: codeEl ? codeEl.value.trim() : '' }).then(function (r2) {
         location.href = '/briefing/?rid=' + r2.rid;
-      }).catch(function (x) { err.textContent = x.message; btn.disabled = false; btn.textContent = 'Prepare my briefing'; });
+      }).catch(function (x) { err.textContent = x.message; btn.disabled = false; btn.textContent = 'Prepare my pack'; });
     });
   }).catch(function (e) { root.innerHTML = '<p class="error">' + esc(e.message) + '</p>'; });
 
@@ -87,14 +87,14 @@
     (function tick() {
       api('/api/briefing?rid=' + rid).then(function (j) {
         if (j.state === 'done') return render(j.briefing);
-        if (j.state === 'error') { root.innerHTML = '<h1>Briefing not ready</h1><p class="error">' + esc(j.error) + '</p>' + (j.listing ? '<p><a href="' + esc(j.listing.path) + '">Back to the PhD</a></p>' : ''); return; }
+        if (j.state === 'error') { root.innerHTML = '<h1>Pack not ready</h1><p class="error">' + esc(j.error) + '</p>' + (j.listing ? '<p><a href="' + esc(j.listing.path) + '">Back to the PhD</a></p>' : ''); return; }
         if (j.state === 'confirm') return confirmStep(j);
-        root.innerHTML = '<h1>Preparing your briefing</h1>' +
+        root.innerHTML = '<h1>Preparing your pack</h1>' +
           '<p class="lead">' + esc(j.supervisor) + ' · ' + esc(j.listing.title) + '</p>' +
           '<div class="progress" role="status"><span class="spinner" aria-hidden="true"></span> ' + esc(j.step || 'Working') + '…</div>' +
           '<p class="small">This usually takes one to three minutes. You can leave this page open, or keep the link and come back: <a href="' + esc(location.href) + '">' + esc(location.href) + '</a></p>';
         if (++tries < 200) setTimeout(tick, tries < 10 ? 2500 : 5000);
-      }).catch(function (e) { root.innerHTML = '<h1>Briefing</h1><p class="error">' + esc(e.message) + '</p>'; });
+      }).catch(function (e) { root.innerHTML = '<h1>PhD preparation pack</h1><p class="error">' + esc(e.message) + '</p>'; });
     })();
   }
 
@@ -108,7 +108,7 @@
           ' · ' + esc(a.works) + ' papers<br><span class="small">Topics: ' + esc((a.topics || []).slice(0, 4).join('; ')) + '</span>' +
           (a.sample && a.sample.length ? '<ul class="small">' + li(a.sample) + '</ul>' : '') + '</span></label>';
       }).join('') +
-      '<label class="cand"><input type="radio" name="author" value="none"' + (c.length ? '' : ' checked') + '><span><strong>None of these</strong><br><span class="small">' + 'We’ll write the briefing from the university profile only, if we found one.' + '</span></span></label>' +
+      '<label class="cand"><input type="radio" name="author" value="none"' + (c.length ? '' : ' checked') + '><span><strong>None of these</strong><br><span class="small">' + 'We’ll write the pack from the university profile only, if we found one.' + '</span></span></label>' +
       '<button class="btn btn-brass" type="submit">Continue</button><p class="error" id="pick-error" role="alert"></p></form>';
     document.getElementById('pick').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -147,7 +147,7 @@
         var conf = m.confidence === 'unconfirmed' || m.confidence === 'not found'
           ? '<span class="st st-gap">Publication record not confirmed</span>' : '';
         return '<div class="sup"><h3>' + esc(m.name) + ' <span class="role">' + esc(m.roleLabel || '') + (m.org ? ' · ' + esc(m.org) : '') + '</span></h3>' + conf +
-          (t ? '<p>' + esc(t.summary) + refs(t.refs) + '</p>' : '<p class="small">Named on the advert. We couldn’t confirm their publication record, so this briefing says only what the advert says about them.</p>') +
+          (t ? '<p>' + esc(t.summary) + refs(t.refs) + '</p>' : '<p class="small">Named on the advert. We couldn’t confirm their publication record, so this pack says only what the advert says about them.</p>') +
           (i === 0 && R.profileQuote ? '<blockquote>' + esc(R.profileQuote) + '<cite>' + (m.profileUrl ? '<a href="' + esc(m.profileUrl) + '" target="_blank" rel="noopener">University profile</a>' : 'University profile') + '</cite></blockquote>' : '') +
           (links(m) ? '<p class="small">' + links(m) + '</p>' : '') + '</div>';
       }).join('');
@@ -177,17 +177,17 @@
     }
     var toc = [['glance', 'At a glance'], ['supervisors', TEAM.length > 1 ? 'The team' : 'The supervisor']].concat((B.funders || []).length || (R.funder && R.funder.summary) ? [['funding', 'Funding and partners']] : []).concat([['read', 'Read these first'], ['thread', 'The research thread'], ['skills', B.hadCv ? 'Skills vs your CV' : 'Skills they look for'], ['questions', 'Open questions'], ['interview', 'Interview prep'], ['bigger', 'Bigger picture'], ['approach', 'Approach angles'], ['method', 'Sources and method']]);
     var S = B.supervisor;
-    document.title = 'Opportunity briefing: ' + L.title + ' | Doctum';
+    document.title = 'PhD preparation pack: ' + L.title + ' | Doctum';
     root.innerHTML =
       '<article class="briefing">' +
-      '<p class="eyebrow">Opportunity briefing · prepared ' + esc(ukDate(B.created)) + '</p>' +
+      '<p class="eyebrow">PhD preparation pack · prepared ' + esc(ukDate(B.created)) + '</p>' +
       '<h1>' + esc(L.title) + '</h1>' +
       '<p class="lead">' + esc(L.institution) + (L.school ? ' · ' + esc(L.school) : '') + ' · lead supervisor ' + esc(S.name) + '</p>' +
       '<p class="chips">' + chips + '</p>' +
       '<p class="idnote idnote-' + esc(I.confidence) + '"><strong>Identity confidence: ' + esc(CONF[I.confidence] || I.confidence) + '.</strong> ' + esc(I.method) + '.' +
         (B.stats.excluded ? ' ' + B.stats.excluded + ' paper' + (B.stats.excluded > 1 ? 's' : '') + ' credited to a different researcher with a similar name were removed (see <a href="#method">Sources and method</a>).' : '') + '</p>' +
       '<div class="brief-actions no-print"><button type="button" class="btn btn-ghost" id="b-print">Print or save as PDF</button><button type="button" class="btn btn-ghost" id="b-copy">Copy link</button><a class="btn btn-ghost" href="' + esc(L.path) + '">Back to the PhD</a><a class="btn btn-brass" href="' + esc(L.url) + '" target="_blank" rel="noopener">Apply at the university ↗</a></div>' +
-      '<nav class="toc no-print" aria-label="In this briefing">' + toc.map(function (t) { return '<a href="#' + t[0] + '">' + t[1] + '</a>'; }).join('') + '</nav>' +
+      '<nav class="toc no-print" aria-label="In this pack">' + toc.map(function (t) { return '<a href="#' + t[0] + '">' + t[1] + '</a>'; }).join('') + '</nav>' +
 
       '<section id="glance"><h2>At a glance</h2><div class="glance">' +
         '<div><h3>' + (B.hadCv ? 'Why you fit' : 'What a strong applicant brings') + '</h3><ul>' + li(R.atAGlance.whyFit) + '</ul></div>' +
@@ -224,13 +224,13 @@
         (B.excluded.length ? '<li>Removed as probably a different researcher: <ul>' + li(B.excluded, function (w) { return esc(w.title) + ' (' + esc(w.year) + ', ' + esc(w.field) + ')'; }) + '</ul></li>' : '') +
         li(R.limits) +
         '<li>Written by an AI model (Anthropic’s Claude) from the material above only, with every claim tied to a paper, the profile or the advert. It can still make mistakes. The university’s advert is always the authority.</li></ul>' +
-        '<p class="small no-print">This briefing is kept for 30 days and anyone with the link can open it. <button type="button" class="btn-link" id="b-del">Delete it now</button></p></section>' +
+        '<p class="small no-print">This pack is kept for 30 days and anyone with the link can open it. <button type="button" class="btn-link" id="b-del">Delete it now</button></p></section>' +
       '</article>';
 
     document.getElementById('b-print').onclick = function () { window.print(); };
     document.getElementById('b-copy').onclick = function () { var b = this; (navigator.clipboard ? navigator.clipboard.writeText(location.href) : Promise.reject()).then(function () { b.textContent = 'Link copied'; }).catch(function () { b.textContent = location.href; }); };
     document.getElementById('b-del').onclick = function () {
-      post({ action: 'delete', rid: rid }).then(function () { root.innerHTML = '<h1>Briefing deleted</h1><p><a href="' + esc(L.path) + '">Back to the PhD</a></p>'; }).catch(function (x) { document.getElementById('b-del').textContent = x.message; });
+      post({ action: 'delete', rid: rid }).then(function () { root.innerHTML = '<h1>Pack deleted</h1><p><a href="' + esc(L.path) + '">Back to the PhD</a></p>'; }).catch(function (x) { document.getElementById('b-del').textContent = x.message; });
     };
   }
 })();

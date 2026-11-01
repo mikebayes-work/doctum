@@ -207,6 +207,14 @@ def get(url: str) -> BeautifulSoup:
     if not allowed(url):
         raise PermissionError(f"robots.txt disallows {url}")
     r = fetch(url, timeout=30)
+    # 429 Too Many Requests / 503 busy: the site wants us to slow down. Wait as long as it asks
+    # (Retry-After, capped at 60 s), otherwise 15 s then 30 s, and try again at most twice.
+    for wait in (15, 30):
+        if r.status_code not in (429, 503):
+            break
+        ra = str(r.headers.get("retry-after", "") or r.headers.get("Retry-After", "")).strip()
+        time.sleep(min(60, int(ra)) if ra.isdigit() else wait)
+        r = fetch(url, timeout=30)
     if r.status_code >= 400:
         raise RuntimeError(f"HTTP {r.status_code}")
     return BeautifulSoup(r.text, "lxml")

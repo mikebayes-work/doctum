@@ -89,12 +89,13 @@ function explainerBody({ openCount }) {
 <li><strong>The research thread</strong>A dated timeline of how the supervisor’s work led to this PhD, plus the other strands worth knowing.</li>
 <li><strong>What they’ll look for</strong>Each skill, where it shows up in their work and what to do about it. Add your CV and each row is marked Matched, Partial or Gap.</li>
 <li><strong>Open questions</strong>Problems their recent papers leave open, each with an angle for conversation or interview.</li>
+<li><strong>The team and the funder</strong>Every supervisor named on the advert, including industry partners, how their work fits together, and what the funder means for you, with evidence from their own papers.</li>
 <li><strong>Interview prep</strong>Questions you may be asked, questions to ask them, and the wider context for the field.</li>
 </ul>
 
 <div class="rule-head"><h2>How it’s made</h2></div>
 <ol class="how">
-<li><strong>Find the right person</strong>Doctum follows the advert’s link to the supervisor’s university profile, then confirms them through ORCID and their publication record.</li>
+<li><strong>Find the right people</strong>Doctum follows the advert’s link to each supervisor’s university profile, then confirms them through ORCID and their publication record. Industry supervisors are found through the company named in the advert.</li>
 <li><strong>Check it’s really them</strong>Papers by namesakes are removed and listed. If the match isn’t certain, you pick the right researcher before anything is written.</li>
 <li><strong>Read their recent work</strong>Up to ten years of papers from OpenAlex, ranked against the advert (and your CV, if you add it).</li>
 <li><strong>Write the briefing</strong>An AI model writes from that material only. Any reference to a paper that wasn’t supplied, or a quote that isn’t word for word, is removed automatically.</li>

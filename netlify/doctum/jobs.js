@@ -5,7 +5,7 @@
 // Storage is Netlify Blobs, store "briefings":
 //   job/<rid>                     the job and, when done, the report (expires after 30 days)
 //   ident/<name|institution>      identity result for a supervisor (14 days)
-//   works/<openalex author id>    their cleaned-up works list (14 days)
+//   works2/<openalex author id>   their works list incl. funders and co-author organisations (14 days)
 //   count/<yyyy-mm-dd>/all        reports written today (soft global cap)
 //   count/<yyyy-mm-dd>/<ip hash>  reports started today from one IP (soft cap)
 // The CV is never written here: it travels in the request to the worker and is

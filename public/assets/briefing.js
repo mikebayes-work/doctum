@@ -29,7 +29,7 @@
     root.innerHTML =
       '<p class="profile">Briefing for <a href="' + esc(d.path) + '">' + esc(d.title) + '</a> (' + esc(d.institution) + ').</p>' +
       '<form id="brief-form" class="match-form">' +
-      '<div class="step"><h2><span>1</span> Which supervisor?</h2>' +
+      '<div class="step"><h2><span>1</span> Lead supervisor</h2><p class="small">Everyone named on the advert is included in the briefing. Choose who leads the project.</p>' +
       (sups.length ? '<div class="radios">' + sups.map(function (s, i) { return '<label><input type="radio" name="sup" value="' + esc(s) + '"' + (i === 0 ? ' checked' : '') + '> ' + esc(s) + (i === 0 ? ' <span class="small">(usually the lead)</span>' : '') + '</label>'; }).join('') +
         '<label><input type="radio" name="sup" value=""> Someone else</label></div>' : '<p class="small">The advert doesn’t name a supervisor. Type the name from the advert or the university website.</p>') +
       '<label class="sr" for="sup-other">Supervisor name</label><input type="text" id="sup-other" class="text" maxlength="100" placeholder="e.g. Dr Jane Smith"' + (sups.length ? ' hidden' : '') + '></div>' +
@@ -138,7 +138,44 @@
       L.eligibility === 'UK & International' && '<span class="chip">Open to international</span>',
       L.start && '<span class="chip">Starts ' + esc(L.start) + '</span>',
       '<span class="chip">' + (B.hadCv ? 'Personalised to your CV' : 'General (no CV)') + '</span>'].filter(Boolean).join('');
-    var toc = [['glance', 'At a glance'], ['supervisors', 'The supervisors'], ['read', 'Read these first'], ['thread', 'The research thread'], ['skills', B.hadCv ? 'Skills vs your CV' : 'Skills they look for'], ['questions', 'Open questions'], ['interview', 'Interview prep'], ['bigger', 'Bigger picture'], ['approach', 'Approach angles'], ['method', 'Sources and method']];
+    var TEAM = B.team || [{ name: B.supervisor.name, roleLabel: 'Lead supervisor', confidence: I.confidence, profileUrl: B.supervisor.profileUrl, orcid: B.supervisor.orcid, openalex: B.supervisor.openalex }];
+    var links = function (m) { return [m.profileUrl && '<a href="' + esc(m.profileUrl) + '" target="_blank" rel="noopener">Profile</a>', m.orcid && '<a href="https://orcid.org/' + esc(m.orcid) + '" target="_blank" rel="noopener">ORCID</a>', m.openalex && '<a href="' + esc(m.openalex) + '" target="_blank" rel="noopener">OpenAlex record</a>'].filter(Boolean).join(' · '); };
+    function supSection() {
+      var byName = {}; (R.team || []).forEach(function (t) { byName[t.name] = t; });
+      var cards = TEAM.map(function (m, i) {
+        var t = byName[m.name] || (i === 0 && R.supervisorSummary ? { summary: R.supervisorSummary, refs: [] } : null);
+        var conf = m.confidence === 'unconfirmed' || m.confidence === 'not found'
+          ? '<span class="st st-gap">Publication record not confirmed</span>' : '';
+        return '<div class="sup"><h3>' + esc(m.name) + ' <span class="role">' + esc(m.roleLabel || '') + (m.org ? ' · ' + esc(m.org) : '') + '</span></h3>' + conf +
+          (t ? '<p>' + esc(t.summary) + refs(t.refs) + '</p>' : '<p class="small">Named on the advert. We couldn’t confirm their publication record, so this briefing says only what the advert says about them.</p>') +
+          (i === 0 && R.profileQuote ? '<blockquote>' + esc(R.profileQuote) + '<cite>' + (m.profileUrl ? '<a href="' + esc(m.profileUrl) + '" target="_blank" rel="noopener">University profile</a>' : 'University profile') + '</cite></blockquote>' : '') +
+          (links(m) ? '<p class="small">' + links(m) + '</p>' : '') + '</div>';
+      }).join('');
+      var legacy = (R.coSupervisors || []).map(function (c) { return '<div class="sup"><h3>' + esc(c.name) + '</h3><p>' + esc(c.note) + '</p></div>'; }).join('');
+      var fit = R.teamFit ? '<div class="team-fit"><h3>How the team fits together</h3><p>' + esc(R.teamFit) + refs(R.teamFitRefs) + '</p>' +
+        ((B.overlap || []).filter(function (o) { return o.n; }).length ? '<p class="small">Shared papers: ' + B.overlap.filter(function (o) { return o.n; }).map(function (o) { return esc(o.a) + ' and ' + esc(o.b) + ': ' + o.n + (o.latest ? ' (latest ' + o.latest + ')' : ''); }).join('; ') + '</p>' : '') + '</div>' : '';
+      var others = (R.others || []).length ? '<div class="team-fit"><h3>Also named in the advert</h3><ul>' + li(R.others, function (o) { return '<strong>' + esc(o.name) + '</strong>: ' + esc(o.note); }) + '</ul></div>' : '';
+      return '<section id="supervisors"><h2>' + (TEAM.length > 1 ? 'The supervisory team' : 'The supervisor') + '</h2>' + cards + legacy + fit + others + '</section>';
+    }
+    function fundSection() {
+      var F = B.funders || [], f = R.funder || {};
+      if (!F.length && !f.summary) return '';
+      var ev = F.map(function (x) {
+        var rows = (x.per || []).filter(function (p) { return p.acknowledged || p.coauthored || p.worksThere; });
+        return '<div class="fund"><h3>' + esc(x.funder) + ' <span class="role">' + esc(x.kind) + '</span></h3>' +
+          (rows.length ? '<ul>' + li(rows, function (p) {
+            var bits = []; if (p.worksThere) bits.push('works at ' + esc(x.funder)); if (p.acknowledged) bits.push(p.acknowledged + ' paper' + (p.acknowledged > 1 ? 's' : '') + ' acknowledging ' + esc(x.funder));
+            if (p.coauthored) bits.push(p.coauthored + ' co-authored with people at ' + esc(x.funder));
+            return '<strong>' + esc(p.name) + '</strong>: ' + bits.join('; ') + (p.examples.length ? '<br><span class="small">e.g. ' + p.examples.map(function (e) { return '<a href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.title) + '</a> (' + esc(e.year) + ')'; }).join('; ') + '</span>' : '');
+          }) + '</ul>' : '<p class="small">No papers by the team acknowledge or include ' + esc(x.funder) + ' in the records we checked.</p>') + '</div>';
+      }).join('');
+      return '<section id="funding"><h2>Funding and partners</h2>' +
+        (f.summary ? '<p class="label">General background</p><p>' + esc(f.summary) + '</p>' : '') + ev +
+        (f.relationship ? '<p><strong>Existing relationship:</strong> ' + esc(f.relationship) + '</p>' : '') +
+        ((f.angles || []).length ? '<h3>Angles to raise</h3><ul>' + li(f.angles) + '</ul>' : '') +
+        '<p class="small">Evidence from OpenAlex: grant acknowledgements and co-author affiliations on the team’s papers from the last ten years. Records can be incomplete.</p></section>';
+    }
+    var toc = [['glance', 'At a glance'], ['supervisors', TEAM.length > 1 ? 'The team' : 'The supervisor']].concat((B.funders || []).length || (R.funder && R.funder.summary) ? [['funding', 'Funding and partners']] : []).concat([['read', 'Read these first'], ['thread', 'The research thread'], ['skills', B.hadCv ? 'Skills vs your CV' : 'Skills they look for'], ['questions', 'Open questions'], ['interview', 'Interview prep'], ['bigger', 'Bigger picture'], ['approach', 'Approach angles'], ['method', 'Sources and method']]);
     var S = B.supervisor;
     document.title = 'Opportunity briefing: ' + L.title + ' | Doctum';
     root.innerHTML =
@@ -157,10 +194,7 @@
         '<div><h3>' + (B.hadCv ? 'Biggest gaps' : 'Common gaps') + '</h3><ul>' + li(R.atAGlance.gaps) + '</ul></div>' +
         '<div><h3>Do this week</h3><ul>' + li(R.atAGlance.thisWeek) + '</ul></div></div></section>' +
 
-      '<section id="supervisors"><h2>The supervisors</h2><div class="sup"><h3>' + esc(S.name) + '</h3><p>' + esc(R.supervisorSummary) + '</p>' +
-        (R.profileQuote ? '<blockquote>' + esc(R.profileQuote) + '<cite>' + (S.profileUrl ? '<a href="' + esc(S.profileUrl) + '" target="_blank" rel="noopener">University profile</a>' : 'University profile') + '</cite></blockquote>' : '') +
-        '<p class="small">' + [S.profileUrl && '<a href="' + esc(S.profileUrl) + '" target="_blank" rel="noopener">Profile</a>', S.orcid && '<a href="https://orcid.org/' + esc(S.orcid) + '" target="_blank" rel="noopener">ORCID ' + esc(S.orcid) + '</a>', S.openalex && '<a href="' + esc(S.openalex) + '" target="_blank" rel="noopener">OpenAlex record</a>'].filter(Boolean).join(' · ') + '</p></div>' +
-        (R.coSupervisors || []).map(function (c) { return '<div class="sup"><h3>' + esc(c.name) + '</h3><p>' + esc(c.note) + '</p></div>'; }).join('') + '</section>' +
+      supSection() + fundSection() +
 
       '<section id="read"><h2>Read these first</h2><ol class="papers">' + R.readFirst.map(function (x, i) { return paper(x.ref, x.why, i + 1); }).join('') + '</ol>' +
         (R.alsoSkim.length ? '<h3>Also worth skimming</h3><ul>' + li(R.alsoSkim, function (x) { var p = P[x.ref]; return p ? '<a href="' + esc(p.url) + '" target="_blank" rel="noopener">' + esc(p.title) + '</a> (' + esc(p.year) + '). ' + esc(x.why) : ''; }) + '</ul>' : '') + '</section>' +
@@ -184,7 +218,8 @@
 
       '<section id="method"><h2>Sources and method</h2><ul>' +
         '<li>Identity: ' + esc(I.method) + ' (confidence ' + esc(CONF[I.confidence] || I.confidence) + ').' + (I.notes || []).map(function (n) { return ' ' + esc(n); }).join('') + '</li>' +
-        '<li>Publications from <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a>, last ten years: ' + B.stats.kept + ' kept, ' + B.stats.withAbstracts + ' with abstracts. Papers without abstracts are described from their titles only.</li>' +
+        '<li>Publications from <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a>, last ten years' + (B.stats.people > 1 ? ', for ' + B.stats.people + ' people' : '') + ': ' + B.stats.kept + ' kept, ' + B.stats.withAbstracts + ' with abstracts. Papers without abstracts are described from their titles only.</li>' +
+        (B.team && B.team.length > 1 ? li(B.team.slice(1), function (m) { return 'Identity, ' + esc(m.name) + ': ' + esc(m.method || 'not found') + ' (' + esc(m.confidence) + ').'; }) : '') +
         '<li>Only abstracts were read, not full papers. Check anything important in the paper itself.</li>' +
         (B.excluded.length ? '<li>Removed as probably a different researcher: <ul>' + li(B.excluded, function (w) { return esc(w.title) + ' (' + esc(w.year) + ', ' + esc(w.field) + ')'; }) + '</ul></li>' : '') +
         li(R.limits) +

@@ -269,6 +269,10 @@ td{font-variant-numeric:tabular-nums}
 .sup{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px}
 .sup:first-of-type{border-top:0;margin-top:0}
 .sup h3{margin-bottom:.2em}
+.sup .role,.fund .role{font:500 .78rem var(--sans);color:var(--brass-ink);letter-spacing:.02em;margin-left:6px}
+.sup .st{margin:2px 0 6px}
+.team-fit,.fund{border-top:1px dashed var(--line);padding-top:10px;margin-top:12px}
+.team-fit h3,.fund h3{font-size:1.15rem;margin:.2em 0 .3em}
 blockquote{margin:10px 0;padding:10px 16px;border-left:3px solid var(--brass);background:var(--surface-2);font:500 1.15rem/1.4 var(--serif);font-style:italic}
 blockquote cite{display:block;font:400 .82rem var(--sans);font-style:normal;color:var(--muted);margin-top:6px}
 .papers{list-style:none;padding:0 !important;counter-reset:none}

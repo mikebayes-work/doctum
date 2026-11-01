@@ -178,6 +178,23 @@ def plain_names(lines: list[str]) -> list[str]:
     return out
 
 
+# Supervisors named in running text: "…jointly supervised by Dr Jennifer Dickens in CIMR and Dr James
+# Garnett and Dr Catherine Overed-Sayer at AstraZeneca…" (Cambridge, Nov 2026). Only titled names count.
+PROSE_SUP = re.compile(r"(?:(?:jointly|co-?)\s*)?supervised\s+(?:jointly\s+)?by|under\s+the\s+(?:joint\s+)?supervision\s+of|"
+                       r"supervisory\s+team\s+(?:comprises|includes|consists\s+of|of)|supervisors?\s+(?:will\s+be|are|is|include)\b|"
+                       r"(?:lead|main|primary|principal)\s+supervisor\s+(?:will\s+be|is)\b", re.I)
+
+
+def prose_supervisors(text: str) -> list[str]:
+    out = []
+    for m in PROSE_SUP.finditer(text or ""):
+        tail = text[m.end():m.end() + 300]
+        # end of sentence = ". " + capital, but not after a title such as "Dr." or "Prof."
+        stop = re.search(r"(?<!\bDr)(?<!\bProf)(?<!\bMr)(?<!\bMs)(?<!\bMrs)\.\s+(?=[A-Z])|\n", tail)
+        out += [n for n in NAME_RE.findall(tail[:stop.start()] if stop else tail) if n not in out]
+    return out
+
+
 def get_supervisors(text: str, snippet: str) -> list[str]:
     block = ""
     lines = text.split("\n")
@@ -192,12 +209,12 @@ def get_supervisors(text: str, snippet: str) -> list[str]:
         m = re.search(rf"\b(?:{SUPERVISOR_LABELS})\s*(?:\(s\))?\s*[:\-–]\s*(.{{0,200}})", text, re.I)
         if m:
             block = re.split(r"\.\s+(?=[A-Z][a-z])", m.group(1))[0]
-    names = NAME_RE.findall(block) or NAME_RE.findall(snippet.split("|")[-1] if snippet else "")
+    names = NAME_RE.findall(block) or NAME_RE.findall(snippet.split("|")[-1] if snippet else "") or prose_supervisors(text)
     if not names and plain:
         return plain[:4]
     out = []
     for n in names:
-        n = norm_ws(n.replace("Professor", "Prof"))
+        n = norm_ws(re.sub(r"^(Dr|Prof|Mr|Ms|Mrs)\.", r"\1", n.replace("Professor", "Prof")))
         n = re.sub(r"\s+(Lecturer|Senior|Reader|Associate|School|Department|More|Research|Email|Profile|Applications?|Contact|"
                    r"PhD|Prof|Dr|Professor|The|This|Faculty|University|Centre|Institute|Co|Second|Primary|Entry|Deadline|Please|Funding|Start|Closing|Tel|Website|Group|Lab|Supervisor|Supervisors|And|Project|Overview|Eligibility|Department|Additional|Schools?|Co-supervisors?|Secondary)\b.*$", "", n)
         n = re.sub(r"(\s+[A-Z]{2,5}\b)+$", "", n)  # post-nominals: BM, FRS, FREng

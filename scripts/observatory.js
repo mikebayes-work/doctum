@@ -43,7 +43,8 @@ function observatoryBody({ open, today, updated, esc, n, money, ukDate, slugify,
       const share = of ? ` (${pct(v, of)}%)` : '';
       const tip = `${label}: ${fmt(v)}${share}${sub != null ? `, of which ${n(sub)} fully funded` : ''}`;
       return `<li title="${esc(tip)}"><span class="pl">${href ? `<a href="${esc(href(label))}">${esc(label)}</a>` : esc(label)}</span>` +
-        `<span class="pb" aria-hidden="true"><i style="width:${w.toFixed(1)}%"></i>${ws != null ? `<b style="width:${ws.toFixed(1)}%"></b>` : ''}</span>` +
+        // SVG attributes, not inline styles: the site's CSP (style-src 'self') blocks style="…".
+        `<svg class="pb" viewBox="0 0 100 14" preserveAspectRatio="none" aria-hidden="true"><rect class="pb-all" x="0" y="0" height="14" width="${Math.max(0.6, w).toFixed(1)}"/>${ws != null ? `<rect class="pb-ff" x="0" y="3" height="8" width="${Math.max(ws ? 0.6 : 0, ws).toFixed(1)}"/>` : ''}</svg>` +
         `<span class="pv">${fmt(v)}${of ? `<small>${pct(v, of)}%</small>` : ''}</span></li>`;
     }).join('')}</ul>${note ? `<p class="small">${note}</p>` : ''}`;
   };

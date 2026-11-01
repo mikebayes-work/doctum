@@ -11,9 +11,10 @@
 // already suppressed by the server.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const [from = '', to = '', inst = ''] = process.argv.slice(2);
-const key = process.env.INSIGHTS_ADMIN_KEY;
+const key = (process.env.INSIGHTS_ADMIN_KEY || '').trim(); // Command Prompt keeps trailing spaces
 const site = (process.env.SITE_URL || 'https://doctum.co.uk').replace(/\/+$/, '');
 if (!key) { console.error('Set INSIGHTS_ADMIN_KEY first (Netlify > Site configuration > Environment variables).'); process.exit(1); }
 
@@ -24,7 +25,7 @@ const jobs = [
 ];
 if (inst) jobs.push(['listings', '', inst]);
 
-const dir = path.join(path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..'), 'reports', 'insights', `${from || 'start'}_${to || 'now'}`);
+const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'reports', 'insights', `${from || 'start'}_${to || 'now'}`);
 fs.mkdirSync(dir, { recursive: true });
 for (const [report, dims = '', i = ''] of jobs) {
   const u = new URL('/api/insights', site);
@@ -33,7 +34,15 @@ for (const [report, dims = '', i = ''] of jobs) {
   if (dims) u.searchParams.set('dims', dims); if (i) u.searchParams.set('inst', i);
   const res = await fetch(u, { headers: { 'x-doctum-admin': key } });
   const name = [report, dims.replace(/,/g, '-'), i && i.replace(/[^a-z0-9]+/gi, '-')].filter(Boolean).join('_') + '.csv';
-  if (!res.ok) { console.log(`${name}: HTTP ${res.status}`); continue; }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    const why = res.status !== 404 ? '' : /<html/i.test(body)
+      ? ' (the reports function is not deployed: site returned its normal "Page not found" page)'
+      : ' (the function is live but rejected the key: not set in Netlify, set after the last deploy, or different from the one here)';
+    console.log(`${name}: HTTP ${res.status}${why}`);
+    if (res.status === 404) { console.log(`Key used here: ${key.length} characters, starts ${key.slice(0, 4)}…, ends …${key.slice(-4)}`); break; }
+    continue;
+  }
   fs.writeFileSync(path.join(dir, name), await res.text());
   console.log('wrote', name);
 }

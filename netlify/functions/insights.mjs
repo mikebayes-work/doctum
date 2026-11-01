@@ -165,10 +165,10 @@ const csv = (r) => [r.columns, ...r.rows].map((row) => row.map((v) => {
 }).join(',')).join('\n') + '\n';
 
 export default async function handler(request) {
-  const key = env('INSIGHTS_ADMIN_KEY');
+  const key = (env('INSIGHTS_ADMIN_KEY') || '').trim();
   if (!key || key.length < 24) return new Response('Not found', { status: 404 });
   if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 });
-  if (!sameKey(request.headers.get('x-doctum-admin') || '', key)) return new Response('Not found', { status: 404 });
+  if (!sameKey((request.headers.get('x-doctum-admin') || '').trim(), key)) return new Response('Not found', { status: 404 });
   const q = new URL(request.url).searchParams;
   const from = WEEK.test(q.get('from') || '') ? q.get('from') : '0000-W00';
   const to = WEEK.test(q.get('to') || '') ? q.get('to') : '9999-W99';

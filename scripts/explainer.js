@@ -9,7 +9,7 @@ const ref = (y) => `<span class="ref">${y}</span>`;
 const SAMPLE = `
 <article class="briefing">
 <p class="eyebrow">PhD preparation pack · example</p>
-<h2 style="margin-top:.2em;font-size:clamp(1.6rem,3.4vw,2.3rem)">${A('AI tools for optical and camera design')}</h2>
+<h2 class="example-title">${A('AI tools for optical and camera design')}</h2>
 <p class="lead">${A('A UK university')} · lead supervisor ${A('Supervisor A')}</p>
 <p class="chips"><span class="chip funded">Fully funded</span><span class="chip">Closes ${A('in January')}</span><span class="chip">General (no CV)</span></p>
 <p class="idnote idnote-high"><strong>Identity confidence: high.</strong> ORCID record lists the university as an employer. Profile found through the advert’s own link.</p>

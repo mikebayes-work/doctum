@@ -307,7 +307,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
     <aside class="listing-side">
       <dl class="facts-list">${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
       ${live ? `<a class="btn btn-brass" href="/match/?id=${esc(r.id)}">Check my CV against this PhD</a>
-      <a class="btn btn-ghost" href="/briefing/?id=${esc(r.id)}" rel="nofollow" style="margin-top:8px">Get a preparation pack</a>
+      <a class="btn btn-ghost btn-pack" href="/briefing/?id=${esc(r.id)}" rel="nofollow">Get a preparation pack</a>
       <p class="side-note">The key papers behind this project, the skills to show and interview prep. <a href="/phd-preparation-pack/">What’s in a preparation pack?</a></p>` : ''}
     </aside>
   </div>

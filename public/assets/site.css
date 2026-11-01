@@ -362,11 +362,10 @@ blockquote cite{display:block;font:400 .82rem var(--sans);font-style:normal;colo
 .pbars li:hover{background:var(--surface-2)}
 .pl{color:var(--ink);line-height:1.25}
 .pl a{color:var(--ink)}
-.pb{position:relative;height:14px}
-.pb i,.pb b{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;min-width:2px}
-.pb i{background:var(--brass)}
-.pbars.two .pb i{background:color-mix(in srgb,var(--brass) 45%,transparent)}
-.pb b{background:var(--brass);top:3px;bottom:3px}
+.pb{display:block;width:100%;height:14px;overflow:visible}
+.pb-all{fill:var(--brass)}
+.pbars.two .pb-all{fill:color-mix(in srgb,var(--brass) 45%,transparent)}
+.pb-ff{fill:var(--brass)}
 .pv{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
 .pv small{display:inline-block;min-width:2.6em;margin-left:6px;font-size:.76rem;color:var(--muted);font-weight:400}
 .pulse-eyebrow{margin-top:18px}
@@ -395,3 +394,5 @@ blockquote cite{display:block;font:400 .82rem var(--sans);font-style:normal;colo
 .share .fdc{display:block;margin-top:6px}
 .share .fdc[hidden]{display:none}
 .share select{font:inherit;padding:8px 10px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);color:var(--ink);margin-left:6px;max-width:100%}
+.btn-pack{margin-top:8px}
+.example-title{margin-top:.2em;font-size:clamp(1.6rem,3.4vw,2.3rem)}

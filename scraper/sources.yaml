@@ -140,7 +140,7 @@ sources:
   - {id: aberystwyth, institution: "Aberystwyth University", region: Wales, mode: auto, domain: aber.ac.uk}
   - {id: anglia-ruskin, institution: "Anglia Ruskin University", region: England, mode: auto, domain: aru.ac.uk}
   - {id: arts-bournemouth, institution: "Arts University Bournemouth", region: England, mode: auto, domain: aub.ac.uk}
-  - {id: aston, institution: "Aston University", region: England, mode: auto, domain: aston.ac.uk}
+  - {id: aston, institution: "Aston University", region: England, mode: auto, domain: aston.ac.uk, runner: home, browser: true}  # 403 to plain requests from 1 Nov 2026
   - {id: bangor, institution: "Bangor University", region: Wales, mode: auto, domain: bangor.ac.uk}
   - {id: bath, institution: "University of Bath", region: England, mode: auto, domain: bath.ac.uk}
   - {id: bath-spa, institution: "Bath Spa University", region: England, mode: auto, domain: bathspa.ac.uk}
@@ -181,7 +181,7 @@ sources:
   - {id: essex, institution: "University of Essex", region: England, mode: auto, domain: essex.ac.uk}
   - {id: exeter, institution: "University of Exeter", region: England, mode: auto, domain: exeter.ac.uk}
   - {id: falmouth, institution: "Falmouth University", region: England, mode: auto, domain: falmouth.ac.uk, runner: home, browser: true}
-  - {id: glasgow, institution: "University of Glasgow", region: Scotland, mode: auto, domain: gla.ac.uk, seeds: ["https://www.gla.ac.uk/colleges/mvls/graduateschool/phd-research-opportunities/funded-research-opportunities", "https://www.gla.ac.uk/schools/computing/postgraduateresearch/prospectivestudents/studentshipinformation"]}
+  - {id: glasgow, institution: "University of Glasgow", region: Scotland, mode: auto, domain: gla.ac.uk, seeds: ["https://www.gla.ac.uk/colleges/mvls/graduateschool/phd-research-opportunities/funded-research-opportunities", "https://www.gla.ac.uk/schools/computing/postgraduateresearch/prospectivestudents/phd-projects/", "https://www.gla.ac.uk/schools/computing/postgraduateresearch/prospectivestudents/scholarshipsandfundingopportunities/"]}
   - {id: gcu, institution: "Glasgow Caledonian University", region: Scotland, mode: auto, domain: gcu.ac.uk, runner: home, browser: true}
   - {id: gsa, institution: "Glasgow School of Art", region: Scotland, mode: auto, domain: gsa.ac.uk}
   - {id: gloucestershire, institution: "University of Gloucestershire", region: England, mode: auto, domain: glos.ac.uk, runner: home, browser: true}
@@ -198,7 +198,7 @@ sources:
   - {id: icr, institution: "The Institute of Cancer Research", region: England, mode: auto, domain: icr.ac.uk}
   - {id: keele, institution: "Keele University", region: England, mode: auto, domain: keele.ac.uk}
   - {id: kent, institution: "University of Kent", region: England, mode: auto, domain: kent.ac.uk}
-  - {id: kcl, institution: "King's College London", region: England, mode: auto, domain: kcl.ac.uk}
+  - {id: kcl, institution: "King's College London", region: England, mode: auto, domain: kcl.ac.uk, conc: 1, delay: 1500}  # HTTP 429 at the default pace (1 Nov 2026)
   - {id: kingston, institution: "Kingston University", region: England, mode: auto, domain: kingston.ac.uk}
   - {id: lancaster, institution: "Lancaster University", region: England, mode: auto, domain: lancaster.ac.uk}
   - {id: leeds-beckett, institution: "Leeds Beckett University", region: England, mode: auto, domain: leedsbeckett.ac.uk}

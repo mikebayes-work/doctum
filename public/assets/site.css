@@ -160,6 +160,9 @@ select{font:500 .92rem var(--sans);padding:11px 10px;border:1px solid var(--line
 .chip.self,.pill-self,.pill-other{background:var(--self-bg);color:var(--self);border-color:transparent}
 .chip.urgent,.pill-soon,.pill-closed{background:var(--urgent-bg);color:var(--urgent);border-color:transparent}
 .chip.money{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.chip.wp{background:transparent;color:var(--brass-ink);border-color:var(--brass)}
+.wp-note{border-left:3px solid var(--brass);background:var(--surface-2);padding:10px 14px;margin:0 0 1.2em;max-width:78ch}
+.wp-note p{margin:0 0 .4em}.wp-note p:last-child{margin:0}
 .card .sum{margin:0 0 10px;max-width:78ch;overflow-wrap:anywhere;font-size:.94rem}
 .card .full{margin:0 0 10px;font-size:.92rem;max-width:78ch}
 .card .full p{margin:0 0 .7em;white-space:pre-line}

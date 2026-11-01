@@ -100,10 +100,12 @@ export function card(r) {
     programme: r.programme || '', disciplines: r.disciplines || [], supervisors: (r.supervisors || []).slice(0, 3),
     funders: (r.funders || []).slice(0, 3),
     summary: r.summary || '', url: r.url, status: r.status,
+    wp: r.wp === 'ring-fenced' ? 'ring-fenced' : '', wp_groups: r.wp === 'ring-fenced' ? (r.wp_groups || []) : [],
   };
 }
 export function detail(r) {
-  return { ...card(r), description: r.description || '', funders: r.funders || [], last_checked: r.last_seen || null };
+  return { ...card(r), description: r.description || '', funders: r.funders || [], last_checked: r.last_seen || null,
+    wp_level: r.wp || '', wp_text: r.wp ? (r.wp_text || '') : '' };
 }
 
 // ── Search ────────────────────────────────────────────────────────────
@@ -136,6 +138,7 @@ export function search(I, q, today) {
     if (quick.has('funded') && r.funding !== 'Fully funded') return false;
     if (quick.has('intl') && !['Open to international', 'Anyone (self-funded)'].includes(elig(r))) return false;
     if (quick.has('soon') && !(r.deadline && daysBetween(r.deadline, today) <= 30)) return false;
+    if (quick.has('wp') && r.wp !== 'ring-fenced') return false;
     return true;
   };
   const facets = {};

@@ -238,6 +238,84 @@ def get_funders(text: str) -> list[str]:
     return found[:5]
 
 
+# ---------------------------------------------------------------- widening participation
+# Two levels, because they mean very different things to an applicant:
+#   "ring-fenced": places set aside for a target group (only available to, reserved for,
+#                  must self-identify as, a named scheme for Black British applicants...).
+#   "encouraged":  the advert welcomes or particularly encourages applications from
+#                  under-represented groups, but the place is open to everyone.
+# Groups are coarse labels only. Matching is done one sentence at a time, and a sentence
+# must be about applicants (not, say, a research project on care-experienced children).
+WP_GROUPS = [
+    ("Widening participation", r"widening (?:participation|access)|under-?\s?represent|socio-?economic(?:ally)? (?:disadvantage|background)|"
+                               r"low(?:er)?[- ]income|disadvantaged backgrounds?|educational (?:or socio-economic )?disadvantage|"
+                               r"deprived (?:area|postcode|neighbourhood)s?"),
+    ("Black, Asian and minority ethnic", r"\bblack\b|\bbame\b|\bbaem\b|minority ethnic|ethnic minorit|global majority"),
+    ("First generation", r"first[- ]generation (?:students?|applicants?|graduates?|university|to)|first in (?:their|your|the) family"),
+    ("Care-experienced or estranged", r"care[- ](?:leavers?|experienced)|estranged"),
+    ("Refugee or sanctuary", r"\brefugees?\b|asylum|humanitarian protection|sanctuary scholar"),
+    ("Disabled applicants", r"disabled (?:applicants|students|candidates|people)|people with (?:a )?disabilit"),
+]
+WP_ORDER = [g for g, _ in WP_GROUPS]
+WP_PEOPLE = re.compile(r"applicant|application|candidate|student|studentship|scholarship|award|people who|individuals|"
+                       r"\byou\b|eligib|places?\b|identify", re.I)
+WP_RING = re.compile(r"only (?:be )?(?:available|open) to|open only to|reserved for|ring-?\s?fenced|exclusively for|"
+                     r"must (?:self-)?identify|eligibility criteria|(?:studentships?|scholarships?|awards?|places?|funding) "
+                     r"(?:is |are )?(?:available )?for (?:\w+ ){0,4}(?:black|under-?represented|refugee|care|first|minority|bame|baem)|"
+                     r"must be (?:\w+ ){0,3}(?:black|care|a refugee|from a)|^(?:be|are) (?:black|care[- ]experienced|a refugee)|"
+                     r"james mccune smith|stuart hall foundation", re.I)
+WP_ENCOURAGE = re.compile(r"welcome|encourag|particularly|especially|keen to|take into account|consider", re.I)
+# Looks like a target group but isn't (nationality rules, research topics).
+WP_NOT = re.compile(r"reserved for (?:international|uk|home|eu)\b|black hole|black box|black carbon|black sea|black-?body|"
+                    r"\bblack (?:soldier|grass|death|tea|pepper)", re.I)
+
+
+def get_wp(title: str, text: str) -> tuple[str, list[str], str]:
+    """Return (level, groups, sentence). level is "ring-fenced", "encouraged" or ""."""
+    level_best, groups_best, sent_best = "", [], ""
+    prev_groups: list[str] = []
+    for raw in re.split(r"(?<=[.!?])\s+|\n+", (title + ". " + text)[:12000]):
+        sent = norm_ws(raw)
+        if len(sent) < 20 or WP_NOT.search(sent):
+            prev_groups = []
+            continue
+        groups = [g for g, p in WP_GROUPS if re.search(p, sent, re.I)]
+        ring = WP_RING.search(sent)
+        # "...committed to widening participation in postgraduate study. Therefore, this studentship
+        # is only available to people who meet one of the criteria": the group is in the sentence before.
+        if ring and not groups and prev_groups:
+            groups = prev_groups
+        prev_groups = groups
+        if not groups or not WP_PEOPLE.search(sent):
+            continue
+        level = "ring-fenced" if ring else "encouraged" if WP_ENCOURAGE.search(sent) else ""
+        if not level:
+            continue
+        if level == "ring-fenced" and level_best != "ring-fenced":
+            level_best, groups_best, sent_best = level, groups, sent[:300]
+        elif level == level_best or not level_best:
+            level_best = level
+            groups_best = sorted(set(groups_best) | set(groups), key=WP_ORDER.index)
+            sent_best = sent_best or sent[:300]
+    return level_best, groups_best, sent_best
+
+
+# ---------------------------------------------------------------- re-advertisement key
+# The same project advertised again (a new page, a new year, "2027 entry" in the title) gets
+# the same key. Generic titles ("PhD studentship") get no key, so they never match.
+KEY_DROP = re.compile(r"\b(?:20\d\d(?:/\d\d)?|phd|ph\.d|dphil|mphil|msc by research|mres|epsrc|bbsrc|nerc|esrc|ahrc|mrc|"
+                      r"stfc|ukri|dtp|cdt|dla|icase|case|fully|funded|funding|studentships?|scholarships?|projects?|"
+                      r"opportunit(?:y|ies)|entry|start(?:ing)?|october|september|january|february|april|autumn|spring|"
+                      r"home|international|students?|applicants?|award|position|vacancy|in|the|a|an|of|and|for|on|to|with)\b", re.I)
+
+
+def project_key(title: str, institution: str) -> str | None:
+    words = re.sub(r"[^a-z0-9 ]+", " ", KEY_DROP.sub(" ", (title or "").lower())).split()
+    if len(words) < 4 or len("".join(words)) < 25:
+        return None
+    return hashlib.sha1((institution.lower() + "|" + " ".join(words)).encode()).hexdigest()[:16]
+
+
 def get_programme(title: str, text: str) -> str:
     s = (title + " " + text[:1500]).lower()
     if re.search(r"\bcdt\b|centre for doctoral training", s):
@@ -392,6 +470,8 @@ def extract(item: dict, source: dict) -> dict | None:
         "disciplines": get_disciplines(title, body, school),
         "has_detail": bool(item.get("text")),
     }
+    rec["wp"], rec["wp_groups"], rec["wp_text"] = get_wp(title, body)
+    rec["project_key"] = project_key(title, source["institution"])
     rec["content_hash"] = hashlib.sha1((rec["title"] + rec["description"] + str(rec["deadline"])).encode()).hexdigest()[:16]
     rec["is_open"] = rec["deadline"] is None or rec["deadline"] >= TODAY.isoformat()
     return rec

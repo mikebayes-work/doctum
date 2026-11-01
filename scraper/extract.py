@@ -188,6 +188,10 @@ def get_supervisors(text: str, snippet: str) -> list[str]:
             block += " ; ".join(lines[i:i + 8]) + " ; "  # ';' stops a name running into the next line's
             after = re.sub(rf"^\s*(?:{SUPERVISOR_LABELS})\b\s*(?:\(s\))?\s*:?", "", ln, flags=re.I)
             plain += plain_names(([after] if after.strip() else []) + lines[i + 1:i + 9])
+    if not block:  # "…the project. Supervisor: Dr Jane Smith. Deadline…" inside running text
+        m = re.search(rf"\b(?:{SUPERVISOR_LABELS})\s*(?:\(s\))?\s*[:\-–]\s*(.{{0,200}})", text, re.I)
+        if m:
+            block = re.split(r"\.\s+(?=[A-Z][a-z])", m.group(1))[0]
     names = NAME_RE.findall(block) or NAME_RE.findall(snippet.split("|")[-1] if snippet else "")
     if not names and plain:
         return plain[:4]

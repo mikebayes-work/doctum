@@ -3,17 +3,32 @@
  "snapshots": [
   {
    "date": "2026-11-01",
-   "open": 1147,
-   "funded": 336,
+   "open": 1152,
+   "funded": 338,
    "intl": 50,
    "universities": 64,
    "median_stipend": 21805,
-   "new_7d": 0,
-   "new_30d": 0,
+   "new_7d": 6,
+   "new_30d": 6,
    "changed_7d": 66,
    "closed_7d": 25,
    "removed_7d": 22,
-   "new_ids": []
+   "new_ids": [
+    "059830879c91",
+    "24d4a6e49fc4",
+    "6f5440b4d82a",
+    "8d78231676f4",
+    "935bc8335b44",
+    "fd33c84786b7"
+   ],
+   "wp_ringfenced": 9,
+   "wp_encouraged": 61,
+   "readvertised_open": 0,
+   "readvertised_30d": 0,
+   "deadline_extended_30d": 0,
+   "removed_early_30d": 85,
+   "time_on_market_n": 3,
+   "time_on_market_median": 0
   }
  ]
 }

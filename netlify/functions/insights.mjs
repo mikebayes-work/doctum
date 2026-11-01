@@ -12,8 +12,10 @@
 //   applicants  crosstab of opted-in CV-match profiles; dims from: d fee fund c lvl cls ug fdc pub proj ind
 //   skills      per subject: share of opted-in applicants with each skill group vs share
 //               of open adverts in that subject asking for it (the skills gap)
-//   listings    per university (or per advert with inst=…): views, apply clicks, saves,
-//               preparation packs, with the all-university median per advert as a benchmark
+//   listings    per university (or per advert with inst=…): times in CV match results, views,
+//               full-advert reads, apply clicks, saves, preparation packs, vs the median advert
+//   sources     how visitors reached advert pages (Doctum search, CV match, Google, AI assistant…), optionally inst=…
+//   matched     who an institution's adverts matched in CV matching (inst=…, dims from fee lvl ug fdc c)
 //   search      crosstab of searches; dims from: q f d e i k o r c
 //
 // Every figure about applicants under K_MIN (10) is shown as "<10" and left out of
@@ -22,7 +24,7 @@
 import crypto from 'node:crypto';
 import DB from '../doctum/listings.generated.js';
 import { env } from '../doctum/http.js';
-import { insightsStore, K_MIN, LISTING_ACTIONS } from '../doctum/insights.js';
+import { insightsStore, K_MIN, LISTING_ACTIONS, SOURCES } from '../doctum/insights.js';
 import { skillsIn, SKILLS, COUNTRIES } from '../doctum/facets.js';
 
 const WEEK = /^\d{4}-W\d{2}$/;
@@ -132,23 +134,44 @@ export function buildReport(report, weeks, q) {
       note: 'Subjects with fewer than 10 opted-in applicants are left out.' };
   }
   if (report === 'listings') {
+    // Per university, or per advert with inst=… . Counts are about adverts, not people.
     const inst = q.get('inst');
-    const per = new Map();
+    const blank = () => Object.fromEntries(Object.keys(LISTING_ACTIONS).map((a) => [a, 0]));
+    const per = new Map(), perAd = new Map();
     for (const [k, n] of Object.entries(L)) {
       const o = JSON.parse(k);
+      const x = perAd.get(o.id) || blank(); x[o.a] = (x[o.a] || 0) + n; perAd.set(o.id, x);
       const key = inst ? (o.u === inst ? o.id : null) : o.u;
       if (!key) continue;
-      const x = per.get(key) || { v: 0, a: 0, sv: 0, pp: 0 }; x[o.a] = (x[o.a] || 0) + n; per.set(key, x);
+      const y = per.get(key) || blank(); y[o.a] = (y[o.a] || 0) + n; per.set(key, y);
     }
-    // benchmark: median per advert across every advert that had any signal
-    const perAd = new Map();
-    for (const [k, n] of Object.entries(L)) { const o = JSON.parse(k); const x = perAd.get(o.id) || { v: 0, a: 0, sv: 0, pp: 0 }; x[o.a] += n; perAd.set(o.id, x); }
-    const bench = Object.fromEntries(Object.keys(LISTING_ACTIONS).map((a) => [a, median([...perAd.values()].map((x) => x[a]))]));
+    const bench = Object.fromEntries(Object.keys(LISTING_ACTIONS).map((a) => [LISTING_ACTIONS[a], median([...perAd.values()].map((x) => x[a]))]));
     const byId = new Map(DB.rows.map((r) => [r.id, r]));
-    const rows = [...per].map(([k, x]) => [inst ? (byId.get(k)?.title || k) : k, x.v, x.a, x.sv, x.pp, x.v ? Math.round((100 * x.a) / x.v) + '%' : ''])
-      .sort((a, b) => b[1] - a[1]);
-    return { columns: [inst ? 'Advert' : 'University', 'Views', 'Apply clicks', 'Saves', 'Preparation packs', 'Apply clicks per view'], rows,
-      benchmark: { 'Median per advert, all universities': { views: bench.v, applyClicks: bench.a, saves: bench.sv, prepPacks: bench.pp } } };
+    const rows = [...per].map(([k, x]) => [inst ? (byId.get(k)?.title || k) : k, ...(inst ? [byId.get(k)?.funding || ''] : []),
+      x.mi, x.v, x.rm, x.a, x.sv, x.pp, x.v ? Math.round((100 * x.a) / x.v) + '%' : '', ...(inst ? [k] : [])])
+      .sort((a, b) => b[inst ? 3 : 2] - a[inst ? 3 : 2]);
+    return { columns: [inst ? 'Advert' : 'University', ...(inst ? ['Funding'] : []), 'Appeared in CV matches', 'Page views', 'Read the full advert', 'Apply clicks', 'Saves', 'Preparation packs', 'Apply clicks per view', ...(inst ? ['Advert id'] : [])], rows,
+      benchmark: { 'Median per advert, all universities': bench } };
+  }
+  if (report === 'sources') {
+    // How visitors reached advert pages, optionally for one university (inst=…).
+    const inst = q.get('inst');
+    const rows = crosstab(L, ['src'], (o) => o.a === 'v' && (!inst || o.u === inst)).map(([src, n]) => [SOURCES[src] || (src === '(none)' ? 'Not recorded' : src), n]);
+    const total = rows.reduce((a, r) => a + r[1], 0);
+    return { columns: ['Arrived from', 'Advert page views', 'Share'], rows: rows.map((r) => [...r, total ? Math.round((100 * r[1]) / total) + '%' : '']) };
+  }
+  if (report === 'matched') {
+    // Who an institution's adverts matched in CV matching. Profile columns are opted-in
+    // applicants only, and every group under K_MIN is hidden. dims from: fee lvl ug fdc c
+    const inst = q.get('inst');
+    const dims = String(q.get('dims') || 'ug').split(',').filter((d) => ['fee', 'lvl', 'ug', 'fdc', 'c'].includes(d)).slice(0, 2);
+    // Profile dimensions (lvl, ug, fdc) only exist for opted-in applicants; fee and c exist for everyone.
+    const keep = (o) => o.a === 'mi' && (!inst || o.u === inst) && (dims.every((d) => d === 'fee' || d === 'c') || o.ug !== undefined);
+    const bySubject = q.get('bysubject') !== '0';
+    const rows = crosstab(L, [...(bySubject ? ['d'] : []), ...dims], keep).map((r) => [...r.slice(0, -1), supp(r[r.length - 1])]);
+    const shown = rows.filter((r) => r[r.length - 1] !== `<${K_MIN}`);
+    return { columns: [...(bySubject ? ['PhD subject'] : []), ...dims.map((d) => LABEL[d]), 'Times matched'], rows: shown, suppressed: rows.length - shown.length,
+      note: `Counts how often ${inst ? inst + "'s" : 'all'} adverts appeared in CV match results, by applicant category. One applicant can match several adverts. Profile categories come only from applicants who ticked "Count me in". Groups under ${K_MIN} are hidden.` };
   }
   if (report === 'search') {
     const dims = String(q.get('dims') || 'd').split(',').filter((d) => SEARCH_DIMS.has(d)).slice(0, 3);
@@ -156,7 +179,7 @@ export function buildReport(report, weeks, q) {
     const rows = crosstab(S, dims).filter((r) => r[r.length - 1] >= K_MIN);
     return { columns: [...dims.map((d) => LABEL[d]), 'Searches'], rows, note: `Combinations seen fewer than ${K_MIN} times are hidden.` };
   }
-  return { error: 'Unknown report. Use summary, terms, filters, demand, applicants, skills, listings or search.' };
+  return { error: 'Unknown report. Use summary, terms, filters, demand, applicants, skills, listings, sources, matched or search.' };
 }
 const sum = (o) => Object.values(o || {}).reduce((a, b) => a + b, 0);
 

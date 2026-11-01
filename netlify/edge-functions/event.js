@@ -1,7 +1,8 @@
 // /api/event — anonymous interest signals for one listing, sent by the page with
 // navigator.sendBeacon: a listing page viewed, "apply" clicked, saved to shortlist.
 //
-//   POST (text/plain) {"a":"v"|"a"|"sv","id":"<12 hex>"}   → 204
+//   POST (text/plain) {"a":"v"|"rm"|"a"|"sv","id":"<12 hex>"[,"src":"search"|…]}   → 204
+//   src (views only): where the visitor came from, as a category from SOURCES. Never a URL.
 //
 // Only the action, the listing (and its public university and subject) and the
 // country Netlify reports are counted. No identifiers: see netlify/doctum/insights.js.
@@ -9,10 +10,10 @@
 // click-throughs and shortlist saves per advert.
 import DB from '../doctum/listings.generated.js';
 import { guard } from '../doctum/http.js';
-import { record } from '../doctum/insights.js';
+import { record, SOURCES } from '../doctum/insights.js';
 
 let BY_ID;
-const ACTIONS = new Set(['v', 'a', 'sv']);
+const ACTIONS = new Set(['v', 'rm', 'a', 'sv']);
 
 export default async function handler(request, context) {
   const g = guard(request, context, { methods: ['POST'], limit: 60 });
@@ -25,7 +26,8 @@ export default async function handler(request, context) {
   } catch { return new Response(null, { status: 400, headers: g.cors }); }
   BY_ID ||= new Map(DB.rows.map((r) => [r.id, r]));
   const r = typeof b?.id === 'string' && /^[0-9a-f]{12}$/.test(b.id) ? BY_ID.get(b.id) : null;
-  if (r && ACTIONS.has(b.a)) record(request, context, { t: 'l', a: b.a, id: r.id, u: r.institution, d: (r.disciplines || [])[0] || '' });
+  const src = b.a === 'v' && Object.hasOwn(SOURCES, b.src) ? b.src : undefined;
+  if (r && ACTIONS.has(b.a)) record(request, context, { t: 'l', a: b.a, id: r.id, u: r.institution, d: (r.disciplines || [])[0] || '', src });
   return new Response(null, { status: 204, headers: g.cors });
 }
 

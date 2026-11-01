@@ -151,4 +151,5 @@ Anonymous counts of searches, filters, CV-match choices and advert interest, plu
 - Download everything as CSV: `set INSIGHTS_ADMIN_KEY=…` then `node scripts/insights-report.mjs 2026-W45 2026-W52 ["University name"]` → `reports/insights/` (gitignored).
 - Environment: `INSIGHTS_ADMIN_KEY` (at least 24 characters) to enable reports; `INSIGHTS=off` stops all logging.
 - Test offline: `node scripts/test-insights.mjs`.
+- **University and sector reports (PDF):** double-click `DoctumReports.exe` (or `node scripts/university-report.mjs --inst "Cranfield University" [--weeks 4] [--sample]`). Branded A4 report: key findings, match-to-application journey vs the median advert, advert-by-advert table with what each advert states, how applicants arrive, who the adverts reach, demand per advert, skills gap and unmet searches. Written to `reports/university/` (gitignored). PDF printed by headless Edge/Chrome; if that fails, open `report.html` and Print > Save as PDF.
 

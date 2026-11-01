@@ -60,6 +60,11 @@ export default async function handler(request, context) {
       });
     }
     record(request, context, ev);
+    // Which adverts this match returned, with the same coarse profile (opted in) or just fee status.
+    if (res.matches.length) {
+      record(request, context, { t: 'mi', fee, ...(body.share === true ? { lvl: ev.lvl, ug: ev.ug, fdc: ev.fdc } : {}),
+        items: res.matches.slice(0, 12).map((x) => [x.id, x.institution, (x.disciplines || [])[0] || '']) });
+    }
     return g.respond(200, res);
   }
 

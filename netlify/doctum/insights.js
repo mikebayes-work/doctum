@@ -75,7 +75,7 @@ export function record(request, context, ev) {
 const FIELDS = {
   s: ['q', 'f', 'd', 'e', 'i', 'k', 'o', 'r', 'c'],
   m: ['d', 'fee', 'fund', 'r', 'c', 'opt', 'lvl', 'cls', 'ug', 'fdc', 'pub', 'proj', 'ind', 'sk'],
-  l: ['a', 'id', 'u', 'd', 'c'],
+  l: ['a', 'id', 'u', 'd', 'c', 'src', 'fee', 'lvl', 'ug', 'fdc'],
 };
 export function tupleKey(type, ev) {
   const o = {};
@@ -83,4 +83,23 @@ export function tupleKey(type, ev) {
   return JSON.stringify(o);
 }
 export const typeOf = (ev) => (['s', 'm', 'l'].includes(ev && ev.t) ? ev.t : null);
-export const LISTING_ACTIONS = { v: 'Viewed', a: 'Clicked through to apply', sv: 'Saved to shortlist', pp: 'Requested a preparation pack' };
+export const LISTING_ACTIONS = {
+  v: 'Viewed', rm: 'Read the full advert', a: 'Clicked through to apply', sv: 'Saved to shortlist',
+  pp: 'Requested a preparation pack', mi: 'Appeared in CV match results',
+};
+// Where a visitor came from before opening an advert page: a category, never an address.
+export const SOURCES = {
+  search: 'Doctum search', match: 'Doctum CV match', subject: 'Doctum subject page', university: 'Doctum university page',
+  hub: 'Doctum collection (fully funded, international, closing soon)', related: 'Similar PhDs on Doctum', observatory: 'Doctum Observatory',
+  pack: 'Doctum preparation pack', 'doctum-other': 'Other Doctum page', 'web-search': 'Search engine', ai: 'AI assistant',
+  social: 'Social media', email: 'Email', other: 'Other website', direct: 'Direct or unknown',
+};
+// One CV match becomes one raw event listing the adverts it returned ("mi"); the rollup
+// expands it into one advert tuple each, so a match costs a single write.
+export function expandEvent(ev) {
+  if (ev && ev.t === 'mi' && Array.isArray(ev.items)) {
+    return ev.items.slice(0, 12).filter((x) => Array.isArray(x) && /^[0-9a-f]{12}$/.test(x[0]))
+      .map(([id, u, d]) => ({ t: 'l', a: 'mi', id, u, d, c: ev.c, fee: ev.fee, lvl: ev.lvl, ug: ev.ug, fdc: ev.fdc }));
+  }
+  return [ev];
+}

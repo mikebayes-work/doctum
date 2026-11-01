@@ -110,7 +110,7 @@ function makeShell(ctx) {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="${A('/assets/site.css')}">
 ${[...crumbLd, ...ld].map(jsonld).join('\n')}
-${gaId ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${gaId}"></script>\n<script src="${A('/assets/site.js')}" data-ga="${gaId}"></script>` : `<script src="${A('/assets/site.js')}" defer></script>`}
+<script src="${A('/assets/site.js')}" defer${gaId ? ` data-ga="${gaId}"` : ''}></script>
 ${scripts.map((s) => `<script src="${A(s)}" defer></script>`).join('\n')}
 </head>
 <body>
@@ -147,6 +147,7 @@ ${body}
       <a href="/data/uk-phd-stipends/">UK PhD stipend data</a>
       <a href="/about/">About and methodology</a>
       <a href="/privacy/">Privacy</a>
+      ${gaId ? '<button type="button" class="btn-link cookie-settings" hidden>Cookie settings</button>' : ''}
     </nav>
   </div>
 </footer>
@@ -643,24 +644,98 @@ ${byInst.map(([i, s]) => `<tr><td><a href="/universities/${instSlug(i)}/">${esc(
 <p>If a listing is wrong or should be removed, email <a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a>.</p></article>`,
   }), { priority: 0.5 });
   write('/privacy/', shell({
-    path: '/privacy/', title: 'Privacy | Doctum', description: 'What Doctum does with your data: your CV is processed for your search and not stored.',
+    path: '/privacy/', title: 'Privacy policy | Doctum', description: 'How Doctum handles your data: your CV is processed for your request and not stored, statistics are anonymous, and supervisors named in adverts can object.',
     crumbs: [['/privacy/', 'Privacy']],
-    body: `<article class="prose"><h1>Privacy</h1>
-<h2>Your CV</h2><p>When you use CV matching, your CV text is sent to Doctum's server, used to find matches for that request and then discarded. It is not saved, logged or used to train anything. If you upload a PDF, the text is extracted in your browser and only the text is sent.</p>
-<h2>Detailed analysis</h2><p>If you ask for a detailed analysis, your CV text and the advert are sent to Anthropic, the provider of the Claude AI model, to produce that analysis. Anthropic processes it under its commercial terms, which do not allow it to train models on this data by default.</p>
-<h2>PhD preparation packs</h2><p>If you add your CV to a preparation pack request, the CV text is sent to Doctum's server and to Anthropic to write that pack, then discarded. The CV itself is not saved. The finished pack (which includes short notes on how your CV matches the project) is stored for 30 days under a private, unguessable link so you can come back to it, then deleted. You can delete it sooner from the pack page. In your browser, the CV you pasted is kept in this tab's session storage so you don't have to paste it twice; it is cleared when you close the tab.</p>
-<p>Preparation packs use public, professional information about supervisors only: their university profile, ORCID record and published papers (via OpenAlex). If you are a supervisor and something is wrong, email <a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a>.</p>
+    body: `<article class="prose"><h1>Privacy policy</h1>
+<p class="meta">Version 1.1 · Last updated 1 November 2026</p>
+<p>This policy explains what personal data Doctum handles, why, who else processes it, how long it is kept and what your rights are under UK data protection law (the UK GDPR and the Data Protection Act 2018).</p>
+<p><strong>In short:</strong> you can use Doctum without an account. Your CV is used for the request you make and then discarded. Usage statistics are anonymous. Doctum never sells personal data.</p>
+
+<h2 id="who">Who we are</h2>
+<p>Doctum (doctum.co.uk) is run from the United Kingdom and is the data controller for the personal data described here. Contact: <a href="mailto:hello@doctum.co.uk?subject=Privacy%20request">hello@doctum.co.uk</a> (please use the subject line “Privacy request”).</p>
+
+<h2 id="summary">What we handle, and why</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Data</th><th>Why</th><th>Lawful basis</th><th>How long</th></tr></thead>
+<tbody>
+<tr><td>CV text you paste or upload for CV match</td><td>To find and explain matches</td><td>Legitimate interests (giving you the service you asked for)</td><td>Not stored. Discarded when the request finishes</td></tr>
+<tr><td>CV text and one advert, for a detailed analysis</td><td>To write that analysis with AI</td><td>Legitimate interests</td><td>Not stored by Doctum. Anthropic keeps it only for a limited period under its commercial terms</td></tr>
+<tr><td>A finished preparation pack</td><td>So you can return to it</td><td>Legitimate interests</td><td>30 days, or until you delete it</td></tr>
+<tr><td>Anonymous search and advert counts</td><td>To understand demand for PhDs</td><td>Legitimate interests</td><td>Raw events about a day; weekly totals kept</td></tr>
+<tr><td>CV categories, only if you tick “Count me”</td><td>To understand applicants' backgrounds</td><td>Consent</td><td>Added to anonymous totals only</td></tr>
+${gaId ? '<tr><td>Google Analytics cookies and visit data, only if you click “Accept analytics”</td><td>To see which pages are useful</td><td>Consent</td><td>Cookies about 13 months; Google keeps visit data 14 months</td></tr>\n' : ''}<tr><td>A daily coded counter for preparation packs</td><td>To enforce the free daily limit</td><td>Legitimate interests (preventing abuse)</td><td>Deleted within a day or two</td></tr>
+<tr><td>Supervisors' names and public research records</td><td>Listings and preparation packs</td><td>Legitimate interests</td><td>See <a href="#supervisors">below</a></td></tr>
+<tr><td>Emails you send us</td><td>To reply</td><td>Legitimate interests</td><td>As long as needed to deal with your message, normally no more than 2 years</td></tr>
+</tbody></table></div>
+
+<h2 id="cv">Your CV</h2>
+<p>When you use CV match, your CV text is sent to Doctum's server, used to find matches for that request and then discarded. It is not saved, logged or used to train anything. If you upload a PDF, the text is extracted in your browser and only the text is sent.</p>
+<p>CVs can contain more than you need for a PhD search. Before you paste one, you may want to remove your address, phone number, date of birth and anything about your health, ethnicity or religion. Doctum doesn't need any of it.</p>
+
+<h2 id="analysis">Detailed analysis (AI)</h2>
+<p>If you ask for a detailed analysis, your CV text and the advert are sent to Anthropic, the provider of the Claude AI model, to produce that analysis. The instructions the model follows are fixed by Doctum. Anthropic processes the data under its commercial terms, which do not allow it to train models on this data. Doctum does not store the result; it is shown to you and gone when you leave the page.</p>
+
+<h2 id="packs">PhD preparation packs</h2>
+<p>If you add your CV to a preparation pack request, the CV text is sent to Doctum's server and to Anthropic to write that pack, then discarded. The CV itself is not saved. The finished pack (which includes short notes on how your CV matches the project) is stored for 30 days under a private, unguessable link so you can come back to it, then deleted. You can delete it sooner from the pack page. Anyone you give the link to can read the pack, so share it with care.</p>
+<p>Packs are free with a daily limit. To apply the limit, Doctum keeps a counter for each connection for that day only. The counter is labelled with a one-way code made from your IP address, the date and a secret, so it can't be turned back into your IP address. Old counters are deleted automatically.</p>
+
 <h2 id="statistics">Anonymous statistics</h2>
 <p>Doctum counts what applicants look for, so that we (and universities planning PhDs) can see where demand is. These counts contain no identifiers: no IP address, cookie, account, session or device id, and nothing finer than the day. Two of your searches cannot be linked to each other or to you.</p>
 <ul>
 <li><strong>Searches:</strong> the words you search for (cleaned of anything that looks like an email address, phone number or link), the filters you choose, how many results were found, and the country your connection comes from. The country is worked out from your connection by our host (Netlify); your IP address is not stored.</li>
 <li><strong>Adverts:</strong> when an advert page is viewed, the full advert is opened, its apply link is clicked, it is saved to a shortlist or a preparation pack is requested. Only the advert and the action are counted. For a page view we also note the kind of place you came from (for example a Doctum search, a search engine or an AI assistant), worked out in your browser; the address itself is never sent.</li>
 <li><strong>CV match:</strong> the subject areas, fee status and funding option you choose on the form are counted like search filters, and so are the adverts that appear in your results.</li>
-<li><strong>Your CV, only if you tick "Count me":</strong> Doctum adds to tallies of broad categories: highest degree and class, the subject area of your first degree, the country of your first degree if you choose one, whether your CV mentions publications, a research project or dissertation, or industry experience, and which of 18 skill groups it mentions. These categories are also added to the tallies of the adverts that matched you, so a university can see, for example, how many applicants with an engineering first degree its adverts reached. Your CV text is never stored, and the tally is not linked to you. If you don't tick the box, nothing from your CV is counted.</li>
+<li><strong>Your CV, only if you tick “Count me”:</strong> Doctum adds to tallies of broad categories: highest degree and class, the subject area of your first degree, the country of your first degree if you choose one, whether your CV mentions publications, a research project or dissertation, or industry experience, and which of 18 skill groups it mentions. These categories are also added to the tallies of the adverts that matched you, so a university can see, for example, how many applicants with an engineering first degree its adverts reached. Your CV text is never stored, and the tally is not linked to you. If you don't tick the box, nothing from your CV is counted.</li>
 </ul>
-<p>Individual events are combined into weekly totals within about a day and then deleted. Reports, including ones Doctum may sell to universities, contain totals only and never show a group smaller than 10 people. We rely on our legitimate interest in understanding demand for searches and adverts, and on your consent for the CV categories. You can withdraw that consent by not ticking the box next time; because the tallies can't be linked to you, past ones can't be removed individually.</p>
-<h2>Analytics cookies</h2><p>${gaId ? 'Doctum uses Google Analytics to count visits and see which pages are useful. It does not receive your CV.' : 'Doctum does not use analytics cookies.'}</p>
-<h2>Contact</h2><p><a href="mailto:hello@doctum.co.uk">hello@doctum.co.uk</a></p></article>`,
+<p>Individual events are combined into weekly totals within about a day and then deleted. Reports, including ones Doctum may sell to universities and other organisations, contain totals only and never show a group smaller than 10 people. You can withdraw your consent to the CV categories by not ticking the box next time. Because the tallies can't be linked to you, past ones can't be removed individually.</p>
+
+<h2 id="supervisors">If you are named in a PhD advert</h2>
+<p>Doctum lists PhD adverts published on UK university websites. Many name a supervisor or supervisory team. We hold what the advert says about you (your name, title, role and organisation) alongside the advert, and keep a dated record of each advert, including after it closes, as an archive of the PhD market.</p>
+<p>When an applicant requests a preparation pack, Doctum also looks up public, professional information about the supervisors: the university profile linked from the advert, your ORCID record, and your published papers and funding acknowledgements in <a href="https://openalex.org">OpenAlex</a>. This is cached for 14 days, then fetched again if needed. Doctum doesn't use Google Scholar or social media, and doesn't sell or publish profiles or rankings of individual supervisors.</p>
+<p>Our legitimate interest is helping applicants find PhDs and prepare well for them, which supervisors also benefit from. You can object at any time: email us and we will stop producing packs about you and, where you ask, remove your name from our copies of adverts. If something in a pack is wrong, tell us and we will correct it.</p>
+
+<h2 id="device">Cookies and storage on your device</h2>
+${gaId ? `<p><strong>Analytics cookies, only with your permission.</strong> If you click “Accept analytics” on the banner, Doctum loads Google Analytics to count visits and see which pages are useful. Nothing from Google is loaded until you accept, and rejecting is as easy as accepting.</p>
+<ul>
+<li><strong>What Google receives:</strong> the pages you visit on Doctum (including search words in the address), the page you came from, your browser and device type, and an approximate location derived from your IP address. Google Analytics 4 does not log or store IP addresses. Your CV and the private links to preparation packs are never sent to Google.</li>
+<li><strong>Cookies:</strong> <code>_ga</code> and <code>_ga_&lt;id&gt;</code>, which tell visits apart. They last about 13 months.</li>
+<li><strong>Settings:</strong> Google signals and advertising features are switched off, so the data isn't used for ads or linked to Google accounts. Google keeps the visit data for 14 months.</li>
+<li><strong>Changing your mind:</strong> use “Cookie settings” at the bottom of any page. Rejecting deletes the cookies and stops collection. We ask again after 12 months.</li>
+</ul>
+<p>Doctum sets no other cookies and uses no advertising or tracking cookies. It also uses your browser's storage for three things, which never leave your device unless you make a request:</p>` : `<p>Doctum does not set cookies, and does not use advertising, analytics or tracking cookies. It uses your browser's storage for two conveniences, which never leave your device unless you make a request:</p>`}
+<ul>
+<li><strong>Your shortlist</strong> of saved PhDs (up to 100), kept in local storage until you remove them or clear your browser data.</li>
+<li><strong>The CV you pasted</strong>, kept in this tab's session storage so you don't have to paste it again for a preparation pack. It is cleared when you close the tab.</li>
+${gaId ? '<li><strong>Your cookie choice</strong>, kept in local storage for 12 months so the banner doesn\'t keep asking.</li>\n' : ''}</ul>
+<p>These are strictly necessary for features you choose to use, so they don't need your consent.</p>
+
+<h2 id="processors">Who else processes data</h2>
+<ul>
+<li><strong>Netlify</strong> (hosting, server functions and storage). Netlify sees your IP address to deliver pages and apply rate limits, and keeps its own short-term server logs. Doctum's own logs record errors only, never CV text or IP addresses.</li>
+<li><strong>Anthropic</strong> (the Claude AI model), for detailed analyses and preparation packs.</li>
+${gaId ? '<li><strong>Google</strong> (Google Analytics), only if you accept analytics cookies.</li>' : ''}
+<li><strong>GitHub</strong> (code and the advert database). It holds advert data, not data about visitors.</li>
+<li><strong>Our email provider</strong>, for messages you send us.</li>
+</ul>
+<p>Doctum also queries OpenAlex and ORCID for supervisors' public research records. Only supervisor names, organisations and identifiers are sent, never anything about you.</p>
+
+<h2 id="transfers">International transfers</h2>
+<p>Netlify, Anthropic${gaId ? ', GitHub and Google' : ' and GitHub'} are based in the United States, so data may be processed there. These transfers rely on the UK–US data bridge, or on the UK International Data Transfer Addendum to the providers' standard contractual clauses.</p>
+
+<h2 id="rights">Your rights</h2>
+<p>You have the right to access the personal data we hold about you, to have it corrected or erased, to restrict or object to its use, to data portability, and to withdraw consent at any time. Because Doctum doesn't keep accounts or CVs, and its statistics can't be linked to anyone, there is usually little or nothing we can find about a visitor. Supervisors named in adverts are the main exception (see above).</p>
+<p>To use any of these rights, email <a href="mailto:hello@doctum.co.uk?subject=Privacy%20request">hello@doctum.co.uk</a>. We will reply within one month.</p>
+<p>If you are unhappy with how we have handled your data, please tell us first. You can also complain to the Information Commissioner's Office: <a href="https://ico.org.uk/make-a-complaint/">ico.org.uk/make-a-complaint</a>, 0303 123 1113.</p>
+
+<h2 id="age">Age</h2>
+<p>Doctum is for people applying for doctoral study and is not intended for anyone under 18.</p>
+
+<h2 id="security">Security</h2>
+<p>All traffic is encrypted (HTTPS). Keys for the services above are kept in the host's protected settings, never in the website code. Preparation pack links are long random codes, and every server endpoint is rate limited.</p>
+
+<h2 id="changes">Changes to this policy</h2>
+<p>If Doctum adds accounts, email alerts or payments, this policy will be updated before those features go live, and anything that needs your consent will ask for it. The version and date at the top show when it last changed.</p>
+</article>`,
   }), { priority: 0.3 });
   write('/404.html', shell({
     path: '/404.html', title: 'Page not found | Doctum', description: 'This page could not be found.', noindex: true,

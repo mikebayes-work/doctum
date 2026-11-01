@@ -174,6 +174,7 @@ def load_sources() -> list[dict]:
     return yaml.safe_load((ROOT / "scraper" / "sources.yaml").read_text(encoding="utf-8"))["sources"]
 
 
+_throttled: dict[str, int] = {}  # host -> rate-limit refusals in a row this run
 _blocked: dict[str, str] = {}   # host -> why the site refused us (shown in the run log and manifest)
 DIAG: dict[str, str] = {}       # source id -> first problem seen this run
 
@@ -207,14 +208,23 @@ def get(url: str) -> BeautifulSoup:
     if not allowed(url):
         raise PermissionError(f"robots.txt disallows {url}")
     r = fetch(url, timeout=30)
-    # 429 Too Many Requests / 503 busy: the site wants us to slow down. Wait as long as it asks
-    # (Retry-After, capped at 60 s), otherwise 15 s then 30 s, and try again at most twice.
-    for wait in (15, 30):
-        if r.status_code not in (429, 503):
-            break
+    # 429 Too Many Requests / 503 busy: the site wants us to slow down. The first time a site does
+    # this, wait as long as it asks (Retry-After, capped at 30 s, else 15 s) and try once more. If it
+    # keeps refusing, stop reading that site for the rest of the run: waiting on every page only makes
+    # the whole scrape slow, and the site's existing listings are kept (the "suspect crawl" rule).
+    host = urlparse(url).scheme + "://" + urlparse(url).netloc
+    if r.status_code in (429, 503) and not _throttled.get(host):
         ra = str(r.headers.get("retry-after", "") or r.headers.get("Retry-After", "")).strip()
-        time.sleep(min(60, int(ra)) if ra.isdigit() else wait)
+        time.sleep(min(30, int(ra)) if ra.isdigit() else 15)
         r = fetch(url, timeout=30)
+    if r.status_code in (429, 503):
+        _throttled[host] = _throttled.get(host, 0) + 1
+        if _throttled[host] >= 3:
+            _blocked[host] = f"site is rate-limiting the crawler (HTTP {r.status_code}); stopped for this run"
+            _robots[host] = False
+            raise PermissionError(_blocked[host])
+    elif r.status_code < 400:
+        _throttled[host] = 0
     if r.status_code >= 400:
         raise RuntimeError(f"HTTP {r.status_code}")
     return BeautifulSoup(r.text, "lxml")

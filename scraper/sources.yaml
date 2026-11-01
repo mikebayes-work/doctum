@@ -198,7 +198,7 @@ sources:
   - {id: icr, institution: "The Institute of Cancer Research", region: England, mode: auto, domain: icr.ac.uk}
   - {id: keele, institution: "Keele University", region: England, mode: auto, domain: keele.ac.uk}
   - {id: kent, institution: "University of Kent", region: England, mode: auto, domain: kent.ac.uk}
-  - {id: kcl, institution: "King's College London", region: England, mode: auto, domain: kcl.ac.uk, conc: 1, delay: 1500}  # HTTP 429 at the default pace (1 Nov 2026)
+  - {id: kcl, institution: "King's College London", region: England, mode: auto, domain: kcl.ac.uk, runner: home, conc: 1, delay: 1500}  # HTTP 429 from GitHub runners (1 Nov 2026): read from the home PC
   - {id: kingston, institution: "Kingston University", region: England, mode: auto, domain: kingston.ac.uk}
   - {id: lancaster, institution: "Lancaster University", region: England, mode: auto, domain: lancaster.ac.uk}
   - {id: leeds-beckett, institution: "Leeds Beckett University", region: England, mode: auto, domain: leedsbeckett.ac.uk}

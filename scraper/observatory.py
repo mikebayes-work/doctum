@@ -80,6 +80,36 @@ def snapshot(started: str) -> dict:
         "closed_7d": len(closed7),
         "removed_7d": len(removed7),
         "new_ids": sorted(r["id"] for r in new7 if r["id"] in open_ids),
+        # widening participation: places ring-fenced for under-represented applicants, and adverts
+        # that particularly encourage them (open adverts only)
+        "wp_ringfenced": sum(r.get("wp") == "ring-fenced" for r in rows),
+        "wp_encouraged": sum(r.get("wp") == "encouraged" for r in rows),
+        **history_figures(con, now),
+    }
+
+
+def history_figures(con, now) -> dict:
+    """Sector-level history figures. Per-advert history stays private (university reports only)."""
+    d90 = (now - timedelta(days=90)).isoformat()[:10]
+    d30 = (now - timedelta(days=30)).isoformat()
+    cols = {r[1] for r in con.execute("PRAGMA table_info(listings)")}
+    if "censored" not in cols:
+        return {}
+    # Time on market: adverts that ended in the last 90 days, whose start Doctum saw (not already
+    # on the site when tracking began) and that were read on more than one visit.
+    days = sorted(r[0] for r in con.execute(
+        "SELECT julianday(closed_at) - julianday(substr(advert_since,1,10)) FROM listings "
+        "WHERE closed_at >= ? AND censored=0 AND first_seen!=last_seen", (d90,)) if r[0] is not None and r[0] >= 0)
+    ev = dict(con.execute("SELECT kind, COUNT(*) FROM listing_events WHERE at >= ? GROUP BY kind", (d30,)).fetchall())
+    return {
+        "readvertised_open": con.execute("SELECT COUNT(*) FROM listings WHERE status='open' AND readvert_count>0").fetchone()[0],
+        "readvertised_30d": ev.get("readvertised", 0) + ev.get("reopened", 0),
+        "deadline_extended_30d": ev.get("deadline_extended", 0),
+        "removed_early_30d": con.execute(
+            "SELECT COUNT(*) FROM listings WHERE gone_at >= ? AND deadline IS NOT NULL AND deadline > substr(gone_at,1,10)",
+            (d30,)).fetchone()[0],
+        "time_on_market_n": len(days),
+        "time_on_market_median": round(days[len(days) // 2]) if days else None,
     }
 
 

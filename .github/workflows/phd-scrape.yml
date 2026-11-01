@@ -48,7 +48,9 @@ jobs:
 
       - name: Update database and export
         run: |
-          python -m scraper.db build
+          python -m scraper.test_history   # offline check of advert history + widening participation tagging
+          python -m scraper.db build       # first run after 1 Nov 2026 adds the history columns and backfills them
+          python -m scraper.db history
           python -m scraper.db export
           python -m scraper.db manifest
           python -m scraper.observatory   # Doctum Observatory: dated market snapshot -> data/observatory.json

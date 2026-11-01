@@ -141,6 +141,7 @@ ${body}
       <a href="/fully-funded-phds/">Fully funded PhDs</a>
       <a href="/funded-phds-international-students/">PhDs open to international students</a>
       <a href="/closing-soon/">Closing soon</a>
+      <a href="/widening-participation-phds/">PhDs for under-represented applicants</a>
       <a href="/phd-preparation-pack/">PhD preparation packs</a>
       <a href="/observatory/">Doctum Observatory: the UK PhD market</a>
       <a href="/data/uk-phd-stipends/">UK PhD stipend data</a>
@@ -167,6 +168,14 @@ function fundPill(f) {
   return `<span class="pill ${cls}">${esc(f || 'Unknown')}</span>`;
 }
 const shortInst = (i) => String(i || '').replace(/^University of /, '').replace(/ University$/, '').replace(/^Queen's University Belfast$/, "Queen's");
+// Widening participation callout on a listing page. The sentence is quoted from the advert so the
+// applicant can see exactly what the university says; eligibility is always checked with them.
+const wpNote = (r) => r.wp === 'ring-fenced'
+  ? `<div class="wp-note"><p><strong>Ring-fenced place.</strong> The advert sets this place aside for applicants in particular groups${(r.wp_groups || []).length ? ` (${esc(r.wp_groups.join('; '))})` : ''}. <a href="/widening-participation-phds/">More places like this</a>.</p>${r.wp_text ? `<p class="small">The advert says: “${esc(r.wp_text)}” Check the eligibility criteria on the university’s page before applying.</p>` : ''}</div>`
+  : r.wp === 'encouraged'
+    ? `<div class="wp-note"><p>This advert particularly encourages applications from under-represented groups. The place is open to everyone who meets the entry requirements.</p></div>`
+    : '';
+const wpChip = (r) => r.wp === 'ring-fenced' ? `<span class="chip wp" title="${esc('Places set aside for: ' + (r.wp_groups || []).join('; '))}">Ring-fenced place</span>` : '';
 const ELIG_CHIP = { 'UK & International': 'Open to international', 'UK/Home only': 'UK / Home only' };
 const FUND_CLS = { 'Fully funded': 'funded', 'Competition funded': 'comp', 'Self-funded': 'self' };
 function closesChip(r, today) {
@@ -184,7 +193,7 @@ function cardHtml(r, today) {
   return `<article class="card${funded ? ' is-funded' : ''}" data-id="${esc(r.id)}">
   <p class="meta"><strong>${esc(r.institution)}</strong>${r.school ? `<span>· ${esc(r.school)}</span>` : ''}${disc ? `<span>· ${esc(disc)}</span>` : ''}</p>
   <h3><a href="${esc(r.path)}">${esc(r.title)}</a></h3>
-  <p class="chips"><span class="chip ${FUND_CLS[r.funding] || ''}">${esc(r.funding || 'Funding unknown')}</span>${r.stipend ? `<span class="chip money">${money(r.stipend)} / yr</span>` : ''}${closesChip(r, today)}${ELIG_CHIP[r.eligibility] ? `<span class="chip">${ELIG_CHIP[r.eligibility]}</span>` : ''}${r.programme ? `<span class="chip">${esc(trimWords(r.programme, 5))}</span>` : ''}${r.start ? `<span class="chip">Starts ${esc(trimWords(r.start, 4))}</span>` : ''}</p>
+  <p class="chips"><span class="chip ${FUND_CLS[r.funding] || ''}">${esc(r.funding || 'Funding unknown')}</span>${r.stipend ? `<span class="chip money">${money(r.stipend)} / yr</span>` : ''}${closesChip(r, today)}${ELIG_CHIP[r.eligibility] ? `<span class="chip">${ELIG_CHIP[r.eligibility]}</span>` : ''}${r.programme ? `<span class="chip">${esc(trimWords(r.programme, 5))}</span>` : ''}${wpChip(r)}${r.start ? `<span class="chip">Starts ${esc(trimWords(r.start, 4))}</span>` : ''}</p>
   ${r.summary ? `<p class="sum">${esc(trimWords(r.summary, 55))}</p>` : ''}
   <p class="more"><button type="button" class="btn-link" data-more="${esc(r.id)}">Read the full advert</button></p>
   <div class="foot"><span class="sup">${foot}</span><span class="actions"><a class="brief" href="/briefing/?id=${esc(r.id)}" rel="nofollow" title="PhD preparation pack: the key papers, research thread and interview prep for this PhD">Prep pack</a><button type="button" data-save="${esc(r.id)}" aria-pressed="false">Save</button><a class="go" href="${esc(r.url)}" rel="nofollow noopener" target="_blank">Apply at ${esc(shortInst(r.institution))} ↗</a></span></div>
@@ -271,6 +280,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
       r.programme && ['Programme', esc(r.programme)],
       (r.supervisors || []).length && ['Supervisors', esc(r.supervisors.slice(0, 4).join(', '))],
       (r.funders || []).length && ['Funders', esc(r.funders.join(', '))],
+      r.wp === 'ring-fenced' && ['Ring-fenced for', esc((r.wp_groups || []).join('; ') || 'Under-represented applicants')],
       (r.disciplines || []).length && ['Subjects', r.disciplines.map((d) => `<a href="/subjects/${discSlug(d)}/">${esc(d)}</a>`).join(', ')],
     ].filter(Boolean);
     const desc = `${r.funding && r.funding !== 'Unknown' ? r.funding + ' ' : ''}PhD at ${r.institution}${r.deadline ? ', deadline ' + ukDate(r.deadline) : ''}. ${trimWords(r.summary || r.description, 22)}`;
@@ -294,6 +304,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   <p class="lead">${esc(r.institution)}${r.school ? ' · ' + esc(r.school) : ''}</p>
   <div class="listing-grid">
     <div class="listing-main">
+      ${wpNote(r)}
       <h2>About this PhD</h2>
       <div class="advert" id="advert"><p>${esc(excerpt)}</p></div>
       <p class="advert-actions">
@@ -377,6 +388,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
     <button type="button" data-quick="funded" aria-pressed="false">Fully funded only</button>
     <button type="button" data-quick="intl" aria-pressed="false">Open to international</button>
     <button type="button" data-quick="soon" aria-pressed="false">Closing in 30 days</button>
+    <button type="button" data-quick="wp" aria-pressed="false" title="Places set aside for applicants from under-represented groups">Ring-fenced places</button>
     <button type="button" id="shortlist-btn" aria-pressed="false">My shortlist (<span id="shortlist-n">0</span>)</button>
     <button type="button" class="filters-toggle" aria-expanded="false" aria-controls="filters">Filters</button>
   </div>
@@ -511,6 +523,27 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   hub('/closing-soon/', `UK PhDs closing soon | Doctum`, 'PhDs closing in the next 30 days',
     `${n(soon.length)} open UK PhDs with a deadline in the next 30 days. Updated ${esc(updated)}.`,
     soon, [['/closing-soon/', 'Closing soon']], '', 0.8);
+
+  // Widening participation: places ring-fenced for under-represented applicants (scraper/extract.py get_wp)
+  {
+    const ring = open.filter((r) => r.wp === 'ring-fenced').sort(byDeadline);
+    const enc = open.filter((r) => r.wp === 'encouraged').sort(byDeadline);
+    const groups = [...new Set(ring.flatMap((r) => r.wp_groups || []))];
+    const p = '/widening-participation-phds/';
+    const h1 = 'PhD places for under-represented applicants';
+    const intro = `${n(ring.length)} open UK PhD adverts set places aside for applicants from under-represented groups. Universities call these widening participation, ring-fenced or targeted studentships.${groups.length ? ` Groups named in the adverts: ${esc(groups.join('; '))}.` : ''} Updated ${esc(updated)}.`;
+    write(p, shell({
+      path: p, title: `Widening participation PhDs and ring-fenced studentships in the UK | Doctum`,
+      description: intro.replace(/<[^>]+>/g, '').slice(0, 300), crumbs: [[p, 'Under-represented applicants']],
+      ld: [itemList(site, ring, h1)],
+      body: `<h1>${esc(h1)}</h1><p class="lead">${intro}</p>
+<div class="wp-note"><p><strong>Who these are for.</strong> Each scheme sets its own criteria. Common ones are being from a group under-represented in postgraduate research, being Black British, being the first in your family to go to university, being care-experienced or estranged, coming from an area with low progression to higher education, or holding refugee or humanitarian protection status. Most are for applicants with UK (Home) fee status. Read the criteria on the university’s page: Doctum shows what each advert says but can’t confirm your eligibility.</p>
+<p>Many universities also run widening participation schemes centrally rather than on each project, so ask the department or doctoral school what is available.</p></div>
+<h2>Ring-fenced places</h2>
+${cardList(ring, today)}
+${enc.length ? `<h2>Adverts that particularly encourage under-represented applicants</h2><p>These ${n(enc.length)} places are open to everyone, but the advert says applications from under-represented groups are especially welcome.</p>${cardList(enc.slice(0, 30), today)}` : ''}`,
+    }), { priority: 0.8 });
+  }
 
   // ── Data pages (citable, with Dataset JSON-LD) ──
   const withStip = open.filter((r) => r.stipend >= 10000 && r.stipend <= 60000);
@@ -655,6 +688,7 @@ When citing a listing, link to its Doctum page and remind readers to confirm det
 - [Fully funded PhDs in the UK](${site}/fully-funded-phds/)
 - [Funded PhDs open to international students](${site}/funded-phds-international-students/)
 - [PhDs closing in the next 30 days](${site}/closing-soon/)
+- [PhD places ring-fenced for under-represented applicants (widening participation)](${site}/widening-participation-phds/)
 - [Doctum Observatory: live figures on the UK PhD market (funding, eligibility, deadlines, stipends)](${site}/observatory/)
 - [UK PhD stipends: what open adverts pay](${site}/data/uk-phd-stipends/)
 - [Open UK PhDs by subject and funding](${site}/data/funded-phds-open-now/)

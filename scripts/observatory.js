@@ -34,6 +34,7 @@ function observatoryBody({ open, today, updated, esc, n, money, ukDate, slugify,
   const atLeastUkri = st.filter((s) => s >= UKRI.min).length;
   const insts = new Set(open.map((r) => r.institution));
 
+
   // ── Bar list: one hue, value labelled, title attribute as the hover tooltip ──
   const bars = (rows, { of, fmt = (v) => n(v), href, note } = {}) => {
     const max = Math.max(1, ...rows.map((r) => r[1]));
@@ -49,6 +50,13 @@ function observatoryBody({ open, today, updated, esc, n, money, ukDate, slugify,
     }).join('')}</ul>${note ? `<p class="small">${note}</p>` : ''}`;
   };
   const tally = (vals) => { const c = new Map(); for (const v of vals) c.set(v, (c.get(v) || 0) + 1); return [...c]; };
+
+  // Widening participation: places set aside for under-represented applicants (ring-fenced), and
+  // adverts that particularly encourage them. Read from the advert wording (scraper/extract.py get_wp).
+  const wpRing = open.filter((r) => r.wp === 'ring-fenced');
+  const wpEnc = open.filter((r) => r.wp === 'encouraged');
+  const wpGroups = tally(wpRing.concat(wpEnc).flatMap((r) => r.wp_groups || [])).sort((a, b) => b[1] - a[1])
+    .map(([g, c]) => [g, c, wpRing.filter((r) => (r.wp_groups || []).includes(g)).length]);
 
   const FUND = ['Fully funded', 'Competition funded', 'Partially funded', 'Self-funded', 'Unknown'];
   const fundRows = FUND.map((f) => [f === 'Unknown' ? 'Not stated in advert' : f, open.filter((r) => r.funding === f).length]).filter((r) => r[1]);
@@ -132,13 +140,26 @@ ${end('open', 'lbl', 'Open')}${end('funded', 'lbl', 'Fully funded')}
     [last ? n(last.new_7d) : '…', 'new adverts in the last 7 days', last ? `${n(last.closed_7d)} closed, ${n(last.changed_7d)} updated${snaps.length < 3 ? ` · counted from ${esc(ukDate(pulse.started))}` : ''}` : 'tracking starts with the next update'],
   ];
 
+  // ── History (sector totals only; per-advert history is never published) ──
+  const historyHtml = (() => {
+    const hn = last ? last.time_on_market_n || 0 : 0;
+    if (!last || hn < 30) {
+      return `<p class="pulse-wait">Doctum started recording each advert's history on 1 November 2026: when it first appears, when its deadline moves, when it closes and whether the same project is advertised again. Figures appear here once at least 30 adverts have run their full course.</p>`;
+    }
+    return `<div class="ptiles">${[
+      [`${n(last.time_on_market_median)} days`, 'median time an advert stays open', `from ${n(hn)} adverts that closed in the last 90 days`],
+      [n(last.readvertised_30d || 0), 're-advertised in the last 30 days', 'the same project advertised again after closing'],
+      [n(last.deadline_extended_30d || 0), 'deadlines extended in the last 30 days', 'a later closing date on the same advert'],
+    ].map(([v, l, sub]) => `<div><b>${v}</b><span>${l}</span><small>${sub}</small></div>`).join('')}</div>`;
+  })();
+
   const html = `
 <p class="eyebrow pulse-eyebrow">Doctum Observatory · updated ${esc(updated)}</p>
 <h1>The UK PhD market, measured</h1>
 <p class="lead">Live figures from every open PhD advert Doctum tracks on UK university websites: how many there are, how many are funded, who can apply, what they pay and when they close. Refreshed every Tuesday and Friday.</p>
 <div class="ptiles">${tiles.map(([v, l, s]) => `<div><b>${v}</b><span>${l}</span><small>${s}</small></div>`).join('')}</div>
 
-<nav class="toc" aria-label="On this page"><a href="#trend">Trend</a><a href="#funding">Funding</a><a href="#who">Who can apply</a><a href="#deadlines">Deadlines</a><a href="#subjects">Subjects</a><a href="#stipends">Stipends</a><a href="#adverts">What adverts tell you</a><a href="#universities">Universities</a><a href="#method">Method</a></nav>
+<nav class="toc" aria-label="On this page"><a href="#trend">Trend</a><a href="#funding">Funding</a><a href="#who">Who can apply</a><a href="#deadlines">Deadlines</a><a href="#subjects">Subjects</a><a href="#stipends">Stipends</a><a href="#adverts">What adverts tell you</a><a href="#universities">Universities</a><a href="#access">Under-represented applicants</a><a href="#history">Time on market</a><a href="#method">Method</a></nav>
 
 <section id="trend"><h2>Open PhDs over time</h2>${trend}</section>
 
@@ -169,12 +190,20 @@ ${bars(disclosure, { of: total, note: 'Measured from the advert text Doctum read
 <section id="regions"><h2>By nation</h2>${bars(regions, { of: total })}</section>
 </div>
 
+<section id="access"><h2>Places for under-represented applicants</h2>
+<p><strong>${n(wpRing.length)}</strong> open adverts set places aside for applicants from under-represented groups (for example scholarships ring-fenced for Black British applicants, or for applicants who meet widening participation criteria). A further <strong>${n(wpEnc.length)}</strong> particularly encourage applications from under-represented groups but are open to everyone.${wpRing.length ? ` <a href="/widening-participation-phds/">See the ring-fenced places</a>.` : ''}</p>
+${wpGroups.length ? `<p class="pkey"><span class="key key-open"></span>Ring-fenced or encouraging <span class="key key-funded"></span>of which ring-fenced</p>${bars(wpGroups, { note: 'Groups as named in the advert. An advert can name more than one. Many universities run widening participation schemes that are advertised centrally rather than on each project, so these figures are a floor, not a total.' })}` : ''}</section>
+
+<section id="history"><h2>How long adverts stay open</h2>${historyHtml}</section>
+
 <section id="method"><h2>How the Observatory is measured</h2>
 <ul>
 <li><strong>Source.</strong> Every figure comes from PhD adverts Doctum reads directly on UK university websites, currently ${insts.size} universities. Doctum checks them every Tuesday and Friday and takes a dated snapshot after each check.</li>
 <li><strong>Open</strong> means the advert is still on the university's site and its deadline (if it has one) has not passed. Adverts Doctum hasn't been able to re-check for three weeks are left out.</li>
 <li><strong>New</strong> means new on the university's website, not new to Doctum. When a university is added to Doctum, or its pages are read more completely, the adverts found that way are not counted as new.</li>
 <li><strong>Funding and eligibility</strong> are read from the advert wording. Where an advert doesn't say, it is counted as “not stated”, never guessed.</li>
+<li><strong>Ring-fenced places</strong> are adverts whose wording sets the place aside for a group (only available to, reserved for, must self-identify as). Adverts that only say they welcome applications from under-represented groups are counted separately.</li>
+<li><strong>Time on market</strong> runs from the day Doctum first sees an advert to the day its deadline passes or it is taken down. Adverts that were already on a university's site when Doctum started reading it are left out, because their real start date is unknown. A project advertised again after closing is counted as re-advertised.</li>
 <li><strong>Coverage.</strong> Some universities publish funded projects only on paid listing sites, not on their own pages. The Observatory describes the adverts on university websites, so it is a large sample of the UK market rather than every PhD.</li>
 </ul>
 <p class="small">You are welcome to quote and cite the Doctum Observatory. Please link to this page and give the date. UKRI stipend rates from <a href="https://www.ukri.org/apply-for-funding/studentships-and-doctoral-training/get-a-studentship-to-fund-your-doctorate/" rel="noopener">UKRI</a>.</p>

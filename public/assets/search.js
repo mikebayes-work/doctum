@@ -52,6 +52,7 @@
       (c.stipend ? '<span class="chip money">£' + Number(c.stipend).toLocaleString('en-GB') + ' / yr</span>' : '') + closes(c) +
       (ELIG_CHIP[c.eligibility] ? '<span class="chip">' + ELIG_CHIP[c.eligibility] + '</span>' : '') +
       (c.programme ? '<span class="chip">' + esc(words(c.programme, 5)) + '</span>' : '') +
+      (c.wp === 'ring-fenced' ? '<span class="chip wp" title="' + esc('Places set aside for: ' + (c.wp_groups || []).join('; ')) + '">Ring-fenced place</span>' : '') +
       (c.start ? '<span class="chip">Starts ' + esc(words(c.start, 4)) + '</span>' : '') + '</p>' +
       (c.summary && !(extra && extra.html) ? '<p class="sum">' + esc(words(c.summary, 55)) + '</p>' : '') +
       (extra && extra.html ? extra.html : '<p class="more"><button type="button" class="btn-link" data-more="' + esc(c.id) + '">Read the full advert</button></p>') +

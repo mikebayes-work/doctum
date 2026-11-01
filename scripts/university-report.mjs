@@ -50,6 +50,9 @@ const FROM = opt('from') || isoWeek(new Date(weekStart(lastFull).getTime() - (WE
 const TO = opt('to') || lastFull;
 const fmtDate = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const PERIOD = `${fmtDate(weekStart(FROM))} to ${fmtDate(new Date(weekStart(TO).getTime() + 6 * 864e5))}`;
+const TRACKING_FROM = '2026-W44'; // demand tracking went live on Sunday 1 November 2026
+const PRE_TRACKING = TO < TRACKING_FROM;
+if (PRE_TRACKING) console.log(`  ! This period ends before tracking began (1 November 2026), so visitor figures will be empty. Only the advert checks are real.`);
 
 // ── data ──────────────────────────────────────────────────────────────
 const db = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'listings.json'), 'utf8'));
@@ -133,7 +136,7 @@ const times = (a, b) => (!b ? '' : a / b >= 1.15 ? `${(a / b).toFixed(1)}× the 
 
 // Horizontal bar chart (SVG). rows: [label, value, compareValue?]; compare drawn as a thin marker.
 function bars(rows, { unit = '', compare = '', barLabel = INST ? 'Your adverts' : 'All adverts', max, width = 640, fmt = (v) => n(v) + unit } = {}) {
-  if (!rows.length) return '<p class="empty">Not enough data in this period yet.</p>';
+  if (!rows.length || rows.every((r) => !num(r[1]) && !num(r[2]))) return '<p class="empty">Not enough data in this period yet.</p>';
   const narrow = width < 500, lw = narrow ? 130 : 210, vw = narrow ? 36 : 70, bw = width - lw - vw - 10, h = narrow ? 24 : 26;
   const m = max || Math.max(1, ...rows.map((r) => Math.max(num(r[1]), num(r[2]))));
   const H = rows.length * h + 6;
@@ -263,7 +266,9 @@ ${process.env.DOCTUM_NO_WEBFONTS ? "" : `<link rel="preconnect" href="https://fo
 <style>
 @page{size:A4;margin:16mm 15mm 18mm}
 *{box-sizing:border-box}
-body{margin:0;font:400 10.5pt/1.5 'IBM Plex Sans',system-ui,sans-serif;color:#1c2436;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+/* Always a white page, even in a dark-mode browser or viewer: the report is styled like paper */
+html{background:#fff;color-scheme:light}
+body{margin:0;background:#fff;font:400 10.5pt/1.5 'IBM Plex Sans',system-ui,sans-serif;color:#1c2436;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 h1,h2,h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;color:#1B2A4A;line-height:1.15;margin:0 0 .4em}
 h1{font-size:30pt}h2{font-size:19pt;margin-top:1.4em;padding-top:.4em;border-top:3px double #B08A4E;break-after:avoid}h3{font-size:13.5pt;margin-top:1em;break-after:avoid}
 .lead{color:#5d6475;max-width:62em}.small,.key{font-size:8.5pt;color:#5d6475}.empty{color:#5d6475;font-style:italic}
@@ -309,7 +314,7 @@ ${SAMPLE ? '<div class="sample">SAMPLE DATA</div>' : ''}
 <div class="logo">${logo}</div>
 <p class="eyebrow">${INST ? 'University report' : 'Sector report'} · Doctum Observatory</p>
 <h1>${esc(title)}</h1>
-<p class="period">${esc(PERIOD)}${SAMPLE ? ' · <strong>sample figures for layout only</strong>' : ''}</p>
+<p class="period">${esc(PERIOD)}${SAMPLE ? ' · <strong>sample figures for layout only</strong>' : ''}${PRE_TRACKING && !SAMPLE ? ' · <strong>before visitor tracking began on 1 November 2026: only the advert checks are filled in</strong>' : ''}</p>
 ${S.findings.length ? `<div class="findings"><h2>Key findings</h2><ul>${S.findings.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></div>` : ''}
 ${S.glance}
 <p class="foot">Doctum lists PhD opportunities collected from UK university websites and matches them to applicants’ CVs. This report contains anonymous totals only: no individual can be identified, and any group smaller than ${K} is not shown. Prepared ${esc(fmtDate(new Date()))} · doctum.co.uk · hello@doctum.co.uk</p>

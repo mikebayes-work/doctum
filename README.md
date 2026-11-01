@@ -141,6 +141,21 @@ Headings Cormorant Garamond, body IBM Plex Sans.
 
 A live, public tracker of the UK PhD market built from our own adverts. After each scrape, `python -m scraper.observatory` appends a dated snapshot to `data/observatory.json` (server-only, never published). `scripts/observatory.js` draws the page at build time: headline figures, funding, eligibility, deadlines by month, subjects, stipend bands against the UKRI minimum, what adverts disclose, top universities, nations, and a trend line once there are three or more snapshots. "New" adverts exclude anything found by a source's first productive run or by a run whose new count jumps past 40% of that source's size (coverage changes, not new PhDs), and only count from the date tracking started. Update the UKRI rate in `scripts/observatory.js` each year.
 
+## Advert history (private) and widening participation (public)
+
+Added 1 Nov 2026. The history is part of the data moat: it can't be collected after the fact, so every scrape adds to it.
+
+- **What is recorded** (scraper/db.py):
+  - `listing_history`: when an advert's content changes, the version it replaces is copied here first (title, deadline, funding, stipend, eligibility, supervisors, WP tag, full text). Nothing is overwritten.
+  - `listing_events`: one row per change: deadline extended / brought forward / added / removed, funding, stipend, eligibility, supervisors, title or WP changed, text changed, `closed` (deadline passed), `removed` (taken off the site), `returned`, `reopened` (same page, new later deadline after closing), `readvertised` (same project on a new page after the earlier advert ended) and `moved` (new page while the old one vanished still open: a site reorganisation, so the start date carries over).
+  - New `listings` columns: `deadline_first`, `deadline_changes`, `closed_at`, `gone_at`, `advert_since`, `censored`, `previous_id`, `readvert_count`, `returned_count`, `versions`, `project_key`, `wp`, `wp_groups`, `wp_text`.
+  - **Same project** = same institution + title with years, funder names and words like "PhD", "studentship", "funded" removed (`project_key` in extract.py). Generic titles get no key and never match.
+  - **Time on market** = `advert_since` → `closed_at`. `censored=1` means the advert was already on the site when Doctum started reading that source (or was already past its deadline), so its true start is unknown and it is left out.
+  - The first `build` on an old database adds the columns and backfills them from what is stored (no history before 1 Nov 2026).
+  - `python -m scraper.db history` prints a summary. `python -m scraper.test_history` is an offline test (3 fake scrapes).
+- **Public vs private:** listing pages and the API never show per-advert history. The Observatory shows sector totals only (time on market, re-advertised, deadlines extended), and only once 30+ adverts have run their course. Per-university history belongs in the paid university reports.
+- **Widening participation** (`get_wp` in extract.py): `ring-fenced` = places set aside for a group (only available to, reserved for, must self-identify as, named schemes such as James McCune Smith or Stuart Hall Foundation); `encouraged` = welcomes applications from under-represented groups but open to all. Groups are coarse labels. Shown as a "Ring-fenced place" chip, a callout on the listing page quoting the advert sentence, the "Ring-fenced places" quick filter (`quick=wp`), the hub page /widening-participation-phds/ and the Observatory "#access" section. First run: 7 ring-fenced, 22 encouraged.
+
 ## Demand insights (private): what applicants look for
 
 Anonymous counts of searches, filters, CV-match choices and advert interest, plus coarse CV categories from applicants who tick "Count me" on the CV match form. No identifiers are ever stored (no IP, hash, cookie or session id). See `netlify/doctum/insights.js` for the full privacy design and `/privacy/#statistics` for the public wording.

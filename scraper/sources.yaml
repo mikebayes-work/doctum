@@ -159,7 +159,7 @@ sources:
   - {id: buckingham, institution: "University of Buckingham", region: England, mode: auto, domain: buckingham.ac.uk}
   - {id: bucks, institution: "Buckinghamshire New University", region: England, mode: auto, domain: bucks.ac.uk}
   - {id: canterbury-cc, institution: "Canterbury Christ Church University", region: England, mode: auto, domain: canterbury.ac.uk}
-  - {id: cardiff, institution: "Cardiff University", region: Wales, mode: auto, domain: cardiff.ac.uk, runner: home, browser: true}
+  - {id: cardiff, institution: "Cardiff University", region: Wales, mode: auto, domain: cardiff.ac.uk, runner: home, browser: true, exclude: '/funded-doctoral-centres/?$'}
   - {id: cardiff-met, institution: "Cardiff Metropolitan University", region: Wales, mode: auto, domain: cardiffmet.ac.uk}
   - {id: uclan, institution: "University of Central Lancashire", region: England, mode: auto, domain: uclan.ac.uk}
   - {id: chester, institution: "University of Chester", region: England, mode: auto, domain: chester.ac.uk}
@@ -191,7 +191,7 @@ sources:
   - {id: harper-adams, institution: "Harper Adams University", region: England, mode: auto, domain: harper-adams.ac.uk}
   - {id: hartpury, institution: "Hartpury University", region: England, mode: auto, domain: hartpury.ac.uk}
   - {id: heriot-watt, institution: "Heriot-Watt University", region: Scotland, mode: auto, domain: hw.ac.uk}
-  - {id: hertfordshire, institution: "University of Hertfordshire", region: England, mode: auto, domain: herts.ac.uk, runner: home, browser: true}
+  - {id: hertfordshire, institution: "University of Hertfordshire", region: England, mode: auto, domain: herts.ac.uk, runner: home, browser: true, exclude: 'msc-projects|/research-degrees-and-studentships/?$|/phd-opportunities/?$|research-supervision'}
   - {id: uhi, institution: "University of the Highlands and Islands", region: Scotland, mode: auto, domain: uhi.ac.uk}
   - {id: huddersfield, institution: "University of Huddersfield", region: England, mode: auto, domain: hud.ac.uk, seeds: ["https://www.hud.ac.uk/postgraduate/research/research-scholarships/"]}
   - {id: hull, institution: "University of Hull", region: England, mode: auto, domain: hull.ac.uk}
@@ -271,7 +271,7 @@ sources:
   - {id: uwe, institution: "University of the West of England", region: England, mode: auto, domain: uwe.ac.uk}
   - {id: uwl, institution: "University of West London", region: England, mode: auto, domain: uwl.ac.uk}
   - {id: uws, institution: "University of the West of Scotland", region: Scotland, mode: auto, domain: uws.ac.uk}
-  - {id: westminster, institution: "University of Westminster", region: England, mode: auto, domain: westminster.ac.uk}
+  - {id: westminster, institution: "University of Westminster", region: England, mode: auto, domain: westminster.ac.uk, conc: 1, delay: 2000, exclude: 'phd-by-published-work|thinking-of-doing-a-phd|hardship-fund'}  # slow: it returned HTTP 429 (too many requests) at the default pace
   - {id: winchester, institution: "University of Winchester", region: England, mode: auto, domain: winchester.ac.uk}
   - {id: wolverhampton, institution: "University of Wolverhampton", region: England, mode: auto, domain: wlv.ac.uk}
   - {id: worcester, institution: "University of Worcester", region: England, mode: auto, domain: worcester.ac.uk}

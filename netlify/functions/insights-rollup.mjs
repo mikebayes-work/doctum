@@ -8,6 +8,7 @@
 // Can also be run by hand: POST /.netlify/functions/insights-rollup is NOT exposed
 // (scheduled functions have no public URL); use the "Run now" button in the Netlify UI.
 import { insightsStore, isoWeek, tupleKey, typeOf, expandEvent } from '../doctum/insights.js';
+import { store as briefingStore, REPORT_DAYS } from '../doctum/jobs.js';
 
 export async function rollup(store = insightsStore(), now = new Date()) {
   const today = now.toISOString().slice(0, 10);
@@ -46,9 +47,30 @@ export async function rollup(store = insightsStore(), now = new Date()) {
   return summary;
 }
 
+// Preparation-pack housekeeping, promised on /privacy/:
+//  * count/<date>/... (daily caps, incl. the per-IP coded counters) older than today are deleted;
+//  * job/<rid> older than REPORT_DAYS is deleted even if nobody opens its link again.
+// The ident/ and works2/ caches are left alone (they expire on read after 14 days and hold
+// only public supervisor data).
+export async function purgeBriefings(s = briefingStore(), now = new Date()) {
+  const today = now.toISOString().slice(0, 10);
+  let counts = 0, jobs = 0;
+  const { blobs: c } = await s.list({ prefix: 'count/' });
+  for (const b of c) if (b.key.split('/')[1] < today) { await s.delete(b.key); counts++; }
+  const { blobs: j } = await s.list({ prefix: 'job/' });
+  for (const b of j) {
+    const job = await s.get(b.key, { type: 'json' }).catch(() => null);
+    const created = Date.parse(job && job.created);
+    if (!job || !Number.isFinite(created) || now - created > REPORT_DAYS * 864e5) { await s.delete(b.key); jobs++; }
+  }
+  return { counts, jobs };
+}
+
 export default async () => {
   const s = await rollup();
   console.log('insights rollup', JSON.stringify(s));
+  try { console.log('briefings purge', JSON.stringify(await purgeBriefings())); }
+  catch (e) { console.error('briefings purge', e.message); }
 };
 
 export const config = { schedule: '17 3 * * *' };

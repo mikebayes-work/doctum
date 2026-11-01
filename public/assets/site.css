@@ -399,3 +399,12 @@ blockquote cite{display:block;font:400 .82rem var(--sans);font-style:normal;colo
 .share select{font:inherit;padding:8px 10px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface);color:var(--ink);margin-left:6px;max-width:100%}
 .btn-pack{margin-top:8px}
 .example-title{margin-top:.2em;font-size:clamp(1.6rem,3.4vw,2.3rem)}
+
+/* ── Cookie consent banner (site.js; only when GA_ID is set) ── */
+.consent{position:fixed;left:16px;right:16px;bottom:16px;z-index:50;max-width:620px;margin:0 auto;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-top:3px double var(--brass);border-radius:4px;padding:14px 18px;box-shadow:0 8px 28px rgba(13,21,38,.22);font-size:.92rem}
+.consent p{margin:0 0 12px}
+.consent-btns{display:flex;gap:10px;flex-wrap:wrap}
+.consent-btns .btn{flex:1 1 140px}
+.foot-site .cookie-settings{color:#e2c995;font-weight:400;font-size:inherit;text-align:left;align-self:flex-start}
+.cookie-settings[hidden]{display:none}
+@media print{.consent{display:none}}

@@ -55,10 +55,23 @@
       (c.start ? '<span class="chip">Starts ' + esc(words(c.start, 4)) + '</span>' : '') + '</p>' +
       (c.summary && !(extra && extra.html) ? '<p class="sum">' + esc(words(c.summary, 55)) + '</p>' : '') +
       (extra && extra.html ? extra.html : '<p class="more"><button type="button" class="btn-link" data-more="' + esc(c.id) + '">Read the full advert</button></p>') +
-      '<div class="foot"><span class="sup">' + foot + '</span><span class="actions">' + (c.status === 'open' ? '<a class="brief" href="/briefing/?id=' + esc(c.id) + '" rel="nofollow" title="Opportunity briefing: the supervisor\u2019s key papers, research thread and interview prep">Briefing</a>' : '') + '<button type="button" data-save="' + esc(c.id) + '" aria-pressed="' + (isSaved(c.id) ? 'true' : 'false') + '">' + (isSaved(c.id) ? 'Saved' : 'Save') + '</button>' +
+      '<div class="foot"><span class="sup">' + foot + '</span><span class="actions">' + (c.status === 'open' ? '<a class="brief" href="/briefing/?id=' + esc(c.id) + '" rel="nofollow" title="PhD preparation pack: the key papers, research thread and interview prep for this PhD">Prep pack</a>' : '') + '<button type="button" data-save="' + esc(c.id) + '" aria-pressed="' + (isSaved(c.id) ? 'true' : 'false') + '">' + (isSaved(c.id) ? 'Saved' : 'Save') + '</button>' +
       '<a class="go" href="' + esc(c.url) + '" rel="nofollow noopener" target="_blank">Apply at ' + esc(shortInst(c.institution)) + ' ↗</a></span></div></article>';
   }
-  window.Doctum = { esc: esc, api: api, cardHtml: cardHtml };
+  // Anonymous interest signals (listing viewed, apply clicked, saved). No cookies, no ids:
+  // just the action and the listing. See netlify/edge-functions/event.js.
+  function signal(a, id) {
+    if (!id || !/^[0-9a-f]{12}$/.test(id) || !navigator.sendBeacon) return;
+    try { navigator.sendBeacon('/api/event', new Blob([JSON.stringify({ a: a, id: id })], { type: 'text/plain' })); } catch (e) { /* ignore */ }
+  }
+  window.Doctum = { esc: esc, api: api, cardHtml: cardHtml, signal: signal };
+  var listing = document.querySelector('article.listing[data-id]');
+  if (listing && !listing.querySelector('.notice-closed')) signal('v', listing.getAttribute('data-id'));
+  document.addEventListener('click', function (e) {
+    var go = e.target.closest && e.target.closest('a.go, .advert-actions a.btn'); if (!go) return;
+    var c = go.closest('.card'), s = c && c.querySelector('[data-save]');
+    signal('a', s ? s.getAttribute('data-save') : listing && listing.getAttribute('data-id'));
+  });
 
   // ── Card actions anywhere on the page (save, read more) ──
   document.addEventListener('click', function (e) {
@@ -69,7 +82,7 @@
       if (isSaved(id)) { saved = saved.filter(function (c) { return c.id !== id; }); storeSaved(saved); syncSaveButtons(); if (state && state.shortlist) showShortlist(); return; }
       t.disabled = true;
       api('/api/phd?id=' + encodeURIComponent(id)).then(function (d) {
-        delete d.description; saved.unshift(d); storeSaved(saved); syncSaveButtons();
+        delete d.description; saved.unshift(d); storeSaved(saved); syncSaveButtons(); signal('sv', id);
       }).catch(function (x) { t.textContent = x.message; }).then(function () { t.disabled = false; });
     } else if (t.hasAttribute('data-more')) {
       t.disabled = true; t.textContent = 'Loading…';

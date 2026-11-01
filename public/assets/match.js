@@ -65,6 +65,9 @@
       suggest();
     }).catch(function () { cvStatus.textContent = 'Could not read that file. Paste the text instead.'; });
   });
+  // Optional anonymous statistics (step 4): the country question only appears once ticked.
+  var shareEl = document.getElementById('share'), fdcBox = document.querySelector('.share .fdc');
+  if (shareEl && fdcBox) shareEl.addEventListener('change', function () { fdcBox.hidden = !shareEl.checked; });
   var lastSuggested = '';
   function suggest() {
     var cv = cvEl.value.trim(); if (cv.length < 200 || cv === lastSuggested || checkedDiscs().length) return;
@@ -90,7 +93,7 @@
     if (!fee) { err.textContent = 'Choose your fee status (UK or international).'; return; }
     var btn = form.querySelector('button[type="submit"]'); btn.disabled = true; btn.textContent = 'Matching…';
     try { sessionStorage.setItem('doctum.cv', cv); } catch (x) { /* private mode: the briefing form just starts empty */ }
-    post({ action: 'match', cv: cv, disc: disc, fee: fee, funding: document.getElementById('funding').value }).then(function (r) {
+    post({ action: 'match', cv: cv, disc: disc, fee: fee, funding: document.getElementById('funding').value, share: !!(shareEl && shareEl.checked), fdc: shareEl && shareEl.checked ? document.getElementById('fdc').value : '' }).then(function (r) {
       var p = r.profile, bits = [];
       if (p.degree) bits.push('highest degree: ' + p.degree + (p.cls ? ' (' + p.cls + ')' : ''));
       if (p.terms.length) bits.push('key terms: ' + p.terms.slice(0, 8).join(', '));

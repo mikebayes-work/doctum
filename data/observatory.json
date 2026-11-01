@@ -1,0 +1,19 @@
+{
+ "started": "2026-11-01",
+ "snapshots": [
+  {
+   "date": "2026-11-01",
+   "open": 1147,
+   "funded": 336,
+   "intl": 50,
+   "universities": 64,
+   "median_stipend": 21805,
+   "new_7d": 0,
+   "new_30d": 0,
+   "changed_7d": 66,
+   "closed_7d": 25,
+   "removed_7d": 22,
+   "new_ids": []
+  }
+ ]
+}

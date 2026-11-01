@@ -1,0 +1,40 @@
+// scripts/insights-report.mjs — download every insights report as CSV files.
+//
+//   Windows (Command Prompt):
+//     set INSIGHTS_ADMIN_KEY=<the key from Netlify>
+//     node scripts/insights-report.mjs 2026-W45 2026-W52
+//   Optional: a university's own advert report:
+//     node scripts/insights-report.mjs 2026-W45 2026-W52 "Cranfield University"
+//
+// Writes reports/insights/<from>_<to>/*.csv (reports/ is gitignored: these are
+// commercial files, not website content). Every applicant figure under 10 is
+// already suppressed by the server.
+import fs from 'node:fs';
+import path from 'node:path';
+
+const [from = '', to = '', inst = ''] = process.argv.slice(2);
+const key = process.env.INSIGHTS_ADMIN_KEY;
+const site = (process.env.SITE_URL || 'https://doctum.co.uk').replace(/\/+$/, '');
+if (!key) { console.error('Set INSIGHTS_ADMIN_KEY first (Netlify > Site configuration > Environment variables).'); process.exit(1); }
+
+const jobs = [
+  ['summary'], ['terms'], ['filters'], ['demand'], ['skills'], ['listings'],
+  ['applicants', 'd,ug'], ['applicants', 'd,fdc'], ['applicants', 'd,lvl,cls'], ['applicants', 'd,fee'], ['applicants', 'ug,fdc'],
+  ['applicants', 'd,pub'], ['applicants', 'd,proj'], ['applicants', 'd,ind'], ['search', 'd,f'], ['search', 'd,c'],
+];
+if (inst) jobs.push(['listings', '', inst]);
+
+const dir = path.join(path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..'), 'reports', 'insights', `${from || 'start'}_${to || 'now'}`);
+fs.mkdirSync(dir, { recursive: true });
+for (const [report, dims = '', i = ''] of jobs) {
+  const u = new URL('/api/insights', site);
+  u.searchParams.set('report', report); u.searchParams.set('format', 'csv');
+  if (from) u.searchParams.set('from', from); if (to) u.searchParams.set('to', to);
+  if (dims) u.searchParams.set('dims', dims); if (i) u.searchParams.set('inst', i);
+  const res = await fetch(u, { headers: { 'x-doctum-admin': key } });
+  const name = [report, dims.replace(/,/g, '-'), i && i.replace(/[^a-z0-9]+/gi, '-')].filter(Boolean).join('_') + '.csv';
+  if (!res.ok) { console.log(`${name}: HTTP ${res.status}`); continue; }
+  fs.writeFileSync(path.join(dir, name), await res.text());
+  console.log('wrote', name);
+}
+console.log('Reports in', dir);

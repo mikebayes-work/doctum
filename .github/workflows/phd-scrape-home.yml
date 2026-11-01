@@ -8,7 +8,8 @@
 #
 # Setup (once): GitHub repo -> Settings -> Actions -> Runners -> New self-hosted runner -> Windows.
 # Follow the commands it shows, add the label doctum-home when asked, and choose to run it as a service.
-# The PC needs Git and Python 3.11+ installed.
+# The PC needs Git and Python 3.11+ installed for all users, and PowerShell scripts allowed
+# (Set-ExecutionPolicy RemoteSigned -Scope LocalMachine). Chromium is installed by the workflow.
 name: PhD scrape (home PC)
 
 on:
@@ -39,7 +40,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install
-        run: python -m pip install --quiet -r requirements.txt
+        run: |
+          python -m pip install --quiet -r requirements.txt
+          python -m playwright install chromium   # browser for `browser: true` sources; cached after the first run
 
       - name: Crawl home sources
         env:

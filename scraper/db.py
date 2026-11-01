@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS scrape_runs (
   source_id TEXT, run_at TEXT, scraped_at TEXT, n_raw INTEGER, n_kept INTEGER, n_new INTEGER, n_changed INTEGER, n_gone INTEGER);
 """
 JSON_COLS = ("supervisors", "funders", "disciplines")
-REGISTRY = {s["id"]: s for s in yaml.safe_load((ROOT / "scraper" / "sources.yaml").read_text())["sources"]}
+REGISTRY = {s["id"]: s for s in yaml.safe_load((ROOT / "scraper" / "sources.yaml").read_text(encoding="utf-8"))["sources"]}
 
 
 def connect() -> sqlite3.Connection:
@@ -72,7 +72,7 @@ def build():
         if f.name in have:
             continue
         try:
-            at = datetime.fromisoformat(json.loads(f.read_text()).get("scraped_at", "")).timestamp()
+            at = datetime.fromisoformat(json.loads(f.read_text(encoding="utf-8")).get("scraped_at", "")).timestamp()
         except ValueError:
             at = 0
         if at >= cutoff:
@@ -80,7 +80,7 @@ def build():
         else:
             print(f"{f.stem.removeprefix('phdraw_'):<14} skipped: home crawl is more than 4 days old")
     for f in files:
-        raw = json.loads(f.read_text())
+        raw = json.loads(f.read_text(encoding="utf-8"))
         sid = f.stem.removeprefix("phdraw_")
         src = {**raw.get("source", {}), **REGISTRY.get(sid, {}), "id": sid}
         src.setdefault("institution", sid.title())
@@ -164,7 +164,7 @@ def export(path: Path | None = None):
     meta = {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "open": n_open,
             "closed_recent": len(out) - n_open,
             "institutions": len({d["institution"] for d in out if d["status"] == "open"})}
-    path.write_text(json.dumps({"meta": meta, "listings": out}, ensure_ascii=False, indent=0))
+    path.write_text(json.dumps({"meta": meta, "listings": out}, ensure_ascii=False, indent=0), encoding="utf-8")
     print(f"exported {n_open} open + {len(out) - n_open} recently closed -> {path} ({path.stat().st_size // 1024} KB)")
 
 
@@ -189,7 +189,7 @@ def manifest(path: Path | None = None):
         if not f.exists():
             f = RAW_HOME / f"phdraw_{sid}.json"
         if f.exists():
-            why = json.loads(f.read_text()).get("problem", "")
+            why = json.loads(f.read_text(encoding="utf-8")).get("problem", "")
         if ever == 0:
             # never produced a listing: a new source still to be tuned, not a breakage
             pending[sid] = why or "crawled, but no page read like a PhD advert"
@@ -202,7 +202,7 @@ def manifest(path: Path | None = None):
     skipped = {sid: s["disabled"] for sid, s in REGISTRY.items() if s.get("disabled")}
     doc = {"run_date": datetime.now(timezone.utc).date().isoformat(), "alerts": alerts, "sources": out,
            "not_working_yet": pending, "skipped": skipped}
-    path.write_text(json.dumps(doc, indent=2))
+    path.write_text(json.dumps(doc, indent=2), encoding="utf-8")
     print(f"manifest: {len(out)} working sources, {len(pending)} not working yet, {len(skipped)} skipped, {len(alerts)} alerts")
     for a in alerts:
         print("ALERT", a)

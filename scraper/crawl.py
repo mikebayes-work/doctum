@@ -8,6 +8,10 @@ browser bootstrap crawler, so extract.py doesn't care which one produced the fil
 
 Sources run in parallel (CRAWLER_JOBS, default 8); each source stays polite to its own site.
 Sources marked `mode: auto` need only a domain - see the auto mode section below.
+Sources marked `browser: true` are read with headless Chromium (Playwright) instead of `requests`:
+for sites whose firewall refuses non-browser clients even though their robots.txt allows us.
+The browser still identifies itself as DoctumBot and still obeys robots.txt. If a site refuses
+DoctumBot by name even in a real browser, it stays refused: we never pose as an ordinary browser.
 """
 from __future__ import annotations
 
@@ -28,8 +32,15 @@ from bs4 import BeautifulSoup
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
 import os
+
+# Windows consoles and services default to cp1252; adverts contain characters it can't print.
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 # Identify the crawler honestly. Set CRAWLER_CONTACT (a GitHub secret) to a real address before going live.
-UA = f"DoctumBot/1.0 (+https://doctum.co.uk/about/#sources; contact: {os.environ.get('CRAWLER_CONTACT', 'hello@doctum.co.uk')})"
+UA = f"DoctumBot/1.0 (+https://doctum.co.uk/about/#sources; contact: {os.environ.get('CRAWLER_CONTACT') or 'hello@doctum.co.uk'})"  # `or`: an unset GitHub secret arrives as an empty string
 BLOCK_TAGS = "p,li,h1,h2,h3,h4,h5,h6,div,br,tr,dt,dd,section,td,th".split(",")
 DROP_TAGS = ["script", "style", "noscript", "svg", "iframe", "form", "nav", "button"]
 
@@ -38,8 +49,129 @@ session.headers["User-Agent"] = UA
 _robots: dict[str, urllib.robotparser.RobotFileParser] = {}
 
 
+# ------------------------------------------------------------------ browser fetching
+# Some university firewalls turn away anything that isn't a full browser (QUB, Oxford, Leicester...,
+# Oct 2026: HTTP 403 even on robots.txt, from GitHub AND from Mike's home connection, for curl too),
+# although their robots.txt allows our pages. For sources marked `browser: true` every request to
+# their domain goes through one headless Chromium with the same honest DoctumBot user agent.
+# Playwright's sync API is tied to the thread that started it, so one worker thread owns the browser
+# and other threads queue requests to it. Browser sites are therefore fetched one page at a time.
+import queue
+import threading
+from concurrent.futures import Future
+
+
+class _Resp:
+    """The small part of requests.Response the crawler uses."""
+    def __init__(self, status_code: int, content: bytes, url: str, ctype: str = ""):
+        self.status_code, self.content, self.url, self.headers = status_code, content, url, {"content-type": ctype}
+
+    @property
+    def text(self) -> str:
+        return self.content.decode("utf-8", errors="replace")
+
+    def iter_content(self, n: int = 65536):
+        for i in range(0, len(self.content), n):
+            yield self.content[i:i + n]
+
+
+class _BrowserWorker:
+    def __init__(self):
+        self.jobs: queue.Queue = queue.Queue()
+        self.thread: threading.Thread | None = None
+        self.lock = threading.Lock()
+
+    def fetch(self, url: str, timeout: float = 45) -> _Resp:
+        with self.lock:
+            if not self.thread:
+                self.thread = threading.Thread(target=self._run, name="doctum-browser", daemon=True)
+                self.thread.start()
+        fut: Future = Future()
+        self.jobs.put((url, timeout, fut))
+        return fut.result(timeout=timeout + 120)
+
+    def close(self):
+        if self.thread:
+            self.jobs.put(None)
+            self.thread.join(timeout=30)
+
+    def _run(self):
+        try:
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                ctx = browser.new_context(user_agent=UA, locale="en-GB",
+                                          extra_http_headers={"From": UA.split("contact: ")[-1].rstrip(")")})
+                page = ctx.new_page()
+                while True:
+                    job = self.jobs.get()
+                    if job is None:
+                        break
+                    url, timeout, fut = job
+                    try:
+                        fut.set_result(self._get(page, url, timeout))
+                    except Exception as e:
+                        fut.set_exception(e)
+                browser.close()
+        except Exception as e:  # Playwright/Chromium missing: fail every queued request clearly
+            msg = f"browser unavailable ({type(e).__name__}: {e})"[:200]
+            while True:
+                job = self.jobs.get()
+                if job is None:
+                    break
+                job[2].set_exception(RuntimeError(msg))
+
+    @staticmethod
+    def _get(page, url: str, timeout: float) -> _Resp:
+        last = {}
+
+        def on_response(r):  # remember the final document response (after any challenge reload)
+            try:
+                if r.request.resource_type == "document" and r.frame == page.main_frame:
+                    last["r"] = r
+            except Exception:
+                pass
+        page.on("response", on_response)
+        try:
+            resp = page.goto(url, wait_until="domcontentloaded", timeout=timeout * 1000)
+            status = resp.status if resp else 0
+            if status in (403, 429, 503):
+                # Some firewalls answer the first request with a short JavaScript check, then reload.
+                try:
+                    page.wait_for_load_state("networkidle", timeout=12000)
+                except Exception:
+                    pass
+                fin = last.get("r")
+                if fin is not None and fin is not resp:
+                    resp, status = fin, fin.status
+            ctype = resp.headers.get("content-type", "") if resp else ""
+            if "html" in ctype and status < 400:
+                body = page.content().encode("utf-8")
+            else:
+                body = resp.body() if resp else b""
+            return _Resp(status, body, page.url or url, ctype)
+        finally:
+            page.remove_listener("response", on_response)
+
+
+_browser = _BrowserWorker()
+BROWSER_DOMAINS: set[str] = set()   # filled from sources marked `browser: true`
+
+
+def _via_browser(url: str) -> bool:
+    h = urlparse(url).netloc.lower().split(":")[0]
+    return any(h == d or h.endswith("." + d) for d in BROWSER_DOMAINS)
+
+
+def fetch(url: str, timeout: float = 30, **kw):
+    """session.get(), or the shared headless browser for `browser: true` sites."""
+    if _via_browser(url):
+        return _browser.fetch(url, timeout=max(timeout, 45))
+    return session.get(url, timeout=timeout, **kw)
+
+
 def load_sources() -> list[dict]:
-    return yaml.safe_load((ROOT / "scraper" / "sources.yaml").read_text())["sources"]
+    return yaml.safe_load((ROOT / "scraper" / "sources.yaml").read_text(encoding="utf-8"))["sources"]
 
 
 _blocked: dict[str, str] = {}   # host -> why the site refused us (shown in the run log and manifest)
@@ -53,7 +185,7 @@ def allowed(url: str) -> bool:
     if host not in _robots:
         rp = urllib.robotparser.RobotFileParser(host + "/robots.txt")
         try:
-            r = session.get(host + "/robots.txt", timeout=20)
+            r = fetch(host + "/robots.txt", timeout=20)
             if r.status_code in (401, 403, 429) or r.status_code >= 500:
                 _blocked[host] = f"site refused the crawler (HTTP {r.status_code} on robots.txt)"
                 rp = False
@@ -74,7 +206,7 @@ def allowed(url: str) -> bool:
 def get(url: str) -> BeautifulSoup:
     if not allowed(url):
         raise PermissionError(f"robots.txt disallows {url}")
-    r = session.get(url, timeout=30)
+    r = fetch(url, timeout=30)
     if r.status_code >= 400:
         raise RuntimeError(f"HTTP {r.status_code}")
     return BeautifulSoup(r.text, "lxml")
@@ -287,7 +419,7 @@ def _raw(url: str, limit: int = 15_000_000) -> bytes | None:
     try:
         if not allowed(url):
             return None
-        r = session.get(url, timeout=30, stream=True)
+        r = fetch(url, timeout=30, stream=True)
         if r.status_code >= 400:
             return None
         data = b""
@@ -311,7 +443,7 @@ def sitemap_urls(cfg: dict, max_files: int = 25) -> list[str]:
     starts = []
     try:
         allowed(base + "/")
-        r = session.get(base + "/robots.txt", timeout=20)
+        r = fetch(base + "/robots.txt", timeout=20)
         starts = [ln.split(":", 1)[1].strip() for ln in r.text.splitlines() if ln.lower().startswith("sitemap:")]
     except Exception:
         pass
@@ -373,7 +505,7 @@ def discover(cfg: dict) -> tuple[list[str], list[str]]:
             u = _base(cfg) + p
             try:
                 if allowed(u):
-                    r = session.get(u, timeout=20, allow_redirects=True)
+                    r = fetch(u, timeout=20, allow_redirects=True)
                     if r.status_code < 400 and PHD_WORDS.search(r.text) and _on_domain(r.url, cfg["domain"]):
                         seeds.append(r.url)
             except PermissionError:
@@ -515,7 +647,14 @@ def crawl_one(cfg: dict) -> None:
     if cfg.get("disabled"):
         print(f"[{cfg['id']}] skipped: {cfg['disabled']}")
         return
-    print(f"[{cfg['id']}] crawling…")
+    if cfg.get("browser"):
+        doms = {cfg["domain"]} if cfg.get("domain") else set()
+        for u in list(cfg.get("lists", [])) + list(cfg.get("seeds", [])) + ([cfg["pages"]["url"]] if cfg.get("pages") else []) + ([cfg["hub"]] if cfg.get("hub") else []):
+            h = urlparse(u).netloc.lower().split(":")[0]
+            doms.add(h[4:] if h.startswith("www.") else h)
+        BROWSER_DOMAINS.update(d for d in doms if d)
+        cfg = {**cfg, "conc": 1, "delay": max(int(cfg.get("delay", 0)), 1500)}  # one page at a time, 1.5 s apart
+    print(f"[{cfg['id']}] crawling…" + (" (browser)" if cfg.get("browser") else ""))
     t0 = time.time()
     try:
         mode = cfg.get("mode")
@@ -530,7 +669,7 @@ def crawl_one(cfg: dict) -> None:
     if not items and cfg["id"] in DIAG:
         out["problem"] = DIAG[cfg["id"]]
         print(f"[{cfg['id']}] PROBLEM: {DIAG[cfg['id']]}")
-    (RAW / f"phdraw_{cfg['id']}.json").write_text(json.dumps(out, ensure_ascii=False))
+    (RAW / f"phdraw_{cfg['id']}.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
     print(f"[{cfg['id']}] {len(items)} items, {sum('text' in i for i in items)} with detail, "
           f"{_counts.get(cfg['id'], 0)} auto requests, {time.time() - t0:.0f}s")
 
@@ -544,8 +683,11 @@ def run(ids: list[str] | None = None, runner: str | None = None):
     todo = [c for c in load_sources() if (not ids or c["id"] in ids)
             and (runner is None or (c.get("runner") == "home") == (runner == "home"))]
     print(f"{len(todo)} sources to crawl" + (f" ({runner} runner)" if runner else ""))
-    with ThreadPoolExecutor(SOURCE_JOBS) as ex:
-        list(ex.map(crawl_one, todo))
+    try:
+        with ThreadPoolExecutor(SOURCE_JOBS) as ex:
+            list(ex.map(crawl_one, todo))
+    finally:
+        _browser.close()
 
 
 if __name__ == "__main__":

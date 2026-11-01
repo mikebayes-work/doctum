@@ -4,3 +4,4 @@ beautifulsoup4
 lxml
 pyyaml
 python-dateutil
+playwright        # headless Chromium for `browser: true` sources (run: python -m playwright install chromium)

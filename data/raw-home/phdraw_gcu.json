@@ -1,0 +1,1 @@
+{"source": {"id": "gcu", "institution": "Glasgow Caledonian University", "region": "Scotland", "mode": "auto", "domain": "gcu.ac.uk", "runner": "home", "browser": true, "conc": 1, "delay": 1500}, "scraped_at": "2026-11-01T09:22:02.356029+00:00", "items": [], "problem": "found 6 listing page(s) and 6 candidate links, but none read like a PhD advert - needs proper rules"}

@@ -1,0 +1,1 @@
+{"source": {"id": "ntu", "institution": "Nottingham Trent University", "region": "England", "mode": "auto", "domain": "ntu.ac.uk", "runner": "home", "browser": true, "conc": 1, "delay": 1500}, "scraped_at": "2026-11-01T09:45:56.883982+00:00", "items": [], "problem": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules"}

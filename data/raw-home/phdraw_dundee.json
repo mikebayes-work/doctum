@@ -1,0 +1,1 @@
+{"source": {"id": "dundee", "institution": "University of Dundee", "region": "Scotland", "mode": "auto", "domain": "dundee.ac.uk", "runner": "home", "browser": true, "conc": 1, "delay": 1500}, "scraped_at": "2026-11-01T09:54:13.900229+00:00", "items": [], "problem": "robots.txt disallows https://www.dundee.ac.uk/phds/funding/en-mn-lindsay-scholarship"}

@@ -1,0 +1,1 @@
+{"source": {"id": "durham-all", "institution": "Durham University", "region": "England", "mode": "auto", "domain": "durham.ac.uk", "exclude": "condensed-matter-physics/phd-projects", "runner": "home", "browser": true, "conc": 1, "delay": 1500}, "scraped_at": "2026-11-01T09:18:06.325482+00:00", "items": [], "problem": "site refused the crawler (HTTP 403 on robots.txt)"}

@@ -1,0 +1,1 @@
+{"source": {"id": "rvc", "institution": "Royal Veterinary College", "region": "England", "mode": "auto", "domain": "rvc.ac.uk", "runner": "home", "browser": true, "conc": 1, "delay": 1500}, "scraped_at": "2026-11-01T09:46:21.995252+00:00", "items": [], "problem": "site refused the crawler (HTTP 403 on robots.txt)"}

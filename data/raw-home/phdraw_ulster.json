@@ -1,0 +1,1 @@
+{"source": {"id": "ulster", "institution": "Ulster University", "region": "Northern Ireland", "mode": "auto", "domain": "ulster.ac.uk", "runner": "home", "browser": true, "conc": 1, "delay": 1500}, "scraped_at": "2026-11-01T09:55:20.569219+00:00", "items": [], "problem": "found 8 listing page(s) and 26 candidate links, but none read like a PhD advert - needs proper rules"}

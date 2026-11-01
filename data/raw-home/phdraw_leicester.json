@@ -1,0 +1,1 @@
+{"source": {"id": "leicester", "institution": "University of Leicester", "region": "England", "mode": "auto", "domain": "le.ac.uk", "runner": "home", "browser": true, "conc": 1, "delay": 1500}, "scraped_at": "2026-11-01T09:41:47.265598+00:00", "items": [], "problem": "site refused the crawler (HTTP 403 on robots.txt)"}

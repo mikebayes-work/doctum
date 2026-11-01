@@ -154,7 +154,8 @@ def build():
         # in which case keep the previous listings and let the manifest alert fire.
         live_before = con.execute("SELECT COUNT(*) FROM listings WHERE source_id=? AND status!='gone'", (src["id"],)).fetchone()[0]
         if kept == 0 or (live_before >= 10 and kept < live_before * 0.5):
-            print(f"{src['id']:<14} SUSPECT CRAWL: kept {kept} vs {live_before} live before; not marking any as gone")
+            if live_before:  # a source that has never worked isn't suspect, just not tuned yet
+                print(f"{src['id']:<14} SUSPECT CRAWL: kept {kept} vs {live_before} live before; not marking any as gone")
             gone = 0
         else:
             ph = ",".join("?" * len(seen)) or "NULL"
@@ -208,7 +209,10 @@ def track(con, old: dict | None, rec: dict, row: dict, now: str, today: str):
         row["returned_count"] += 1
         row["gone_at"] = None
         row["closed_at"] = None if rec["is_open"] else row["closed_at"]
-    if old["content_hash"] != rec["content_hash"] or (old.get("wp") or "") != (rec["wp"] or ""):
+    # wp is NULL until an advert has been tagged from its full page (rows stored before 1 Nov 2026):
+    # filling it in for the first time is not a change to the advert.
+    wp_changed = old.get("wp") is not None and (old.get("wp") or "") != (rec["wp"] or "")
+    if old["content_hash"] != rec["content_hash"] or wp_changed:
         # keep the state being replaced
         con.execute("INSERT INTO listing_history VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                     (lid, old["last_changed"], now, old["content_hash"], old["title"], old["deadline"], old["funding"],
@@ -228,6 +232,8 @@ def track(con, old: dict | None, rec: dict, row: dict, now: str, today: str):
                 row["closed_at"] = None
             _event(con, lid, now, kind, od, nd)
         for k in ("funding", "stipend", "eligibility", "title", "wp"):
+            if k == "wp" and not wp_changed:
+                continue
             if (old.get(k) or "") != (rec[k] or ""):
                 logged = True
                 _event(con, lid, now, f"{k}_changed", old.get(k), rec[k])
@@ -292,7 +298,7 @@ def link_readverts(con, since: str | None = None) -> int:
 
 def backfill(con):
     """One-off: fill the history columns for adverts stored before they existed (1 Nov 2026)."""
-    from .extract import get_wp, project_key
+    from .extract import project_key
     today = date.today().isoformat()
     print("backfilling advert history columns...")
     rows_ = con.execute("SELECT id, title, institution, summary, description, deadline, first_seen, last_seen, status, source_id FROM listings").fetchall()
@@ -308,7 +314,6 @@ def backfill(con):
                 coverage.setdefault(sid, set()).add(r["run_at"])
             best = max(best, r["n_kept"] or 0)
     for r in rows_:
-        wp, groups, text = get_wp(r["title"] or "", (r["summary"] or "") + "\n" + (r["description"] or ""))
         mine = [x["run_at"] for x in runs.get(r["source_id"], []) if x["run_at"] <= r["first_seen"]]
         born_closed = bool(r["deadline"] and r["deadline"] < r["first_seen"][:10])
         censored = 1 if born_closed or not mine or mine[-1] in coverage.get(r["source_id"], set()) else 0
@@ -316,9 +321,10 @@ def backfill(con):
         gone_at = r["last_seen"] if r["status"] == "gone" else None
         if gone_at and not closed:
             closed = gone_at[:10]
-        con.execute("UPDATE listings SET wp=?, wp_groups=?, wp_text=?, project_key=?, deadline_first=deadline, deadline_changes=0, "
+        # wp is left NULL: the next scrape tags it from the full advert page (the stored text is only an excerpt)
+        con.execute("UPDATE listings SET project_key=?, deadline_first=deadline, deadline_changes=0, "
                     "closed_at=?, gone_at=?, advert_since=first_seen, censored=?, readvert_count=0, returned_count=0, versions=1 WHERE id=?",
-                    (wp, json.dumps(groups), text, project_key(r["title"] or "", r["institution"] or ""), closed, gone_at, censored, r["id"]))
+                    (project_key(r["title"] or "", r["institution"] or ""), closed, gone_at, censored, r["id"]))
     n = link_readverts(con)
     con.commit()
     print(f"backfilled {len(rows_)} adverts; {n} linked to an earlier advert for the same project")
@@ -374,6 +380,45 @@ def export(path: Path | None = None):
             "institutions": len({d["institution"] for d in out if d["status"] == "open"})}
     path.write_text(json.dumps({"meta": meta, "listings": out}, ensure_ascii=False, indent=0), encoding="utf-8")
     print(f"exported {n_open} open + {len(out) - n_open} recently closed -> {path} ({path.stat().st_size // 1024} KB)")
+    if path == ROOT / "data" / "listings.json":
+        export_history()
+
+
+def export_history(path: Path | None = None):
+    """Write data/history.json: every tracked advert's history, for the private university reports.
+
+    Committed like listings.json but NEVER published (build.js only copies an allowlist). One compact
+    row per advert, all statuses, with the events that matter for reports. Field names are short to
+    keep the file small: see HISTORY_FIELDS.
+    """
+    path = path or ROOT / "data" / "history.json"
+    con = connect()
+    ev: dict[str, list] = {}
+    for r in con.execute("SELECT listing_id, at, kind FROM listing_events WHERE kind IN "
+                         "('deadline_extended','deadline_brought_forward','readvertised','reopened','moved','removed',"
+                         "'returned','funding_changed','stipend_changed','eligibility_changed') ORDER BY at"):
+        ev.setdefault(r["listing_id"], []).append([r["kind"], r["at"][:10]])
+    out = []
+    for r in con.execute("SELECT * FROM listings ORDER BY first_seen"):
+        d = dict(r)
+        if d["deadline"] and d["deadline"] < (d["first_seen"] or "")[:10]:
+            continue  # an old page already past its deadline when found: never a live advert while tracked
+        disc = json.loads(d.get("disciplines") or "[]")
+        out.append({
+            "id": d["id"], "inst": d["institution"], "title": d["title"], "funding": d["funding"],
+            "disc": disc[0] if disc else "", "status": d["status"],
+            "since": (d.get("advert_since") or d["first_seen"] or "")[:10], "first_seen": (d["first_seen"] or "")[:10],
+            "last_seen": (d["last_seen"] or "")[:10], "closed": d.get("closed_at"), "gone": (d.get("gone_at") or "")[:10] or None,
+            "deadline": d["deadline"], "deadline_first": d.get("deadline_first"), "dl_changes": d.get("deadline_changes") or 0,
+            "censored": d.get("censored") or 0, "prev": d.get("previous_id"), "readverts": d.get("readvert_count") or 0,
+            "versions": d.get("versions") or 1, "wp": d.get("wp") or "", "events": ev.get(d["id"], []),
+        })
+        # leave out empty and default values (the report treats a missing field as empty/0)
+        out[-1] = {k: v for k, v in out[-1].items() if v not in (None, "", [], 0) and not (k == "versions" and v == 1)}
+    meta = {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "tracking_from": "2026-11-01",
+            "adverts": len(out)}
+    path.write_text(json.dumps({"meta": meta, "adverts": out}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    print(f"history: {len(out)} adverts -> {path} ({path.stat().st_size // 1024} KB)")
 
 
 def manifest(path: Path | None = None):

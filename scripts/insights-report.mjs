@@ -14,16 +14,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const [from = '', to = '', inst = ''] = process.argv.slice(2);
-const key = (process.env.INSIGHTS_ADMIN_KEY || '').trim(); // Command Prompt keeps trailing spaces
+import os from 'node:os';
+const KEY_FILE = path.join(os.homedir(), '.doctum', 'insights-key.txt'); // saved by DoctumReports.exe
+const key = (process.env.INSIGHTS_ADMIN_KEY || (fs.existsSync(KEY_FILE) ? fs.readFileSync(KEY_FILE, 'utf8') : '')).trim(); // Command Prompt keeps trailing spaces
 const site = (process.env.SITE_URL || 'https://doctum.co.uk').replace(/\/+$/, '');
-if (!key) { console.error('Set INSIGHTS_ADMIN_KEY first (Netlify > Site configuration > Environment variables).'); process.exit(1); }
+if (!key) { console.error('No key: run DoctumReports.exe once to save it, or set INSIGHTS_ADMIN_KEY.'); process.exit(1); }
 
 const jobs = [
   ['summary'], ['terms'], ['filters'], ['demand'], ['skills'], ['listings'],
   ['applicants', 'd,ug'], ['applicants', 'd,fdc'], ['applicants', 'd,lvl,cls'], ['applicants', 'd,fee'], ['applicants', 'ug,fdc'],
   ['applicants', 'd,pub'], ['applicants', 'd,proj'], ['applicants', 'd,ind'], ['search', 'd,f'], ['search', 'd,c'],
 ];
-if (inst) jobs.push(['listings', '', inst]);
+jobs.push(['sources'], ['matched', 'ug'], ['matched', 'fee']);
+if (inst) jobs.push(['listings', '', inst], ['sources', '', inst], ['matched', 'ug', inst], ['matched', 'fee', inst], ['matched', 'fdc', inst], ['matched', 'lvl', inst]);
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'reports', 'insights', `${from || 'start'}_${to || 'now'}`);
 fs.mkdirSync(dir, { recursive: true });

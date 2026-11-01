@@ -7,7 +7,7 @@
 //
 // Can also be run by hand: POST /.netlify/functions/insights-rollup is NOT exposed
 // (scheduled functions have no public URL); use the "Run now" button in the Netlify UI.
-import { insightsStore, isoWeek, tupleKey, typeOf } from '../doctum/insights.js';
+import { insightsStore, isoWeek, tupleKey, typeOf, expandEvent } from '../doctum/insights.js';
 
 export async function rollup(store = insightsStore(), now = new Date()) {
   const today = now.toISOString().slice(0, 10);
@@ -27,12 +27,14 @@ export async function rollup(store = insightsStore(), now = new Date()) {
       const week = (await store.get('week/' + wk, { type: 'json' })) || { week: wk, s: {}, m: {}, l: {}, days: {} };
       let n = 0;
       for (const k of keys) {
-        const ev = await store.get(k, { type: 'json' }).catch(() => null);
-        const t = ev && typeOf(ev);
-        if (!t) continue;
-        const key = tupleKey(t, ev);
-        week[t][key] = (week[t][key] || 0) + 1;
-        n++;
+        const raw = await store.get(k, { type: 'json' }).catch(() => null);
+        for (const ev of expandEvent(raw)) {
+          const t = ev && typeOf(ev);
+          if (!t) continue;
+          const key = tupleKey(t, ev);
+          week[t][key] = (week[t][key] || 0) + 1;
+          n++;
+        }
       }
       week.days[day] = (week.days[day] || 0) + n;
       await store.setJSON('week/' + wk, week);

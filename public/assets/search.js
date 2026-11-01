@@ -60,13 +60,31 @@
   }
   // Anonymous interest signals (listing viewed, apply clicked, saved). No cookies, no ids:
   // just the action and the listing. See netlify/edge-functions/event.js.
-  function signal(a, id) {
+  function signal(a, id, src) {
     if (!id || !/^[0-9a-f]{12}$/.test(id) || !navigator.sendBeacon) return;
-    try { navigator.sendBeacon('/api/event', new Blob([JSON.stringify({ a: a, id: id })], { type: 'text/plain' })); } catch (e) { /* ignore */ }
+    var b = { a: a, id: id }; if (src) b.src = src;
+    try { navigator.sendBeacon('/api/event', new Blob([JSON.stringify(b)], { type: 'text/plain' })); } catch (e) { /* ignore */ }
+  }
+  // Where this visit came from, reduced to a category in the browser. The address itself is never sent.
+  function source() {
+    var r; try { r = document.referrer ? new URL(document.referrer) : null; } catch (e) { r = null; }
+    if (!r) return 'direct';
+    if (r.host === location.host) {
+      var p = r.pathname;
+      return p === '/' || p === '/search/' ? 'search' : /^\/match\//.test(p) ? 'match' : /^\/subjects\//.test(p) ? 'subject'
+        : /^\/universities\//.test(p) ? 'university' : /^\/(fully-funded-phds|funded-phds-international-students|closing-soon)\//.test(p) ? 'hub'
+        : /^\/phd\//.test(p) ? 'related' : /^\/observatory\//.test(p) ? 'observatory' : /^\/(briefing|phd-preparation-pack)\//.test(p) ? 'pack' : 'doctum-other';
+    }
+    var h = r.hostname.replace(/^www\./, '');
+    if (/(^|\.)(google\.|bing\.com|duckduckgo\.com|ecosia\.org|search\.yahoo\.|yandex\.|baidu\.com|naver\.com|brave\.com)/.test(h)) return 'web-search';
+    if (/(chatgpt\.com|openai\.com|perplexity\.ai|claude\.ai|gemini\.google|copilot\.microsoft|bing\.com\/chat|you\.com|phind\.com|deepseek)/.test(h)) return 'ai';
+    if (/(linkedin\.|facebook\.|instagram\.|t\.co$|twitter\.|x\.com|reddit\.|bsky\.|threads\.|tiktok\.|youtube\.|whatsapp\.|wechat|weixin)/.test(h)) return 'social';
+    if (/(mail\.|outlook\.|proton)/.test(h)) return 'email';
+    return 'other';
   }
   window.Doctum = { esc: esc, api: api, cardHtml: cardHtml, signal: signal };
   var listing = document.querySelector('article.listing[data-id]');
-  if (listing && !listing.querySelector('.notice-closed')) signal('v', listing.getAttribute('data-id'));
+  if (listing && !listing.querySelector('.notice-closed')) signal('v', listing.getAttribute('data-id'), source());
   document.addEventListener('click', function (e) {
     var go = e.target.closest && e.target.closest('a.go, .advert-actions a.btn'); if (!go) return;
     var c = go.closest('.card'), s = c && c.querySelector('[data-save]');
@@ -85,6 +103,7 @@
         delete d.description; saved.unshift(d); storeSaved(saved); syncSaveButtons(); signal('sv', id);
       }).catch(function (x) { t.textContent = x.message; }).then(function () { t.disabled = false; });
     } else if (t.hasAttribute('data-more')) {
+      signal('rm', t.getAttribute('data-more'));
       t.disabled = true; t.textContent = 'Loading…';
       api('/api/phd?id=' + encodeURIComponent(t.getAttribute('data-more'))).then(function (d) {
         var box = document.createElement('div'); box.className = 'full';
@@ -103,6 +122,7 @@
   // Listing page: full advert on demand
   var more = document.getElementById('read-more');
   if (more) more.addEventListener('click', function () {
+    signal('rm', more.getAttribute('data-id'));
     more.disabled = true; more.textContent = 'Loading…';
     api('/api/phd?id=' + encodeURIComponent(more.getAttribute('data-id'))).then(function (d) {
       document.getElementById('advert').innerHTML = String(d.description || '').split(/\n{2,}/).map(function (p) { return '<p>' + esc(p.trim()) + '</p>'; }).join('');

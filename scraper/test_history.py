@@ -64,6 +64,13 @@ def main():
                        advert("https://x/d", "Sustainable aviation fuels from municipal solid waste", FUT, WP)])
 
     con = db.connect()
+    # an advert stored before tagging existed (wp NULL) that gets tagged on the next scrape: not a change
+    con.execute("UPDATE listings SET wp=NULL WHERE url='https://x/d'")
+    con.commit()
+    time.sleep(1.1)
+    scrape(db.RAW, 4, [a2, advert("https://x/b-new", B, FUT), advert("https://x/c-2027", C + " (2027 entry)", FUT),
+                       advert("https://x/d", "Sustainable aviation fuels from municipal solid waste", FUT, WP)])
+    con = db.connect()
     by_url = {r["url"]: dict(r) for r in con.execute("SELECT * FROM listings")}
     kinds = lambda url: [r[0] for r in con.execute("SELECT kind FROM listing_events WHERE listing_id=? ORDER BY rowid", (by_url[url]["id"],))]
     checks = []
@@ -87,6 +94,7 @@ def main():
     d = by_url["https://x/d"]
     check("D: ring-fenced widening participation", d["wp"] == "ring-fenced" and "Widening participation" in json.loads(d["wp_groups"]))
     check("A: not widening participation", not a["wp"])
+    check("D: first tagging logged no change", kinds("https://x/d") == [] and d["versions"] == 1)
     for name, ok in checks:
         print(("PASS " if ok else "FAIL ") + name)
     if not all(ok for _, ok in checks):

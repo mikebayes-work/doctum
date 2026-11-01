@@ -65,6 +65,18 @@ if (INST && !MINE.length) {
 }
 const SUBJECTS = [...new Set(MINE.flatMap((r) => r.disciplines || []))].filter((d) => !/^Other/.test(d));
 
+// Advert history (private, written by `python -m scraper.db export` since 1 November 2026): one row per
+// advert ever tracked, with when it was first advertised, when it closed, deadline changes and whether
+// the same project was advertised again. Missing fields mean empty / 0.
+const HISTORY_FROM = '2026-11-01';
+const P0 = weekStart(FROM).toISOString().slice(0, 10);
+const P1 = new Date(weekStart(TO).getTime() + 6 * 864e5).toISOString().slice(0, 10);
+const HIST_ALL = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'history.json'), 'utf8')).adverts || []; }
+  catch { return []; }
+})();
+if (!HIST_ALL.length && !SAMPLE) console.log('  ! data/history.json not found (it is written by each scrape from 1 November 2026): the advert history section will be empty. Run DoctumPull first.');
+
 async function api(report, params = {}) {
   const u = new URL('/api/insights', SITE);
   u.searchParams.set('report', report); u.searchParams.set('from', FROM); u.searchParams.set('to', TO);
@@ -124,6 +136,26 @@ function sampleData() {
       .map(([s, a, w]) => [d, s, Math.max(5, a + int(-8, 8)) + '%', Math.max(3, w + int(-8, 8)) + '%', int(120, 600), OPEN.filter((r) => (r.disciplines || []).includes(d)).length])) },
     terms: { rows: [['hydrogen', 412, '<10'], ['machine learning', 388, '<10'], ['battery', 301, '<10'], ['quantum computing', 190, 41], ['nuclear fusion', 160, 22], ['motorsport', 141, 63], ['sustainable aviation fuel', 98, 57], ['space debris', 74, 48], ['agritech robotics', 52, 39], ['digital twin', 210, '<10']] },
   };
+}
+
+// Made-up history for --sample: shaped like data/history.json.
+function sampleHistory() {
+  let seed = 99; const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+  const day = (d) => new Date(Date.parse(P1) - d * 864e5).toISOString().slice(0, 10);
+  const pool = INST ? [...MINE, ...OPEN.filter((r) => r.institution !== INST).slice(0, 400)] : OPEN.slice(0, 600);
+  return pool.map((r) => {
+    const mine = !INST || r.institution === INST, since = day(Math.round(20 + rnd() * 200)), open = rnd() < 0.45;
+    const dur = Math.round(18 + rnd() * (r.funding === 'Fully funded' ? 50 : 90) * (mine && INST ? 0.8 : 1));
+    let closed = open ? null : new Date(Date.parse(since) + dur * 864e5).toISOString().slice(0, 10);
+    if (closed && closed > P1) closed = day(Math.round(rnd() * 25));
+    const ext = rnd() < 0.12, re = rnd() < (mine ? 0.14 : 0.08);
+    const events = [];
+    if (ext) events.push(['deadline_extended', day(Math.round(rnd() * 25))]);
+    if (re) events.push(['readvertised', day(Math.round(rnd() * 25))]);
+    return { id: r.id, inst: r.institution, title: r.title, funding: r.funding, disc: (r.disciplines || [])[0] || '', status: open ? 'open' : 'closed',
+      since, first_seen: since, last_seen: closed || P1, closed, deadline: r.deadline, deadline_first: ext ? day(40) : r.deadline,
+      dl_changes: ext ? 1 : 0, readverts: re ? 1 + (rnd() < 0.3 ? 1 : 0) : 0, events };
+  });
 }
 
 // ── helpers ───────────────────────────────────────────────────────────
@@ -255,7 +287,85 @@ ${table(['Subject', 'Searches', 'CV matches', 'Open adverts', 'Fully funded', 'I
 <div><h3>Searched, but nothing found</h3>${bars(unmet.map((r) => [r[0], r[2]]), { width: 330 })}<p class="small">Topics where applicants found no open PhD on Doctum. A signal for new projects and CDT themes.</p></div></div></section>`;
   if (unmet[0]) findings.push(`Applicants searched for “${unmet[0][0]}” ${n(unmet[0][2])} times without finding a single open PhD.`);
 
-  return { glance, funnel, adverts, sources, reach, demand, skillsSec, termsSec, findings: findings.slice(0, 6) };
+  // 9. advert history: time on market, re-advertised projects, deadline changes
+  const historySec = historySection(SAMPLE ? sampleHistory() : HIST_ALL, findings);
+
+  return { glance, funnel, adverts, sources, reach, demand, skillsSec, termsSec, historySec, findings: findings.slice(0, 7) };
+}
+
+function historySection(H, findings) {
+  const inPeriod = (d) => d && d >= P0 && d <= P1;
+  const median = (v) => { v = v.filter((x) => x != null && x >= 0).sort((a, b) => a - b); return v.length ? v[Math.floor((v.length - 1) / 2)] : null; };
+  const days = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+  // Time on market: from first advertised to closed, only where Doctum saw the start (not censored)
+  // and read the advert on more than one visit. Measured over everything that has closed so far.
+  const tom = (rows) => rows.filter((h) => h.closed && !h.censored && h.since && h.last_seen && h.last_seen !== h.first_seen && h.closed <= P1)
+    .map((h) => days(h.since, h.closed));
+  const mine = INST ? H.filter((h) => h.inst === INST) : H;
+  const ev = (rows, kinds) => rows.flatMap((h) => (h.events || []).filter(([k, d]) => kinds.includes(k) && inPeriod(d)).map(([k, d]) => ({ h, k, d })));
+  const MIN_MINE = 5, MIN_ALL = 30;
+
+  const newAds = mine.filter((h) => !h.censored && inPeriod(h.since) && (!h.prev || h.readverts));
+  const closedAds = mine.filter((h) => inPeriod(h.closed));
+  const ext = ev(mine, ['deadline_extended']);
+  const fwd = ev(mine, ['deadline_brought_forward']);
+  const readv = ev(mine, ['readvertised', 'reopened']);
+  const removedEarly = mine.filter((h) => inPeriod(h.gone) && h.deadline && h.deadline > h.gone);
+  const tMine = tom(mine), tAll = tom(H);
+  const mMine = median(tMine), mAll = median(tAll);
+  const enoughMine = tMine.length >= MIN_MINE && tAll.length >= MIN_ALL, enoughAll = tAll.length >= MIN_ALL;
+
+  const tiles = [
+    [newAds.length, 'new adverts published', 'first advertised in this period'],
+    [closedAds.length, 'adverts closed', 'deadline passed or taken down'],
+    [ext.length, 'deadlines extended', fwd.length ? `${fwd.length} brought forward` : 'a later closing date on the same advert'],
+    [readv.length, 'projects re-advertised', 'advertised again after closing'],
+    [INST ? (enoughMine ? `${mMine} days` : '…') : (enoughAll ? `${mAll} days` : '…'), 'median time on market',
+      INST ? (enoughMine ? `all universities: ${mAll} days` : `needs ${MIN_MINE}+ of your adverts to close`) : (enoughAll ? `from ${n(tAll.length)} adverts` : `needs ${MIN_ALL}+ adverts to close`)],
+    [removedEarly.length, 'taken down before the deadline', 'often filled early, or withdrawn'],
+  ];
+  const tilesHtml = `<div class="tiles">${tiles.map(([v, l, sub]) => `<div><b>${n(v)}</b><span>${esc(l)}</span><small>${esc(sub)}</small></div>`).join('')}</div>`;
+
+  // Time on market by funding type (or by subject for the sector report), with the sector as the marker.
+  const groupBy = INST ? (h) => h.funding || 'Unknown' : (h) => h.disc || '';
+  const groups = [...new Set(mine.map(groupBy))].filter((g) => g && !/^Other/.test(g));
+  const tomRows = groups.map((g) => {
+    const a = tom(mine.filter((h) => groupBy(h) === g)), b = tom(H.filter((h) => groupBy(h) === g));
+    return a.length >= (INST ? MIN_MINE : 10) ? [g === 'Unknown' ? 'Funding not stated' : g, median(a), INST && b.length >= 10 ? median(b) : null] : null;
+  }).filter(Boolean).sort((a, b) => b[1] - a[1]);
+  const tomChart = tomRows.length ? `<h3>Time on market by ${INST ? 'funding type' : 'subject'}</h3>${bars(tomRows, { fmt: (v) => `${v} days`, barLabel: INST ? 'Your adverts' : 'Median days', compare: INST ? 'All universities' : '' })}` : '';
+
+  // Projects advertised more than once: the "hard to fill" list.
+  const byId = new Map(H.map((h) => [h.id, h]));
+  const chainStart = (h) => { let x = h, guard = 0; while (x.prev && byId.get(x.prev) && guard++ < 20) x = byId.get(x.prev); return x; };
+  const repeats = mine.filter((h) => (h.readverts || 0) > 0 && !mine.some((o) => o.prev === h.id)) // latest advert of each chain
+    .map((h) => ({ h, start: chainStart(h) })).sort((a, b) => (b.h.readverts || 0) - (a.h.readverts || 0) || a.start.since.localeCompare(b.start.since));
+  // The sector report names no university's hard-to-fill projects: it shows the re-advertised share by subject instead.
+  const reBySubject = !INST ? groups.map((g) => {
+    const rows = H.filter((h) => h.disc === g && !h.censored);
+    return rows.length >= 10 ? [g, pct(rows.filter((h) => (h.readverts || 0) > 0).length, rows.length)] : null;
+  }).filter(Boolean).sort((a, b) => b[1] - a[1]) : [];
+  const repeatTable = !INST ? (reBySubject.some((r) => r[1]) ? `<h3>Share of adverts re-advertised, by subject</h3>${bars(reBySubject, { unit: '%' })}<p class="small">Adverts first seen since ${esc(fmtDate(new Date(HISTORY_FROM + 'T00:00:00Z')))} whose project had been advertised before and closed. A higher share suggests projects that are harder to fill.</p>` : '')
+  : repeats.length ? `<h3>Projects advertised more than once</h3><p class="small">The same project (same ${INST ? '' : 'university and '}title) advertised again after an earlier advert closed. Projects that keep coming back are usually hard to fill: worth checking the funding, eligibility and wording.</p>
+${table(INST ? ['Project', 'Times advertised', 'First advertised', 'Latest advert', 'Now'] : ['Project', 'University', 'Times advertised', 'First advertised', 'Now'],
+    repeats.slice(0, 15).map(({ h, start }) => INST
+      ? [`<span class="t">${esc(h.title.slice(0, 90))}</span>`, (h.readverts || 0) + 1, esc(fmtDate(new Date(start.since + 'T00:00:00Z'))), esc(fmtDate(new Date(h.since + 'T00:00:00Z'))), h.status === 'open' ? 'Open' : 'Closed']
+      : [`<span class="t">${esc(h.title.slice(0, 80))}</span>`, esc(h.inst), (h.readverts || 0) + 1, esc(fmtDate(new Date(start.since + 'T00:00:00Z'))), h.status === 'open' ? 'Open' : 'Closed']), 'ads')}` : '';
+
+  const extTable = INST && ext.length ? `<h3>Deadlines extended in this period</h3>${table(['Advert', 'Original deadline', 'Deadline now', 'Extended on'],
+    ext.slice(0, 15).map(({ h, d }) => [`<span class="t">${esc(h.title.slice(0, 90))}</span>`, h.deadline_first ? esc(fmtDate(new Date(h.deadline_first + 'T00:00:00Z'))) : '–', h.deadline ? esc(fmtDate(new Date(h.deadline + 'T00:00:00Z'))) : 'Open until filled', esc(fmtDate(new Date(d + 'T00:00:00Z')))]), 'ads')}` : '';
+
+  // Findings for the cover: placed after the first two (views, apply rate) so they aren't cut off
+  const hf = [];
+  if (INST && enoughMine) hf.push(`Your adverts stay open for a median of ${mMine} days, against ${mAll} days across all universities.`);
+  if (repeats.length) hf.push(`${repeats.length} of ${INST ? 'your' : 'the'} projects ${repeats.length === 1 ? 'has' : 'have'} been advertised more than once since ${fmtDate(new Date(HISTORY_FROM + 'T00:00:00Z'))}, a sign ${repeats.length === 1 ? 'it is' : 'they are'} hard to fill.`);
+  if (INST && ext.length) hf.push(`You extended the deadline on ${ext.length} advert${ext.length === 1 ? '' : 's'} in this period.`);
+
+  findings.splice(Math.min(2, findings.length), 0, ...hf.slice(0, 2));
+  const early = P1 < '2027-01-15' && !SAMPLE
+    ? `<p class="small">Doctum began recording advert history on ${esc(fmtDate(new Date(HISTORY_FROM + 'T00:00:00Z')))}. Time on market needs adverts to open and close while being tracked, so it fills in over the first few months; adverts that were already open on that date are left out of it.</p>` : '';
+  return `<section><h2>How long adverts stay open</h2><p class="lead">What happened to ${INST ? 'your adverts' : 'adverts'} on university websites: new adverts, closures, deadline changes and projects advertised again. Measured by Doctum from each advert page, twice a week.</p>
+${tilesHtml}${early}${tomChart}${repeatTable}${extTable}</section>`;
 }
 
 function page(S) {
@@ -319,10 +429,11 @@ ${S.findings.length ? `<div class="findings"><h2>Key findings</h2><ul>${S.findin
 ${S.glance}
 <p class="foot">Doctum lists PhD opportunities collected from UK university websites and matches them to applicants’ CVs. This report contains anonymous totals only: no individual can be identified, and any group smaller than ${K} is not shown. Prepared ${esc(fmtDate(new Date()))} · doctum.co.uk · hello@doctum.co.uk</p>
 </section>
-${S.funnel}${S.adverts}${S.sources}${S.reach}${S.demand}${S.skillsSec}${S.termsSec}
+${S.funnel}${S.adverts}${S.historySec}${S.sources}${S.reach}${S.demand}${S.skillsSec}${S.termsSec}
 <h2>About this report</h2><ul class="method small">
 <li><strong>Period:</strong> ${esc(PERIOD)} (ISO weeks ${esc(FROM)} to ${esc(TO)}).</li>
 <li><strong>Advert figures</strong> count events on Doctum: appearing in an applicant’s CV match results, page views, opening the full advert, clicking through to the university’s page, saving to a shortlist and requesting a preparation pack. The median advert is across all universities listed on Doctum in the same period.</li>
+<li><strong>Advert history</strong> is recorded from 1 November 2026. Time on market runs from the day an advert first appears on the university’s site to the day its deadline passes or it is taken down; adverts already open when Doctum started reading a university are left out because their start date is unknown. A project counts as re-advertised when an advert with the same title appears again after the earlier one closed; a page that simply moves address is not counted.</li>
 <li><strong>Applicant figures</strong> come from Doctum’s CV match. Fee status and subject choices come from the form; degree, first-degree subject and country only from applicants who ticked “Count me in”. CVs are never stored.</li>
 <li><strong>Privacy:</strong> Doctum stores no identifiers (no IP address, cookie or account) with these counts, and any group smaller than ${K} is withheld. See doctum.co.uk/privacy.</li>
 <li><strong>Coverage:</strong> ${n(OPEN.length)} open PhDs at ${new Set(OPEN.map((r) => r.institution)).size} UK universities were listed at the time of writing.</li>

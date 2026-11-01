@@ -146,6 +146,7 @@ ok((await rep('report=nope')).status === 400, 'unknown report → 400');
   const html = file ? fs.readFileSync(file, 'utf8') : '';
   ok(out.status === 0 && html.includes('Key findings') && html.includes(top[1]), 'university report built from live API data' + (out.status ? ': ' + out.stderr.slice(0, 300) : ''));
   ok(!/NaN|undefined/.test(html.replace(/<script[\s\S]*?<\/script>/g, '')), 'report has no NaN or undefined values');
+  ok(html.includes('How long adverts stay open'), 'report includes the advert history section');
   if (file) fs.rmSync(path.dirname(file), { recursive: true, force: true });
 }
 

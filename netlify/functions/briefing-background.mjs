@@ -71,7 +71,8 @@ export default async function handler(request) {
     await bump(s, 'all');
     const briefing = await buildBriefing({
       net, fetchFn: fetch, listing, identity, cv, key: cfg.key, model: cfg.model, progress,
-      worksCache: (authorId, make) => cached(s, `works/${authorId}`, CACHE_DAYS, make),
+      worksCache: (authorId, make) => cached(s, `works2/${authorId}`, CACHE_DAYS, make),   // works2: includes funders and co-author organisations
+      identCache: (raw, inst, make) => cached(s, `ident/${fold(raw)}|${fold(inst)}`, CACHE_DAYS, make),
     });
     await finish({ state: 'done', step: 'Ready', briefing, identity: null, candidates: [] });
     console.log('briefing done', rid, briefing.usage ? JSON.stringify(briefing.usage) : '');

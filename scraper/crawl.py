@@ -36,7 +36,7 @@ import os
 # Windows consoles and services default to cp1252; adverts contain characters it can't print.
 for _s in (sys.stdout, sys.stderr):
     try:
-        _s.reconfigure(encoding="utf-8", errors="replace")
+        _s.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)  # show progress live in Actions logs
     except Exception:
         pass
 # Identify the crawler honestly. Set CRAWLER_CONTACT (a GitHub secret) to a real address before going live.

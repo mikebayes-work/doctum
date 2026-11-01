@@ -25,6 +25,10 @@ const DB = (await import('../netlify/doctum/listings.generated.js')).default;
 const L1 = DB.rows.find((r) => r.id === 'a74f08c83ec8') || DB.rows.find((r) => r.status === 'open' && (r.supervisors || []).length >= 2);
 const L2 = DB.rows.find((r) => r.status === 'open' && r.id !== L1.id && (r.supervisors || []).length);
 L1.status = 'open'; L2.status = 'open';
+L1.supervisors = [L1.supervisors[0], L1.supervisors[1] || 'Dr Alex Coauthor', 'Dr Pat Industry'];
+L1.funders = ['AstraZeneca', 'EPSRC'];
+const FULL_ADVERT = `This project is jointly supervised by ${L1.supervisors[0]} and ${L1.supervisors[1]} at the university and Dr Pat Industry at AstraZeneca. ` +
+  'The student will work in collaboration with Prof. Ann Other (Department of Chemistry) on lens materials. FULLPAGEMARKER: the full advert continues with training details.';
 const sup1 = L1.supervisors[0], sup2 = L2.supervisors[0];
 const last1 = sup1.split(/\s+/).pop(), first1 = sup1.replace(/^(Dr|Prof|Professor)\.?\s+/i, '').split(/\s+/)[0];
 const co1 = (L1.supervisors[1] || 'Dr Alex Coauthor').replace(/^(Dr|Prof|Professor)\.?\s+/i, '');
@@ -42,17 +46,21 @@ const work = (i, o = {}) => ({
   publication_year: o.year || 2016 + (i % 10), publication_date: `${o.year || 2016 + (i % 10)}-0${1 + (i % 9)}-01`, type: 'article',
   primary_location: { source: { display_name: o.venue || 'IEEE Transactions on Visualization' } },
   abstract_inverted_index: o.noAbs ? null : Object.fromEntries((o.abs || `We present a camera lens optical design method using deep learning for cinematic capture number ${i}`).split(' ').map((w, k) => [w + (k ? '' : ''), [k]])),
-  authorships: [{ author: { id: 'https://openalex.org/A5000000111', display_name: `${first1} ${last1}` }, institutions: [{ display_name: o.inst || L1.institution }] },
-    ...(o.co || [{ id: 'A5000000222', name: co1 }]).map((c) => ({ author: { id: 'https://openalex.org/' + c.id, display_name: c.name }, institutions: [] }))],
+  authorships: [...(o.noLead ? [] : [{ author: { id: 'https://openalex.org/A5000000111', display_name: `${first1} ${last1}` }, institutions: [{ display_name: o.inst || L1.institution }] }]),
+    ...(o.co || [{ id: 'A5000000222', name: co1 }]).map((c) => ({ author: { id: 'https://openalex.org/' + c.id, display_name: c.name }, institutions: c.inst ? [{ display_name: c.inst }] : [] }))],
+  grants: o.grants || [],
   primary_topic: { display_name: o.topic || 'Computational imaging', field: { display_name: o.field || 'Computer Science' } }, cited_by_count: 10 + i,
 });
 const WORKS = [
-  ...Array.from({ length: 14 }, (_, i) => work(i)),
-  work(20, { title: 'Optical lens aberration correction with neural networks', abs: 'Neural networks correct optical lens aberration in cinematic camera design with ray tracing', year: 2025 }),
+  ...Array.from({ length: 14 }, (_, i) => work(i, i < 3 ? { grants: [{ funder_display_name: 'Engineering and Physical Sciences Research Council' }] } : {})),
+  work(20, { title: 'Optical lens aberration correction with neural networks', abs: 'Neural networks correct optical lens aberration in cinematic camera design with ray tracing', year: 2025,
+    co: [{ id: 'A5000000222', name: co1 }, { id: 'A5000000333', name: 'Pat Industry', inst: 'AstraZeneca (United Kingdom)' }],
+    grants: [{ funder_display_name: 'Engineering and Physical Sciences Research Council', award_id: 'EP/X1' }] }),
   work(21, { title: 'Untitled preprint', noAbs: true }),
   // a namesake merged into the record: other field, other co-authors, other institution
   ...[30, 31, 32].map((i) => work(i, { title: `Landslide susceptibility mapping in mountain region ${i}`, field: 'Earth and Planetary Sciences', topic: 'Landslides', inst: 'China University of Geosciences', co: [{ id: 'A5000000900', name: 'Wei Zhang' }], abs: 'Slope stability and landslide risk' })),
 ];
+const PAT_WORKS = [WORKS.find((w) => w.id.endsWith('W1020')), ...[50, 51, 52].map((i) => work(i, { noLead: true, title: `Lens material screening for imaging ${i}`, co: [{ id: 'A5000000333', name: 'Pat Industry', inst: 'AstraZeneca (United Kingdom)' }], abs: 'Optical lens materials screened for camera imaging quality' }))];
 const author = (id, name, inst, o = {}) => ({ id: 'https://openalex.org/' + id, display_name: name, display_name_alternatives: [], orcid: o.orcid || null, works_count: o.works || 40, cited_by_count: 500,
   last_known_institutions: [{ display_name: inst }], affiliations: [{ institution: { display_name: inst } }], topics: (o.topics || ['Morphology', 'Inflection']).map((t) => ({ display_name: t, field: { display_name: 'Arts' } })) });
 
@@ -60,7 +68,11 @@ const REPORT = (refs) => JSON.stringify({
   atAGlance: { whyFit: ['Your computer vision MSc matches the multi-camera work.', 'Python and PyTorch match the learning methods.', 'Your dissertation used optics.'], gaps: ['No ray tracing experience yet.', 'No publications.'], thisWeek: ['Read P2, P1 and W1 first.', 'Learn the basics of lens aberrations.', 'Check the deadline.'] },
   supervisorSummary: 'Works on multi-camera capture and learning-based optical design.',
   profileQuote: 'My research sits between computer vision and graphics.',
-  coSupervisors: [{ name: co1, note: 'Co-author on several capture papers.' }],
+  team: [{ name: `${first1} ${last1}`, summary: 'Multi-camera capture and learned rendering.', refs: ['P1'] }, { name: co1, summary: 'Co-author on the capture work.', refs: ['P2'] },
+    { name: 'Pat Industry', summary: 'Lens materials at AstraZeneca.', refs: ['P1'] }, { name: 'Dr Nobody Invented', summary: 'Made up.', refs: [] }],
+  teamFit: 'Capture and rendering meet lens materials, see P1.', teamFitRefs: ['P1', 'P88'],
+  funder: { summary: 'An industry partner usually means placements and publication review.', relationship: 'Two co-authored papers.', angles: ['Ask about time at the company.'] },
+  others: [{ name: 'Ann Other', note: 'Collaborator on lens materials.' }, { name: 'Ghost Person', note: 'Not in the advert.' }],
   readFirst: [{ ref: refs[0], why: 'Closest to the project.' }, { ref: refs[1], why: 'Method background.' }, { ref: 'P99', why: 'Made up and must be dropped.' }],
   alsoSkim: [{ ref: 'W1', why: 'Earlier capture work.' }],
   thread: [{ period: '2016–19', text: 'Multi-camera capture.', refs: ['P2', 'W2'] }, { period: '2025', text: 'Optics meets learning.', refs: ['P1'] }, { period: '2030', text: 'Invented step with no real refs.', refs: ['P77'] }],
@@ -86,21 +98,34 @@ globalThis.fetch = async (input, opts = {}) => {
     return new Response('', { status: 202 });
   }
   if (u.pathname === '/robots.txt') return new Response('User-agent: *\nDisallow: /admin/\n', { status: 200 });
-  if (url === L1.url) { calls.pages.push(url); return html(`<html><body><h1>${L1.title}</h1><p>Supervisors: <a href="${PROFILE_URL}">${sup1}</a> and ${L1.supervisors[1] || ''}</p></body></html>`); }
+  if (url === L1.url) { calls.pages.push(url); return html(`<html><body><h1>${L1.title}</h1><p>Supervisors: <a href="${PROFILE_URL}">${sup1}</a> and ${L1.supervisors[1] || ''}</p><p>${FULL_ADVERT}</p></body></html>`); }
   if (url === PROFILE_URL) { calls.pages.push(url); return html(`<html><head><title>${sup1} | ${L1.institution}</title></head><body><h1>${sup1}</h1><h2>Research interests</h2><p>${INTEREST}</p><a href="https://orcid.org/${ORCID}">ORCID</a><p>doi: 10.1234/test.3</p></body></html>`); }
   if (url === L2.url) { calls.pages.push(url); return html(`<html><body><h1>${L2.title}</h1><p>No links here.</p></body></html>`); }
   if (u.hostname === 'api.openalex.org') {
     calls.oa++;
     ok(u.searchParams.get('mailto') === 'hello@doctum.co.uk', 'OpenAlex call uses the polite pool (mailto)');
     if (u.pathname === `/authors/orcid:${ORCID}`) return json(author('A5000000111', `${first1} ${last1}`, L1.institution, { orcid: 'https://orcid.org/' + ORCID, topics: ['Computer vision', 'Computational imaging'] }));
-    if (u.pathname === '/institutions') return json({ results: [{ id: 'https://openalex.org/I999', display_name: L2.institution }] });
-    if (u.pathname === '/authors') return json({ results: [author('A5000000501', name2, 'University of Elsewhere'), author('A5000000502', name2.split(' ')[0][0] + '. ' + name2.split(' ').pop(), 'Another University')] });
+    if (u.pathname === '/institutions') {
+      const q = u.searchParams.get('search') || '';
+      if (/astrazeneca/i.test(q)) return json({ results: [{ id: 'https://openalex.org/I777', display_name: 'AstraZeneca (United Kingdom)', type: 'company' }] });
+      if (q === L1.institution) return json({ results: [{ id: 'https://openalex.org/I111', display_name: L1.institution }] });
+      return json({ results: [{ id: 'https://openalex.org/I999', display_name: L2.institution }] });
+    }
+    if (u.pathname === '/authors') {
+      const q = u.searchParams.get('search') || '', f = u.searchParams.get('filter') || '';
+      if (/Guillemaut|Coauthor/i.test(q) || q === co1) return json({ results: [author('A5000000222', co1, L1.institution, { topics: ['Camera imaging and lens design', 'Computer vision learning'] })] });
+      if (/Pat Industry/.test(q) && f.includes('I777')) return json({ results: [author('A5000000333', 'Pat Industry', 'AstraZeneca (United Kingdom)', { topics: ['Optical lens design', 'Camera imaging materials'] })] });
+      if (/Pat Industry/.test(q)) return json({ results: [] });
+      return json({ results: [author('A5000000501', name2, 'University of Elsewhere'), author('A5000000502', name2.split(' ')[0][0] + '. ' + name2.split(' ').pop(), 'Another University')] });
+    }
     if (u.pathname === '/authors/A5000000501') return json(author('A5000000501', name2, 'University of Elsewhere'));
     if (u.pathname === '/works') {
       const f = u.searchParams.get('filter') || '';
       if (u.searchParams.get('per-page') === '3') return json({ results: [{ title: 'A sample paper', publication_year: 2024 }] });
       if (f.startsWith('author.id:A5000000501')) return json({ results: WORKS.slice(0, 8) });
       if (f.startsWith('author.id:A5000000111')) return json({ results: WORKS });
+      if (f.startsWith('author.id:A5000000222')) return json({ results: WORKS.slice(0, 6).concat([WORKS.find((w) => w.id.endsWith('W1020'))]) });
+      if (f.startsWith('author.id:A5000000333')) return json({ results: PAT_WORKS });
     }
     return json({ results: [] });
   }
@@ -151,7 +176,18 @@ ok(B.report?.skills.find((x) => x.skill === 'Ray tracing')?.status === 'unknown'
 ok(B.papers?.P1?.title.includes('Optical lens aberration'), 'most advert-relevant paper ranked P1');
 ok(B.hadCv === true && !JSON.stringify(b).includes('Internship at a VFX'), 'job JSON does not contain the CV text');
 ok(calls.model === 1, 'exactly one model call');
-ok(B.report?.coSupervisors.length >= 1, 'co-supervisor note present');
+ok(B.team?.length === 3 && B.team.map((m) => m.role).join() === 'lead,co,external', `team of 3: ${B.team?.map((m) => `${m.name} (${m.role}, ${m.confidence})`).join('; ')}`);
+ok(B.team?.[2]?.org === 'AstraZeneca' && B.team[2].confidence === 'medium', 'industry supervisor found through "at AstraZeneca" on the advert');
+const az = B.funders?.find((f) => f.funder === 'AstraZeneca'), ep = B.funders?.find((f) => f.funder === 'EPSRC');
+ok(az && az.kind.startsWith('Industry') && az.per.find((p) => p.name.endsWith(last1))?.coauthored >= 1, `AstraZeneca co-authorship found (${JSON.stringify(az?.per?.map((p) => [p.name, p.coauthored]))})`);
+ok(az?.per.find((p) => p.name === 'Pat Industry')?.worksThere === true && az.per.find((p) => p.name === 'Pat Industry').coauthored === 0, 'industry supervisor shown as working there, not as co-authoring with their own employer');
+ok(ep && ep.kind.startsWith('UK research council') && ep.per.find((p) => p.name.endsWith(last1))?.acknowledged >= 3, `EPSRC acknowledgements found (${ep?.per?.[0]?.acknowledged})`);
+ok(B.overlap?.find((o) => o.b === co1)?.n >= 5, `shared papers lead + co-supervisor (${B.overlap?.find((o) => o.b === co1)?.n})`);
+ok(B.report?.team.length === 3 && !B.report.team.some((t) => /Nobody/.test(t.name)), 'made-up team member dropped, real three kept');
+ok(B.report?.others.length === 1 && B.report.others[0].name === 'Ann Other', 'collaborator from the advert kept, invented one dropped');
+ok(B.report?.teamFitRefs.join() === 'P1' && B.report.funder.relationship, 'team fit refs checked; relationship kept because evidence exists');
+ok(modelPrompt.includes('TEAM (lead first)') && modelPrompt.includes('Pat Industry | External co-supervisor | at AstraZeneca') && modelPrompt.includes('FUNDER AND PARTNER EVIDENCE') && modelPrompt.includes('Ann Other'), 'prompt carries team, funder evidence and others');
+ok(modelPrompt.includes('FULLPAGEMARKER'), 'prompt uses the full advert page, not just the stored excerpt');
 ok(!/\b[PW]\d\b/.test(B.report.atAGlance.thisWeek[0]) && B.report.atAGlance.thisWeek[0].includes('Optical lens aberration'), `paper ids in text replaced by titles: "${B.report?.atAGlance.thisWeek[0]}"`);
 
 // ── scenario 2: no profile, namesakes elsewhere → asks the student first, no AI cost ──

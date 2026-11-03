@@ -1,5 +1,5 @@
 {
-  "run_date": "2026-11-01",
+  "run_date": "2026-11-03",
   "alerts": [
     "durham: returned 0 adverts (site refused the crawler (HTTP 403 on robots.txt))",
     "qub: returned 0 adverts (site refused the crawler (HTTP 403 on robots.txt))",
@@ -14,25 +14,25 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:14:14.368670+00:00"
+      "scraped_at": "2026-11-03T22:54:27.261754+00:00"
     },
     "cambridge": {
-      "scraped": 25,
-      "kept": 25,
-      "open": 25,
-      "new": 0,
-      "changed": 0,
+      "scraped": 36,
+      "kept": 36,
+      "open": 36,
+      "new": 11,
+      "changed": 5,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:14:15.344171+00:00"
+      "scraped_at": "2026-11-03T22:54:30.276799+00:00"
     },
     "cranfield": {
-      "scraped": 39,
-      "kept": 39,
-      "open": 38,
-      "new": 0,
+      "scraped": 40,
+      "kept": 40,
+      "open": 39,
+      "new": 1,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:14:44.023121+00:00"
+      "scraped_at": "2026-11-03T22:54:49.369603+00:00"
     },
     "durham": {
       "scraped": 0,
@@ -44,22 +44,22 @@
       "scraped_at": "2026-11-01T09:18:06.325482+00:00"
     },
     "imperial": {
-      "scraped": 71,
-      "kept": 53,
+      "scraped": 70,
+      "kept": 52,
       "open": 51,
       "new": 0,
       "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-11-01T16:14:58.509055+00:00"
+      "gone": 1,
+      "scraped_at": "2026-11-03T22:55:04.112177+00:00"
     },
     "leeds": {
-      "scraped": 313,
-      "kept": 312,
-      "open": 307,
-      "new": 0,
-      "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-11-01T16:14:56.883405+00:00"
+      "scraped": 309,
+      "kept": 308,
+      "open": 304,
+      "new": 2,
+      "changed": 44,
+      "gone": 6,
+      "scraped_at": "2026-11-03T22:55:13.805640+00:00"
     },
     "liverpool": {
       "scraped": 4,
@@ -68,25 +68,25 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:14:15.398779+00:00"
+      "scraped_at": "2026-11-03T22:54:28.771807+00:00"
     },
     "loughborough": {
-      "scraped": 80,
-      "kept": 80,
-      "open": 80,
-      "new": 0,
+      "scraped": 90,
+      "kept": 90,
+      "open": 90,
+      "new": 12,
       "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-11-01T16:16:26.832761+00:00"
+      "gone": 2,
+      "scraped_at": "2026-11-03T22:55:37.590221+00:00"
     },
     "nottingham": {
-      "scraped": 14,
-      "kept": 14,
-      "open": 14,
-      "new": 0,
-      "changed": 0,
+      "scraped": 15,
+      "kept": 15,
+      "open": 15,
+      "new": 1,
+      "changed": 1,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:14:12.440635+00:00"
+      "scraped_at": "2026-11-03T22:54:25.334495+00:00"
     },
     "qub": {
       "scraped": 0,
@@ -99,12 +99,12 @@
     },
     "southampton": {
       "scraped": 272,
-      "kept": 270,
-      "open": 130,
-      "new": 0,
+      "kept": 271,
+      "open": 131,
+      "new": 5,
       "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-11-01T16:18:35.383498+00:00"
+      "gone": 4,
+      "scraped_at": "2026-11-03T22:57:04.315889+00:00"
     },
     "surrey": {
       "scraped": 7,
@@ -113,16 +113,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:14:12.451045+00:00"
+      "scraped_at": "2026-11-03T22:54:24.453052+00:00"
     },
     "swansea": {
-      "scraped": 9,
-      "kept": 9,
-      "open": 9,
-      "new": 0,
+      "scraped": 13,
+      "kept": 13,
+      "open": 13,
+      "new": 2,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:14:12.439922+00:00"
+      "scraped_at": "2026-11-03T22:54:25.807223+00:00"
     },
     "anglia-ruskin": {
       "scraped": 33,
@@ -131,7 +131,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:15:19.221922+00:00"
+      "scraped_at": "2026-11-03T22:55:26.993308+00:00"
     },
     "arts-bournemouth": {
       "scraped": 0,
@@ -140,7 +140,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:15:26.118292+00:00"
+      "scraped_at": "2026-11-03T22:55:54.086319+00:00"
     },
     "aston": {
       "scraped": 0,
@@ -158,7 +158,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:15:03.234322+00:00"
+      "scraped_at": "2026-11-03T22:55:11.737429+00:00"
     },
     "bcu": {
       "scraped": 39,
@@ -167,7 +167,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:10.913598+00:00"
+      "scraped_at": "2026-11-03T22:55:57.354388+00:00"
     },
     "birkbeck": {
       "scraped": 16,
@@ -176,16 +176,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:15:55.452496+00:00"
+      "scraped_at": "2026-11-03T22:55:59.682775+00:00"
     },
     "birmingham": {
-      "scraped": 13,
-      "kept": 13,
-      "open": 10,
+      "scraped": 12,
+      "kept": 12,
+      "open": 9,
       "new": 0,
       "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-11-01T16:15:40.535010+00:00"
+      "gone": 1,
+      "scraped_at": "2026-11-03T22:55:52.354192+00:00"
     },
     "bradford": {
       "scraped": 3,
@@ -194,16 +194,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:15:48.765901+00:00"
+      "scraped_at": "2026-11-03T22:55:57.617129+00:00"
     },
     "brighton": {
-      "scraped": 11,
-      "kept": 11,
-      "open": 5,
-      "new": 0,
-      "changed": 0,
+      "scraped": 12,
+      "kept": 12,
+      "open": 6,
+      "new": 1,
+      "changed": 1,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:15:43.778039+00:00"
+      "scraped_at": "2026-11-03T22:55:56.939804+00:00"
     },
     "bristol-all": {
       "scraped": 18,
@@ -212,7 +212,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:29.834157+00:00"
+      "scraped_at": "2026-11-03T22:56:14.735474+00:00"
     },
     "brookes": {
       "scraped": 2,
@@ -221,16 +221,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:48.728041+00:00"
+      "scraped_at": "2026-11-03T22:57:52.346571+00:00"
     },
     "brunel": {
-      "scraped": 222,
-      "kept": 222,
+      "scraped": 219,
+      "kept": 219,
       "open": 14,
       "new": 0,
-      "changed": 0,
-      "gone": 0,
-      "scraped_at": "2026-11-01T16:18:48.767237+00:00"
+      "changed": 1,
+      "gone": 3,
+      "scraped_at": "2026-11-03T22:58:48.894833+00:00"
     },
     "cardiff-met": {
       "scraped": 2,
@@ -239,7 +239,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:09.782180+00:00"
+      "scraped_at": "2026-11-03T22:56:02.878750+00:00"
     },
     "cardiff": {
       "scraped": 14,
@@ -257,7 +257,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:10.670089+00:00"
+      "scraped_at": "2026-11-03T22:56:04.845065+00:00"
     },
     "courtauld": {
       "scraped": 1,
@@ -266,7 +266,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:20.912407+00:00"
+      "scraped_at": "2026-11-03T22:56:11.597878+00:00"
     },
     "coventry": {
       "scraped": 18,
@@ -275,7 +275,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:17:12.532099+00:00"
+      "scraped_at": "2026-11-03T22:56:53.235161+00:00"
     },
     "cumbria": {
       "scraped": 1,
@@ -284,7 +284,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:25.889427+00:00"
+      "scraped_at": "2026-11-03T22:56:13.120525+00:00"
     },
     "derby": {
       "scraped": 38,
@@ -293,7 +293,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:47.532230+00:00"
+      "scraped_at": "2026-11-03T22:56:23.372007+00:00"
     },
     "dmu": {
       "scraped": 5,
@@ -302,7 +302,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:41.143379+00:00"
+      "scraped_at": "2026-11-03T22:56:20.990685+00:00"
     },
     "exeter": {
       "scraped": 19,
@@ -311,16 +311,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:59.944147+00:00"
+      "scraped_at": "2026-11-03T22:56:33.973698+00:00"
     },
     "glasgow": {
-      "scraped": 48,
-      "kept": 46,
-      "open": 44,
-      "new": 7,
-      "changed": 0,
-      "gone": 1,
-      "scraped_at": "2026-11-01T16:17:16.281234+00:00"
+      "scraped": 49,
+      "kept": 47,
+      "open": 45,
+      "new": 0,
+      "changed": 1,
+      "gone": 0,
+      "scraped_at": "2026-11-03T22:56:46.543270+00:00"
     },
     "goldsmiths": {
       "scraped": 4,
@@ -329,7 +329,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:53.058716+00:00"
+      "scraped_at": "2026-11-03T22:56:38.082477+00:00"
     },
     "hartpury": {
       "scraped": 1,
@@ -338,16 +338,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:17:16.654164+00:00"
+      "scraped_at": "2026-11-03T22:57:00.599758+00:00"
     },
     "heriot-watt": {
-      "scraped": 15,
-      "kept": 15,
-      "open": 10,
+      "scraped": 18,
+      "kept": 18,
+      "open": 11,
       "new": 0,
       "changed": 0,
-      "gone": 3,
-      "scraped_at": "2026-11-01T16:17:21.194132+00:00"
+      "gone": 0,
+      "scraped_at": "2026-11-03T22:57:01.654132+00:00"
     },
     "hertfordshire": {
       "scraped": 6,
@@ -363,9 +363,9 @@
       "kept": 6,
       "open": 6,
       "new": 0,
-      "changed": 0,
+      "changed": 2,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:17:19.512131+00:00"
+      "scraped_at": "2026-11-03T22:57:01.632423+00:00"
     },
     "hull": {
       "scraped": 1,
@@ -374,7 +374,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:17:33.645362+00:00"
+      "scraped_at": "2026-11-03T22:57:13.587663+00:00"
     },
     "kcl": {
       "scraped": 8,
@@ -392,7 +392,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:17:51.679111+00:00"
+      "scraped_at": "2026-11-03T22:57:22.916845+00:00"
     },
     "leeds-beckett": {
       "scraped": 33,
@@ -401,7 +401,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:18.480090+00:00"
+      "scraped_at": "2026-11-03T22:58:13.706415+00:00"
     },
     "lincoln": {
       "scraped": 1,
@@ -410,16 +410,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:00.077415+00:00"
+      "scraped_at": "2026-11-03T22:57:26.868939+00:00"
     },
     "liverpool-all": {
-      "scraped": 21,
-      "kept": 21,
-      "open": 21,
-      "new": 0,
+      "scraped": 22,
+      "kept": 22,
+      "open": 22,
+      "new": 1,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:14.963171+00:00"
+      "scraped_at": "2026-11-03T22:57:40.231685+00:00"
     },
     "london-met": {
       "scraped": 1,
@@ -428,7 +428,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:13.173296+00:00"
+      "scraped_at": "2026-11-03T22:57:33.121283+00:00"
     },
     "mmu": {
       "scraped": 3,
@@ -437,16 +437,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:34.543485+00:00"
+      "scraped_at": "2026-11-03T22:57:47.411998+00:00"
     },
     "plymouth": {
       "scraped": 23,
       "kept": 23,
       "open": 23,
       "new": 0,
-      "changed": 0,
+      "changed": 1,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:01.790908+00:00"
+      "scraped_at": "2026-11-03T22:58:02.433447+00:00"
     },
     "portsmouth": {
       "scraped": 10,
@@ -455,7 +455,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:43.420926+00:00"
+      "scraped_at": "2026-11-03T22:57:58.090849+00:00"
     },
     "qmu": {
       "scraped": 3,
@@ -464,7 +464,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:49.264995+00:00"
+      "scraped_at": "2026-11-03T22:57:52.916733+00:00"
     },
     "qmul": {
       "scraped": 14,
@@ -473,7 +473,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:59.938228+00:00"
+      "scraped_at": "2026-11-03T22:58:00.002455+00:00"
     },
     "rca": {
       "scraped": 3,
@@ -482,7 +482,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:08.310838+00:00"
+      "scraped_at": "2026-11-03T22:58:12.394803+00:00"
     },
     "rgu": {
       "scraped": 1,
@@ -491,7 +491,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:18:52.061968+00:00"
+      "scraped_at": "2026-11-03T22:57:55.829615+00:00"
     },
     "royal-holloway": {
       "scraped": 4,
@@ -500,7 +500,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:15.322724+00:00"
+      "scraped_at": "2026-11-03T22:58:12.219770+00:00"
     },
     "shu": {
       "scraped": 17,
@@ -509,7 +509,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:20:08.547480+00:00"
+      "scraped_at": "2026-11-03T22:59:23.939430+00:00"
     },
     "sruc": {
       "scraped": 1,
@@ -518,7 +518,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:18.810376+00:00"
+      "scraped_at": "2026-11-03T22:58:22.644368+00:00"
     },
     "st-andrews": {
       "scraped": 5,
@@ -527,7 +527,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:28.632984+00:00"
+      "scraped_at": "2026-11-03T22:58:31.358569+00:00"
     },
     "staffordshire": {
       "scraped": 1,
@@ -536,7 +536,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:58.870428+00:00"
+      "scraped_at": "2026-11-03T22:58:57.622261+00:00"
     },
     "suffolk": {
       "scraped": 1,
@@ -545,7 +545,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:35.090007+00:00"
+      "scraped_at": "2026-11-03T22:58:37.652907+00:00"
     },
     "sunderland": {
       "scraped": 1,
@@ -554,16 +554,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:50.300860+00:00"
+      "scraped_at": "2026-11-03T22:58:50.198513+00:00"
     },
     "sussex": {
-      "scraped": 7,
-      "kept": 7,
-      "open": 7,
-      "new": 0,
+      "scraped": 8,
+      "kept": 8,
+      "open": 8,
+      "new": 1,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:38.720224+00:00"
+      "scraped_at": "2026-11-03T22:58:44.564352+00:00"
     },
     "trinity-laban": {
       "scraped": 1,
@@ -572,7 +572,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:56.122689+00:00"
+      "scraped_at": "2026-11-03T22:59:03.321047+00:00"
     },
     "ucl": {
       "scraped": 2,
@@ -581,7 +581,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:55.651193+00:00"
+      "scraped_at": "2026-11-03T22:58:58.681969+00:00"
     },
     "uel": {
       "scraped": 3,
@@ -590,7 +590,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:16:41.671732+00:00"
+      "scraped_at": "2026-11-03T22:56:30.478365+00:00"
     },
     "uwl": {
       "scraped": 36,
@@ -599,16 +599,16 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:20:17.479109+00:00"
+      "scraped_at": "2026-11-03T22:59:15.626613+00:00"
     },
     "warwick": {
-      "scraped": 7,
-      "kept": 7,
-      "open": 6,
-      "new": 0,
+      "scraped": 8,
+      "kept": 8,
+      "open": 7,
+      "new": 1,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:19:54.568997+00:00"
+      "scraped_at": "2026-11-03T22:58:52.859070+00:00"
     },
     "westminster": {
       "scraped": 20,
@@ -617,7 +617,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:21:39.556153+00:00"
+      "scraped_at": "2026-11-03T23:00:55.865211+00:00"
     },
     "worcester": {
       "scraped": 2,
@@ -626,7 +626,7 @@
       "new": 0,
       "changed": 0,
       "gone": 0,
-      "scraped_at": "2026-11-01T16:20:26.674230+00:00"
+      "scraped_at": "2026-11-03T22:59:23.917953+00:00"
     }
   },
   "not_working_yet": {
@@ -657,7 +657,7 @@
     "harper-adams": "found 3 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
     "icr": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
     "keele": "found 1 listing page(s) and 0 candidate links, but none read like a PhD advert - needs proper rules",
-    "kent": "found 2 listing page(s) and 2 candidate links, but none read like a PhD advert - needs proper rules",
+    "kent": "found 2 listing page(s) and 1 candidate links, but none read like a PhD advert - needs proper rules",
     "kingston": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
     "leeds-trinity": "no PhD listing page found (sitemap and common paths) - add `seeds:`",
     "leicester": "site refused the crawler (HTTP 403 on robots.txt)",

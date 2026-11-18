@@ -1,10 +1,14 @@
 # Doctum - crawl the universities that refuse GitHub's servers, from Mike's PC.
 #
-# Runs on a self-hosted GitHub Actions runner on Mike's Windows PC (label: doctum-home), Monday and
-# Thursday evenings, so the results are in the repo before the Tuesday/Friday 05:23 UTC main scrape.
+# Runs on a self-hosted GitHub Actions runner on Mike's Windows PC (label: doctum-home).
+# The PC isn't always on, and GitHub cancels a job that waits more than 24h for a runner, so the
+# schedule fires three times a day: there is always a job waiting, it runs whenever the PC is awake,
+# and the freshness check below skips it if the PC already crawled in the last 20 hours.
 # It only crawls sources marked `runner: home` in scraper/sources.yaml and commits their raw files to
 # data/raw-home/. The main workflow (phd-scrape.yml) builds the database from them.
-# If the PC is off, the job waits in the queue; the main scrape ignores home files over 4 days old.
+# The main scrape ignores home files over 4 days old.
+# It has its own concurrency group: sharing one with phd-scrape.yml made the main scrape wait up to
+# 24h behind a home job that was waiting for a sleeping PC (Nov 2026).
 #
 # Setup (once): GitHub repo -> Settings -> Actions -> Runners -> New self-hosted runner -> Windows.
 # Follow the commands it shows, add the label doctum-home when asked, and choose to run it as a service.
@@ -14,7 +18,7 @@ name: PhD scrape (home PC)
 
 on:
   schedule:
-    - cron: '37 19 * * 1,4'
+    - cron: '37 7,13,19 * * *'
   workflow_dispatch:
     inputs:
       sources:
@@ -26,7 +30,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: phd-scrape   # never at the same time as the main scrape
+  group: phd-scrape-home   # own group: never blocks the main scrape (pushes retry with rebase instead)
   cancel-in-progress: false
 
 jobs:
@@ -39,18 +43,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Skip if crawled recently
+        id: fresh
+        run: |
+          $recent = python -c "import json,glob,datetime as d; t=[d.datetime.fromisoformat(json.load(open(f))['scraped_at']) for f in glob.glob('data/raw-home/phdraw_*.json')]; print(int(bool(t) and (d.datetime.now(d.timezone.utc)-max(t)).total_seconds() < 20*3600))"
+          if ("${{ github.event_name }}" -eq "schedule" -and $recent -eq "1") {
+            Write-Output "Home crawl already done in the last 20 hours - skipping"
+            "skip=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
+
       - name: Install
+        if: steps.fresh.outputs.skip != 'true'
         run: |
           python -m pip install --quiet -r requirements.txt
           python -m playwright install chromium   # browser for `browser: true` sources; cached after the first run
 
       - name: Crawl home sources
+        if: steps.fresh.outputs.skip != 'true'
         env:
           CRAWLER_CONTACT: ${{ secrets.CRAWLER_CONTACT }}
           CRAWLER_JOBS: '4'
         run: python -m scraper.crawl --runner home ${{ github.event.inputs.sources }}
 
       - name: Commit raw files
+        if: steps.fresh.outputs.skip != 'true'
         run: |
           git config user.name "doctum-bot"
           git config user.email "doctum-bot@users.noreply.github.com"

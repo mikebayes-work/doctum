@@ -46,7 +46,9 @@ jobs:
       - name: Skip if crawled recently
         id: fresh
         run: |
-          $recent = python -c "import json,glob,datetime as d; t=[d.datetime.fromisoformat(json.load(open(f))['scraped_at']) for f in glob.glob('data/raw-home/phdraw_*.json')]; print(int(bool(t) and (d.datetime.now(d.timezone.utc)-max(t)).total_seconds() < 20*3600))"
+          $env:PYTHONUTF8 = "1"
+          $recent = python -c "import json,glob,datetime as d`ntry:`n t=[d.datetime.fromisoformat(json.load(open(f,encoding='utf-8'))['scraped_at']) for f in glob.glob('data/raw-home/phdraw_*.json')]`n print(int(bool(t) and (d.datetime.now(d.timezone.utc)-max(t)).total_seconds() < 20*3600))`nexcept Exception:`n print(0)"
+          if ($LASTEXITCODE -ne 0) { $recent = "0" }   # any problem with the check: crawl anyway
           if ("${{ github.event_name }}" -eq "schedule" -and $recent -eq "1") {
             Write-Output "Home crawl already done in the last 20 hours - skipping"
             "skip=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8

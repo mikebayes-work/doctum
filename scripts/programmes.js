@@ -7,6 +7,12 @@
 // description (or anywhere in the description, for programmes marked "anywhere").
 // Programmes with at least one open advert get their own page; the rest are listed on
 // the hub with a link to their own site, so there are no empty pages for search engines.
+//
+// New programmes need no manual step: discoverProgrammes() reads every open advert for
+// names like "FIBE3 CDT", "Centre for Doctoral Training in X" or "X Doctoral Training
+// Partnership" and adds any it finds that the checked list doesn't already cover. Their
+// pages show only what the adverts say. Adding a programme to data/programmes.json is
+// optional: it adds checked facts (partners, website) and takes over from the found entry.
 
 const fs = require('fs');
 const path = require('path');
@@ -32,8 +38,9 @@ function loadProgrammes(root) {
   });
 }
 
-// Fills p.list for each programme and returns Map(listing id -> [programmes]).
-function matchProgrammes(progs, open) {
+// Fills p.list for each programme, appends any programmes discovered in the adverts to
+// progs, and returns Map(listing id -> [programmes]).
+function matchProgrammes(progs, open, slugify) {
   const byListing = new Map();
   for (const r of open) {
     const early = [r.title, r.summary, r.programme, (r.description || '').slice(0, EARLY)].filter(Boolean).join('\n');
@@ -47,7 +54,78 @@ function matchProgrammes(progs, open) {
       }
     }
   }
+  if (slugify) {
+    const found = discoverProgrammes(progs, open, slugify);
+    if (found.length) console.log(`doctoral training: found ${found.length} programme(s) not in data/programmes.json: ${found.map((p) => `${p.short} (${p.list.length})`).join(', ')}`);
+    for (const p of found) {
+      progs.push(p);
+      for (const r of p.list) { if (!byListing.has(r.id)) byListing.set(r.id, []); byListing.get(r.id).push(p); }
+    }
+  }
   return byListing;
+}
+
+// ── Automatic discovery ──
+const FUNDER_RE = /\b(EPSRC|EPRSC|BBSRC|NERC|ESRC|AHRC|MRC|STFC|UKRI|Medical Research Council|Wellcome(?: Trust)?)(?:-funded)?\b/g;
+const FUNDER_FIX = { EPRSC: 'EPSRC', 'Medical Research Council': 'MRC', 'Wellcome Trust': 'Wellcome' };
+const LEAD_RE = /^(The|An|A|Our|OR|Or|This|These|Funded|Joint|Its|Their)\s+/;
+const GENERIC_RE = /^(An?|The|This|Our|OR|Industrial|Doctoral|Training|Partnerships?|PhDs?|Social Sciences|Humanities|Arts|Sciences?|Algorithmic Grant|Healthcare Professionals|AI|Centre|Doctoral Training|Studentships?|Funded|New|National|UK|Research|University|Graduate School)$/i;
+const NAME_RES = [
+  // "FIBE3 CDT", "Data-Centric Engineering CDT", "SWBio DTP", "LEAH DLA"
+  [/\b([A-Z][A-Za-z0-9+²\-]*(?: [A-Z][A-Za-z0-9+²\-]*){0,4}) (CDT|DTP|DLA)s?\b/g, (m) => ({ raw: m[1], type: m[2] })],
+  // "EPSRC Centre for Doctoral Training in Quantum Information Science and Technologies"
+  [/\b((?:EPSRC|BBSRC|NERC|ESRC|AHRC|MRC|STFC|UKRI)(?:[ -](?:AI|funded))? )?Centre for Doctoral Training (?:in|for) ([A-Z][\w-]*(?: (?:[A-Z][\w-]*|and|for|of|the|in|&))*)/g, (m) => ({ raw: (m[1] || '') + m[2], type: 'CDT', full: true })],
+  // "South West Doctoral Training Partnership", "Wessex One Health Doctoral Landscape Award"
+  [/\b([A-Z][\w-]*(?: [A-Z][\w-]*){0,5}) Doctoral (Training Partnership|Landscape Award)s?\b/g, (m) => ({ raw: m[1], type: m[2] === 'Training Partnership' ? 'DTP' : 'DLA' })],
+];
+const overlap = (a, b) => { let k = 0; for (const x of a) if (b.has(x)) k++; return k; };
+
+function discoverProgrammes(curated, open, slugify) {
+  const instWords = new Set(open.flatMap((r) => r.institution.split(/[\s,]+/)).concat(['DMU', 'UCL', 'LSE', 'KCL', 'London']));
+  const byId = new Map(open.map((r) => [r.id, r]));
+  const cands = new Map();
+  for (const r of open) {
+    const text = [r.title, r.summary, (r.description || '').slice(0, EARLY)].filter(Boolean).join('\n');
+    for (const [re, read] of NAME_RES) for (const m of text.matchAll(re)) {
+      const c = read(m);
+      const funders = [...c.raw.matchAll(FUNDER_RE)].map((x) => FUNDER_FIX[x[1]] || x[1]);
+      let name = c.raw.replace(FUNDER_RE, ' ').replace(/\s+/g, ' ').trim(), prev;
+      do { prev = name; name = name.replace(LEAD_RE, ''); } while (prev !== name);
+      name = name.replace(/^(and|for|of|in|the) /i, '').replace(/ (and|for|of|in|the|&)$/i, '').trim();
+      if (!name || GENERIC_RE.test(name) || name.split(' ').length > 7) continue;
+      if (!name.includes(' ') && instWords.has(name)) continue; // "Exeter DLA" = a university's own award, not a programme
+      const key = c.type + '|' + name.toLowerCase();
+      if (!cands.has(key)) cands.set(key, { name, type: c.type, full: !!c.full, funders: new Set(), ids: new Set() });
+      const k = cands.get(key);
+      funders.forEach((f) => k.funders.add(f));
+      k.ids.add(r.id);
+    }
+  }
+  // Drop anything the checked list already covers (same adverts, or its patterns match the name).
+  const known = curated.map((p) => new Set(p.list.map((r) => r.id)));
+  const list = [...cands.values()].filter((c) =>
+    !known.some((s) => overlap(c.ids, s) >= 0.8 * c.ids.size) &&
+    !curated.some((p) => p.res.some((re) => re.test(`${c.name} ${c.type}`))));
+  // Merge names that are the same programme (mostly the same adverts): "FIBE3 CDT" + "CDT in Future Infrastructure…".
+  list.sort((a, b) => b.ids.size - a.ids.size || a.full - b.full);
+  const merged = [];
+  for (const c of list) {
+    const m = merged.find((x) => x.type === c.type && overlap(c.ids, x.ids) >= 0.8 * Math.min(c.ids.size, x.ids.size));
+    if (m) { c.ids.forEach((i) => m.ids.add(i)); c.funders.forEach((f) => m.funders.add(f)); if (c.full && !m.fullName) m.fullName = c.name; }
+    else merged.push({ ...c, fullName: c.full ? c.name : '' });
+  }
+  const taken = new Set(curated.map((p) => p.id));
+  return merged.map((c) => {
+    let id = slugify(`${c.name} ${c.type}`);
+    while (taken.has(id)) id += '-x';
+    taken.add(id);
+    const full = c.fullName || c.name;
+    return {
+      id, auto: true, type: c.type, short: `${c.name} ${c.type}`,
+      name: c.type === 'CDT' ? `Centre for Doctoral Training in ${full}` : `${full} ${c.type === 'DTP' ? 'Doctoral Training Partnership' : 'Doctoral Landscape Award'}`,
+      funder: [...c.funders], list: [...c.ids].map((i) => byId.get(i)),
+    };
+  });
 }
 
 const progPath = (p) => `/doctoral-training/${p.id}/`;
@@ -84,7 +162,7 @@ function programmePage(p, { esc, n, cardList, today, updated }) {
   const insts = [...new Set(p.list.map((r) => r.institution))].sort();
   const facts = [
     ['Type', `${esc(TYPE_NAME[p.type])} (${esc(p.type)})`],
-    (p.funder || []).length && ['Funded by', esc(p.funder.join(', '))],
+    (p.funder || []).length && [p.auto ? 'Funder (as named in adverts)' : 'Funded by', esc(p.funder.join(', '))],
     (p.partners || []).length && ['Partners', esc(p.partners.join(', '))],
     (p.subjects || []).length && ['Subjects', esc(p.subjects.join(', '))],
     p.website && ['Website', `<a href="${esc(p.website)}" rel="noopener" target="_blank">${esc(p.website.replace(/^https:\/\/(www\.)?/, '').replace(/\/$/, ''))} ↗</a>`],
@@ -96,7 +174,9 @@ function programmePage(p, { esc, n, cardList, today, updated }) {
     body: `<h1>${esc(p.short)} PhDs</h1>
 <p class="lead">${intro}</p>
 <dl class="facts-list dtp-facts">${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
-<p class="small">Facts on this page come from the programme's own site and adverts. Check the programme's site for its full list of projects and how to apply. <a href="/doctoral-training/">What is a ${esc(p.type)}?</a></p>
+<p class="small">${p.auto
+    ? 'Doctum found this programme named in the university adverts below, so the details here come only from those adverts. Search for the programme’s own website for its full list of projects and how to apply.'
+    : 'Facts on this page come from the programme’s own site and adverts. Check the programme’s site for its full list of projects and how to apply.'} <a href="/doctoral-training/">What is a ${esc(p.type)}?</a></p>
 ${cardList(p.list, today)}`,
   };
 }
@@ -136,4 +216,4 @@ ${directory({ esc, n, live, idle })}`,
   return live;
 }
 
-module.exports = { loadProgrammes, matchProgrammes, programmePages, progPath };
+module.exports = { loadProgrammes, matchProgrammes, discoverProgrammes, programmePages, progPath };

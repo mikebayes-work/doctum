@@ -1,0 +1,264 @@
+{
+  "_readme": [
+    "Doctoral training programmes (DTPs, CDTs and DLA hubs) shown on /doctoral-training/.",
+    "Only put facts here that you have checked on the programme's own site or in its adverts. Leave a field out rather than guess.",
+    "type: DTP, CDT or DLA. funder: the UKRI council(s). partners: universities and institutes, lead first if known.",
+    "match: regular expressions (case-sensitive) tested against each advert's title, summary and the first 500 characters of its description.",
+    "match_i: the same, but case-insensitive. anywhere: true also searches the whole description (use only for distinctive names, because passing mentions creep in).",
+    "A programme gets its own page when at least one open advert matches; the rest are listed on the hub with a link to their site."
+  ],
+  "programmes": [
+    {
+      "id": "swbio-dtp", "name": "South West Biosciences Doctoral Training Partnership", "short": "SWBio DTP",
+      "type": "DTP", "funder": ["BBSRC"],
+      "partners": ["University of Bristol (lead)", "University of Bath", "Cardiff University", "University of Exeter", "Rothamsted Research"],
+      "website": "https://www.swbio.ac.uk/", "subjects": ["Biosciences"],
+      "about": "A BBSRC-funded partnership led by the University of Bristol that trains bioscience PhD students through four-year funded studentships.",
+      "match": ["\\bSWBio\\b"], "match_i": ["South West Biosciences Doctoral Training"]
+    },
+    {
+      "id": "gw4-biomed", "name": "MRC GW4 BioMed Doctoral Training Partnership", "short": "GW4 BioMed",
+      "type": "DTP", "funder": ["MRC"],
+      "partners": ["Cardiff University (lead)", "University of Bath", "University of Bristol", "University of Exeter"],
+      "website": "https://www.gw4biomed.ac.uk/", "subjects": ["Biomedical sciences"],
+      "about": "A Medical Research Council partnership between the four GW4 universities, offering funded biomedical PhD studentships each year.",
+      "match_i": ["GW4 ?BioMed"]
+    },
+    {
+      "id": "aries-dtp", "name": "ARIES Doctoral Training Partnership", "short": "ARIES DTP",
+      "type": "DTP", "funder": ["NERC"],
+      "partners": ["University of East Anglia (lead)", "University of Essex", "University of Kent", "University of Plymouth", "Royal Holloway, University of London"],
+      "website": "https://www.aries-dtp.ac.uk/", "subjects": ["Environmental sciences"],
+      "about": "A NERC-funded partnership led by the University of East Anglia that funds environmental science PhDs across its partner universities.",
+      "match": ["\\bARIES\\b"]
+    },
+    {
+      "id": "centa-dtp", "name": "CENTA Doctoral Training Partnership", "short": "CENTA",
+      "type": "DTP", "funder": ["NERC"], "subjects": ["Environmental sciences"],
+      "about": "A NERC-funded doctoral training partnership for environmental science PhDs.",
+      "match": ["\\bCENTA\\b"]
+    },
+    {
+      "id": "quadrat-dtp", "name": "QUADRAT Doctoral Training Partnership", "short": "QUADRAT",
+      "type": "DTP", "funder": ["NERC"], "subjects": ["Environmental sciences"],
+      "match_i": ["\\bQUADRAT (DTP|Doctoral)"]
+    },
+    {
+      "id": "one-planet-dtp", "name": "One Planet Doctoral Training Partnership", "short": "One Planet DTP",
+      "type": "DTP", "funder": ["NERC"], "partners": ["Newcastle University", "Northumbria University"], "subjects": ["Environmental sciences"],
+      "match_i": ["One Planet (DTP|Doctoral)"]
+    },
+    {
+      "id": "foodbiosystems-dtp", "name": "FoodBioSystems Doctoral Training Partnership", "short": "FoodBioSystems DTP",
+      "type": "DTP", "funder": ["BBSRC"], "subjects": ["Food and agriculture", "Biosciences"],
+      "about": "A BBSRC-funded partnership for PhDs on food and the food system; Brunel University of London is among its partners.",
+      "match_i": ["FoodBio ?Systems", "FoodBio DTP"]
+    },
+    {
+      "id": "eastbio-dtp", "name": "EASTBIO Doctoral Training Partnership", "short": "EASTBIO",
+      "type": "DTP", "funder": ["BBSRC"], "subjects": ["Biosciences"],
+      "match_i": ["\\bEASTBIO\\b"]
+    },
+    {
+      "id": "white-rose-bbsrc-dtp", "name": "White Rose BBSRC Doctoral Training Partnership in Mechanistic Biology", "short": "White Rose BBSRC DTP",
+      "type": "DTP", "funder": ["BBSRC"], "subjects": ["Biosciences"],
+      "match_i": ["White Rose (BBSRC|Mechanistic)"]
+    },
+    {
+      "id": "needl-dla", "name": "NEEDL BBSRC Doctoral Landscape Award", "short": "NEEDL",
+      "type": "DLA", "funder": ["BBSRC"],
+      "partners": ["Durham University", "Newcastle University", "Northumbria University", "Teesside University"], "subjects": ["Biosciences"],
+      "match": ["\\bNEEDL\\b"]
+    },
+    {
+      "id": "dimen-dtp", "name": "MRC DiMeN Doctoral Training Partnership", "short": "DiMeN DTP",
+      "type": "DTP", "funder": ["MRC"], "subjects": ["Biomedical sciences"],
+      "about": "A Medical Research Council partnership offering funded biomedical PhD projects.",
+      "match": ["\\bDiMeN\\b"]
+    },
+    {
+      "id": "mrc-lid", "name": "MRC London Intercollegiate Doctoral Training Partnership", "short": "MRC LID",
+      "type": "DTP", "funder": ["MRC"],
+      "partners": ["London School of Hygiene & Tropical Medicine", "St George's, University of London"], "subjects": ["Biomedical sciences", "Public health"],
+      "match": ["\\bMRC LID\\b"], "match_i": ["London Intercollegiate Doctoral Training"]
+    },
+    {
+      "id": "ubel-dtp", "name": "UBEL Doctoral Training Partnership (UCL, Bloomsbury and East London)", "short": "UBEL DTP",
+      "type": "DTP", "funder": ["ESRC"],
+      "website": "https://www.ubel-dtp.ac.uk/", "subjects": ["Social sciences"],
+      "about": "One of the ESRC's social science doctoral training partnerships, bringing together UCL and partner universities in Bloomsbury and East London.",
+      "match": ["\\bUBEL\\b"]
+    },
+    {
+      "id": "nine-dtp", "name": "Northern Ireland and North East Doctoral Training Partnership", "short": "NINE DTP",
+      "type": "DTP", "funder": ["ESRC"],
+      "partners": ["Durham University", "Newcastle University", "Northumbria University", "University of Sunderland", "Teesside University", "Queen's University Belfast", "Ulster University"],
+      "website": "https://www.ninedtp.ac.uk/", "subjects": ["Social sciences"],
+      "about": "An ESRC partnership of seven universities in the North East of England and Northern Ireland, funding social science PhDs.",
+      "match": ["\\bNINE DTP\\b", "\\bNINE\\b(?= Doctoral| ESRC)"], "match_i": ["Northern Ireland and North East Doctoral"]
+    },
+    {
+      "id": "sedarc", "name": "South East Doctoral Training Arc", "short": "SEDarc",
+      "type": "DTP", "funder": ["ESRC"],
+      "website": "https://www.sedarc.ac.uk/", "subjects": ["Social sciences"],
+      "about": "An ESRC doctoral training partnership of six universities in the South East of England, including Kent, Surrey and Sussex.",
+      "match_i": ["\\bSEDarc\\b", "South East Doctoral Training Arc"]
+    },
+    {
+      "id": "cam-dtp", "name": "Cambridge ESRC Doctoral Training Partnership", "short": "CAM-DTP",
+      "type": "DTP", "funder": ["ESRC"],
+      "partners": ["University of Cambridge", "Anglia Ruskin University", "University of Bedfordshire"], "subjects": ["Social sciences"],
+      "match": ["\\bCAM-DTP\\b", "Cambridge ESRC Doctoral Training Partnership"]
+    },
+    {
+      "id": "wgsss", "name": "ESRC Welsh Graduate School for the Social Sciences", "short": "WGSSS",
+      "type": "DTP", "funder": ["ESRC"], "subjects": ["Social sciences"],
+      "about": "The ESRC's doctoral training partnership for Wales, funding social science PhDs through accredited pathways at Welsh universities.",
+      "match": ["\\bWGSSS\\b"], "match_i": ["Wel(sh|es) Graduate School for the Social Sciences"]
+    },
+    {
+      "id": "white-rose-dtp", "name": "White Rose Social Sciences Doctoral Training Partnership", "short": "WRDTP",
+      "type": "DTP", "funder": ["ESRC"], "subjects": ["Social sciences"],
+      "about": "An ESRC partnership funding social science PhDs at universities across Yorkshire and the north of England.",
+      "match": ["\\bWRDTP\\b"], "match_i": ["White Rose (Social Sciences|DTP|Doctoral Training Partnership)"]
+    },
+    {
+      "id": "grand-union-dtp", "name": "Grand Union Doctoral Training Partnership", "short": "Grand Union DTP",
+      "type": "DTP", "funder": ["ESRC"], "subjects": ["Social sciences"],
+      "about": "An ESRC partnership funding social science PhDs; Brunel University of London is among its members.",
+      "match_i": ["Grand Union (DTP|Doctoral)"]
+    },
+    {
+      "id": "senss", "name": "South and East Network for Social Sciences", "short": "SeNSS",
+      "type": "DTP", "funder": ["ESRC"], "subjects": ["Social sciences"],
+      "about": "An ESRC doctoral training partnership funding social science PhDs, including student-led and collaborative studentships.",
+      "match_i": ["\\bSeNSS\\b", "South and East Network for Social Sciences"], "anywhere": true
+    },
+    {
+      "id": "midlands-graduate-school", "name": "Midlands Graduate School Doctoral Training Partnership", "short": "Midlands Graduate School",
+      "type": "DTP", "funder": ["ESRC"], "subjects": ["Social sciences"],
+      "about": "An ESRC partnership funding social science PhDs at universities across the Midlands.",
+      "match": ["Midlands Graduate School"], "anywhere": true
+    },
+    {
+      "id": "south-coast-dtp", "name": "South Coast Doctoral Training Partnership", "short": "South Coast DTP",
+      "type": "DTP", "funder": ["ESRC"], "subjects": ["Social sciences"],
+      "match_i": ["South Coast (DTP|Doctoral Training)"]
+    },
+    {
+      "id": "chase", "name": "Consortium for the Humanities and the Arts South-East England", "short": "CHASE",
+      "type": "DTP", "funder": ["AHRC"],
+      "partners": ["University of Sussex (coordinator)", "Birkbeck, University of London", "The Courtauld", "University of Essex", "Goldsmiths, University of London", "University of Kent", "SOAS University of London", "University of East Anglia"],
+      "website": "https://www.chase.ac.uk/", "subjects": ["Arts and humanities"],
+      "about": "An AHRC-funded consortium of arts and humanities departments across London and the South East, coordinated by the University of Sussex.",
+      "match": ["\\bCHASE (DTP|DLA|AHRC|Doctoral|studentship)", "AHRC CHASE"], "match_i": ["Consortium for the Humanities and the Arts South-East"]
+    },
+    {
+      "id": "northern-bridge", "name": "Northern Bridge Consortium", "short": "Northern Bridge",
+      "type": "DTP", "funder": ["AHRC"],
+      "partners": ["Durham University", "Newcastle University", "Northumbria University", "University of Sunderland", "Teesside University", "Queen's University Belfast", "Ulster University"],
+      "website": "https://www.northernbridge.ac.uk/", "subjects": ["Arts and humanities"],
+      "about": "The AHRC's arts and humanities partnership for the North East of England and Northern Ireland.",
+      "match": ["Northern Bridge"]
+    },
+    {
+      "id": "nwcdtp", "name": "North West Consortium Doctoral Training Partnership", "short": "NWCDTP",
+      "type": "DTP", "funder": ["AHRC"],
+      "partners": ["University of Manchester", "Keele University", "Lancaster University", "University of Liverpool", "Manchester Metropolitan University", "Royal Northern College of Music", "University of Salford"], "subjects": ["Arts and humanities"],
+      "match": ["\\bNWCDTP\\b"], "match_i": ["North West Consortium Doctoral Training"]
+    },
+    {
+      "id": "techne", "name": "Techne AHRC Doctoral Training Partnership", "short": "Techne",
+      "type": "DTP", "funder": ["AHRC"], "subjects": ["Arts and humanities"],
+      "match_i": ["\\bTechne (DTP|AHRC|Doctoral|studentship)"]
+    },
+    {
+      "id": "midlands4cities", "name": "Midlands4Cities Doctoral Training Partnership", "short": "M4C",
+      "type": "DTP", "funder": ["AHRC"], "subjects": ["Arts and humanities"],
+      "about": "The AHRC's arts and humanities partnership of eight universities across the Midlands.",
+      "match": ["\\bM4C\\b"], "match_i": ["Midlands4Cities"]
+    },
+    {
+      "id": "leah-dla", "name": "London and East of England Arts and Humanities Doctoral Landscape Awards Hub", "short": "LEAH DLA Hub",
+      "type": "DLA", "funder": ["AHRC"], "subjects": ["Arts and humanities"],
+      "about": "An AHRC Doctoral Landscape Award hub for arts and humanities PhDs in London and the East of England; the University of Westminster is a member.",
+      "match": ["\\bLEAH\\b"], "anywhere": true
+    },
+    {
+      "id": "fibe3-cdt", "name": "EPSRC CDT in Future Infrastructure and Built Environment: Unlocking Net Zero", "short": "FIBE3 CDT",
+      "type": "CDT", "funder": ["EPSRC"], "partners": ["University of Cambridge"], "subjects": ["Engineering", "Built environment"],
+      "about": "A Cambridge centre offering 1+3 MRes and PhD studentships on infrastructure and the built environment, in collaboration with industry.",
+      "match": ["\\bFIBE ?3\\b"]
+    },
+    {
+      "id": "cisdns-cdt", "name": "EPSRC and MOD CDT in Complex Integrated Systems for Defence and Security", "short": "CISDnS CDT",
+      "type": "CDT", "funder": ["EPSRC", "Ministry of Defence"], "partners": ["University of Southampton"],
+      "website": "https://www.cisdns-cdt.ac.uk/", "subjects": ["Engineering", "Defence and security"],
+      "about": "A University of Southampton centre, funded with EPSRC and the Ministry of Defence, offering integrated PhDs and EngDs across digital, physical and biological systems for the defence and security sector.",
+      "match": ["\\bCISDnS\\b", "EPSRC.{0,3}MOD CDT"], "anywhere": true
+    },
+    {
+      "id": "net2zero-cdt", "name": "Net2Zero Centre for Doctoral Training", "short": "Net2Zero CDT",
+      "type": "CDT",
+      "partners": ["Aston University", "University of Nottingham", "Queen's University Belfast", "University of Warwick"], "subjects": ["Engineering", "Energy"],
+      "about": "A centre run by four universities on net-zero technologies, with industrial engagement and a three-month placement for students.",
+      "match_i": ["\\bNet2Zero\\b"], "anywhere": true
+    },
+    {
+      "id": "sustai-cdt", "name": "UKRI AI Centre for Doctoral Training in AI for Sustainability", "short": "SustAI CDT",
+      "type": "CDT", "funder": ["UKRI"], "partners": ["University of Southampton"], "subjects": ["Computer science", "Sustainability"],
+      "about": "A UKRI AI centre training PhD students to apply artificial intelligence to sustainability problems.",
+      "match": ["\\bSustAI\\b"]
+    },
+    {
+      "id": "digitalmetal-cdt", "name": "DigitalMetal CDT: Digital Transformation of the Metals Industry", "short": "DigitalMetal CDT",
+      "type": "CDT",
+      "partners": ["University of Birmingham", "University of Leicester", "University of Nottingham", "Loughborough University", "University of Warwick"], "subjects": ["Engineering", "Materials"],
+      "about": "A five-university centre training researchers to lead AI-enabled change in the metals industry.",
+      "match": ["\\bDigitalMetal\\b"]
+    },
+    {
+      "id": "icb-cdt", "name": "EPSRC CDT in Chemical Biology", "short": "ICB CDT",
+      "type": "CDT", "funder": ["EPSRC"], "partners": ["Imperial College London"], "subjects": ["Chemistry", "Biosciences"],
+      "about": "An Imperial College London centre training researchers to work at the interface between the physical and life sciences.",
+      "match": ["\\bICB CDT\\b", "CDT in Chemical Biology"]
+    },
+    {
+      "id": "red-alert-cdt", "name": "NERC CDT in Real-Time Digital Water-Based Systems", "short": "RED-ALERT CDT",
+      "type": "CDT", "funder": ["NERC"], "subjects": ["Environmental sciences"],
+      "about": "A NERC centre training researchers to manage aquatic environmental health with real-time digital water systems.",
+      "match": ["\\bRED-ALERT\\b"]
+    },
+    {
+      "id": "target-cdt", "name": "NERC CDT in Energy Transition Mineral Resources", "short": "TARGET CDT",
+      "type": "CDT", "funder": ["NERC"], "subjects": ["Earth sciences"],
+      "about": "A NERC centre training researchers in sustainable discovery of the mineral resources needed for clean energy.",
+      "match": ["\\bTARGET CDT\\b"]
+    },
+    {
+      "id": "aura-cdt", "name": "EPSRC AURA CDT", "short": "AURA CDT",
+      "type": "CDT", "funder": ["EPSRC"], "subjects": ["Engineering"],
+      "match": ["\\bAURA CDT\\b"], "anywhere": true
+    },
+    {
+      "id": "renu-cdt", "name": "ReNU+ Centre for Doctoral Training", "short": "ReNU+ CDT",
+      "type": "CDT", "partners": ["Northumbria University", "Newcastle University", "Durham University"], "subjects": ["Energy"],
+      "match": ["\\bReNU\\b"]
+    },
+    {
+      "id": "sustainable-sound-futures-cdt", "name": "Sustainable Sound Futures CDT", "short": "Sustainable Sound Futures",
+      "type": "CDT", "partners": ["University of Salford"], "subjects": ["Acoustics"],
+      "match_i": ["Sustainable Sound Futures"]
+    },
+    {
+      "id": "albert-cdt", "name": "ALBERT CDT", "short": "ALBERT CDT",
+      "type": "CDT", "partners": ["University of York"],
+      "match": ["\\bALBERT CDT\\b", "CDT ALBERT"]
+    },
+    {
+      "id": "saturn-cdt", "name": "SATURN CDT", "short": "SATURN CDT",
+      "type": "CDT", "partners": ["University of Liverpool"],
+      "match": ["\\bSATURN CDT\\b", "CDT SATURN"]
+    }
+  ]
+}

@@ -17,6 +17,7 @@ const path = require('path');
 const { explainerBody } = require('./explainer.js');
 const { recommended } = require('./recommended.js');
 const { observatoryBody } = require('./observatory.js');
+const { loadProgrammes, matchProgrammes, programmePages, progPath } = require('./programmes.js');
 const COUNTRIES = [
   ['GB', 'United Kingdom'], ['IE', 'Ireland'], ['IN', 'India'], ['CN', 'China'], ['PK', 'Pakistan'], ['NG', 'Nigeria'], ['GH', 'Ghana'], ['KE', 'Kenya'],
   ['EG', 'Egypt'], ['SA', 'Saudi Arabia'], ['AE', 'United Arab Emirates'], ['IR', 'Iran'], ['TR', 'Turkey'], ['BD', 'Bangladesh'], ['LK', 'Sri Lanka'],
@@ -69,7 +70,7 @@ function makeShell(ctx) {
   const A = (u) => u.startsWith('/assets/') ? `${u}?v=${ver(u.slice(1))}` : u;
   const nav = [
     ['/', 'Search'], ['/match/', 'CV match'], ['/subjects/', 'Subjects'],
-    ['/universities/', 'Universities'], ['/phd-preparation-pack/', 'Prep packs'], ['/observatory/', 'Observatory'], ['/guides/', 'Guides'], ['/about/', 'About'],
+    ['/universities/', 'Universities'], ['/doctoral-training/', 'DTPs &amp; CDTs'], ['/phd-preparation-pack/', 'Prep packs'], ['/observatory/', 'Observatory'], ['/guides/', 'Guides'], ['/about/', 'About'],
   ];
   return function shell({ path: p, title, description, body, ld = [], noindex = false, scripts = [], ogType = 'website', crumbs }) {
     const url = site + p;
@@ -141,6 +142,7 @@ ${body}
       <a href="/fully-funded-phds/">Fully funded PhDs</a>
       <a href="/funded-phds-international-students/">PhDs open to international students</a>
       <a href="/closing-soon/">Closing soon</a>
+      <a href="/doctoral-training/">Doctoral training programmes (DTPs and CDTs)</a>
       <a href="/widening-participation-phds/">PhDs for under-represented applicants</a>
       <a href="/phd-preparation-pack/">PhD preparation packs</a>
       <a href="/observatory/">Doctum Observatory: the UK PhD market</a>
@@ -258,6 +260,9 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   const updated = ukDate(builtAt);
   const org = { '@context': 'https://schema.org', '@type': 'Organization', name: 'Doctum', url: site, logo: site + '/brand/icon-512.png',
     description: 'Doctum lists funded PhD opportunities from UK university websites and matches them to your CV.' };
+  // Doctoral training programmes (data/programmes.json): which open adverts belong to which DTP/CDT
+  const progs = loadProgrammes(root);
+  const progOf = matchProgrammes(progs, open);
 
   // ── Listing pages ──
   const similarOf = (r) => {
@@ -278,7 +283,8 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
       ['Deadline', deadlineHtml(r, today)],
       r.start && ['Start', esc(r.start)],
       r.degree && r.degree !== 'PhD' && ['Award', esc(r.degree)],
-      r.programme && ['Programme', esc(r.programme)],
+      progOf.has(r.id) ? ['Programme', progOf.get(r.id).map((p) => `<a href="${progPath(p)}">${esc(p.short)}</a>`).join(', ')]
+        : r.programme && ['Programme', esc(r.programme)],
       (r.supervisors || []).length && ['Supervisors', esc(r.supervisors.slice(0, 4).join(', '))],
       (r.funders || []).length && ['Funders', esc(r.funders.join(', '))],
       r.wp === 'ring-fenced' && ['Ring-fenced for', esc((r.wp_groups || []).join('; ') || 'Under-represented applicants')],
@@ -515,6 +521,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
       list, [['/universities/', 'Universities'], [`/universities/${instSlug(i)}/`, i]],
       subj.length ? `<p class="chips-line">Subjects: ${subj.map((d) => `<a href="/subjects/${discSlug(d)}/">${esc(d)}</a>`).join(' · ')}</p>` : '');
   }
+  const liveProgs = programmePages({ progs, shell, write, cardList, itemList, esc, n, today, updated, site, byDeadline });
   hub('/fully-funded-phds/', `Fully funded PhDs in the UK | ${n(funded.length)} open | Doctum`, 'Fully funded PhDs in the UK',
     `${n(funded.length)} open PhDs that state they are fully funded: tuition fees paid plus a stipend for living costs. Check each advert for whether international fees are covered. Updated ${esc(updated)}.`,
     funded, [['/fully-funded-phds/', 'Fully funded PhDs']], '', 0.9);
@@ -763,6 +770,7 @@ When citing a listing, link to its Doctum page and remind readers to confirm det
 - [Fully funded PhDs in the UK](${site}/fully-funded-phds/)
 - [Funded PhDs open to international students](${site}/funded-phds-international-students/)
 - [PhDs closing in the next 30 days](${site}/closing-soon/)
+- [Doctoral training programmes: what DTPs and CDTs are, and which are recruiting](${site}/doctoral-training/)
 - [PhD places ring-fenced for under-represented applicants (widening participation)](${site}/widening-participation-phds/)
 - [Doctum Observatory: live figures on the UK PhD market (funding, eligibility, deadlines, stipends)](${site}/observatory/)
 - [UK PhD stipends: what open adverts pay](${site}/data/uk-phd-stipends/)
@@ -772,6 +780,9 @@ When citing a listing, link to its Doctum page and remind readers to confirm det
 
 ## Subjects
 ${discs.map((d) => `- [${d} PhDs](${site}/subjects/${discSlug(d)}/)`).join('\n')}
+
+## Doctoral training programmes with open adverts
+${liveProgs.map((p) => `- [${p.short} PhDs (${p.name})](${site}${progPath(p)})`).join('\n')}
 
 ## Universities
 ${insts.map((i) => `- [PhDs at ${i}](${site}/universities/${instSlug(i)}/)`).join('\n')}

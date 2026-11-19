@@ -408,3 +408,10 @@ blockquote cite{display:block;font:400 .82rem var(--sans);font-style:normal;colo
 .foot-site .cookie-settings{color:#e2c995;font-weight:400;font-size:inherit;text-align:left;align-self:flex-start}
 .cookie-settings[hidden]{display:none}
 @media print{.consent{display:none}}
+/* ── Doctoral training ── */
+.dtp-table th.num,.dtp-table td.num{text-align:right}
+.dtp-table td .small{display:inline-block;margin-top:2px}
+.dtp-others{list-style:none;padding:0;margin:0 0 1.5em;columns:2 320px;column-gap:28px}
+.dtp-others li{break-inside:avoid;margin-bottom:.55em}
+.dtp-explainer{margin-bottom:28px}
+.dtp-facts{max-width:78ch}

@@ -6,7 +6,7 @@
 # and the freshness check below skips it if the PC already crawled in the last 20 hours.
 # It only crawls sources marked `runner: home` in scraper/sources.yaml and commits their raw files to
 # data/raw-home/. The main workflow (phd-scrape.yml) builds the database from them.
-# The main scrape ignores home files over 4 days old.
+# The main scrape ignores home files over 10 days old (HOME_MAX_AGE_DAYS in scraper/db.py).
 # It has its own concurrency group: sharing one with phd-scrape.yml made the main scrape wait up to
 # 24h behind a home job that was waiting for a sleeping PC (Nov 2026).
 #

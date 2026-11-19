@@ -11,7 +11,7 @@ import json
 import sqlite3
 import sys
 from collections import Counter
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -22,7 +22,8 @@ ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "data" / "phd.db"
 RAW = ROOT / "data" / "raw"
 RAW_HOME = ROOT / "data" / "raw-home"
-STALE_DAYS = 21  # drop listings not re-checked for this long
+STALE_DAYS = 14  # drop listings not re-checked for this long
+HOME_MAX_AGE_DAYS = 10  # use data/raw-home files (Mike's PC, used about weekly) up to this old
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS listings (
@@ -108,8 +109,8 @@ def build():
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     files = sorted(RAW.glob("phdraw_*.json"))
     # sources crawled from Mike's PC (runner: home) are committed to data/raw-home/. Use them only while
-    # fresh, so a PC that was off doesn't keep re-applying an old crawl. Same-named files in raw/ win.
-    cutoff = datetime.now(timezone.utc).timestamp() - 4 * 86400
+    # fresh (HOME_MAX_AGE_DAYS), so a PC that was off doesn't keep re-applying an old crawl. Same-named files in raw/ win.
+    cutoff = datetime.now(timezone.utc).timestamp() - HOME_MAX_AGE_DAYS * 86400
     have = {f.name for f in files}
     for f in sorted(RAW_HOME.glob("phdraw_*.json")):
         if f.name in have:
@@ -121,7 +122,7 @@ def build():
         if at >= cutoff:
             files.append(f)
         else:
-            print(f"{f.stem.removeprefix('phdraw_'):<14} skipped: home crawl is more than 4 days old")
+            print(f"{f.stem.removeprefix('phdraw_'):<14} skipped: home crawl is more than {HOME_MAX_AGE_DAYS} days old")
     today = date.today().isoformat()
     for f in files:
         raw = json.loads(f.read_text(encoding="utf-8"))
@@ -430,10 +431,15 @@ def manifest(path: Path | None = None):
     path = path or ROOT / "_scrape_manifest.json"
     con = connect()
     out, alerts, pending = {}, [], {}
+    stale = (datetime.now(timezone.utc) - timedelta(days=STALE_DAYS)).isoformat()
     for (sid,) in con.execute("SELECT DISTINCT source_id FROM scrape_runs"):
+        if REGISTRY.get(sid, {}).get("disabled"):
+            continue  # listed under "skipped" instead; its old listings drop off the site via STALE_DAYS
         runs = con.execute("SELECT * FROM scrape_runs WHERE source_id=? ORDER BY run_at DESC LIMIT 2", (sid,)).fetchall()
         cur = dict(runs[0]); prev = dict(runs[1]) if len(runs) > 1 else None
-        open_now = con.execute("SELECT COUNT(*) FROM listings WHERE source_id=? AND status='open'", (sid,)).fetchone()[0]
+        # same rule as export(): only adverts re-checked within STALE_DAYS count as open on the site
+        open_now = con.execute("SELECT COUNT(*) FROM listings WHERE source_id=? AND status='open' AND last_seen>=?",
+                               (sid, stale)).fetchone()[0]
         out[sid] = {"scraped": cur["n_raw"], "kept": cur["n_kept"], "open": open_now, "new": cur["n_new"],
                     "changed": cur["n_changed"], "gone": cur["n_gone"], "scraped_at": cur["scraped_at"]}
         ever = con.execute("SELECT MAX(n_kept) FROM scrape_runs WHERE source_id=?", (sid,)).fetchone()[0] or 0

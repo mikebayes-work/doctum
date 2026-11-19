@@ -8,7 +8,8 @@
 #   headings   one page, one project per heading (`head` selector), body = following siblings
 #   auto       generic: only `domain` needed. Finds listing pages from `seeds`, else the sitemap, else common paths;
 #              follows pagination and sub-listings; keeps only pages that read like a PhD advert. Optional:
-#              seeds, base (if the site has no www.), link (detail regex), exclude, max_lists, budget.
+#              seeds, base (if the site has no www.), link (detail regex), exclude, max_lists, budget,
+#              code_re + code_url (adverts held as data in the page: regex with one group -> code_url.format(code=...)).
 #
 #   runner: home   crawled from Mike's PC (phd-scrape-home.yml, self-hosted runner) because the site
 #                  refuses GitHub's servers. Its raw file is committed to data/raw-home/.
@@ -133,6 +134,7 @@ sources:
   # empty or noisy are listed under "Not working yet" in the run summary; give those proper rules
   # (lists/pages/link like the sources above) or add `seeds: ["https://..."]` with the right listing page.
   # `-all` sources cover the rest of a university whose one department already has rules above.
+  # FindAPhD gap check 19 Nov: FindAPhD-only (its 'Available PhD Opportunities' page is a FindAPhD widget). Nothing to scrape; only submissions/partnerships will cover it.
   - {id: aberdeen, institution: "University of Aberdeen", region: Scotland, mode: auto, domain: abdn.ac.uk}
   - {id: abertay, institution: "Abertay University", region: Scotland, mode: auto, domain: abertay.ac.uk}
   - {id: aberystwyth, institution: "Aberystwyth University", region: Wales, mode: auto, domain: aber.ac.uk}
@@ -149,7 +151,8 @@ sources:
   - {id: newman, institution: "Newman University", region: England, mode: auto, domain: newman.ac.uk}
   - {id: bishop-grosseteste, institution: "Bishop Grosseteste University", region: England, mode: auto, domain: bishopg.ac.uk}
   - {id: bolton, institution: "University of Bolton", region: England, mode: auto, domain: bolton.ac.uk}
-  - {id: bournemouth, institution: "Bournemouth University", region: England, mode: auto, domain: bournemouth.ac.uk}
+  # FindAPhD gap check 19 Nov: 1 on FindAPhD; BU studentships page moved to bmth.ac.uk
+  - {id: bournemouth, institution: "Bournemouth University", region: England, mode: auto, domain: bmth.ac.uk, base: "https://bmth.ac.uk", seeds: ["https://bmth.ac.uk/study/postgraduate-research/fees-funding-studentships/bu-phd-studentships"]}
   - {id: bradford, institution: "University of Bradford", region: England, mode: auto, domain: bradford.ac.uk}
   - {id: brighton, institution: "University of Brighton", region: England, mode: auto, domain: brighton.ac.uk}
   - {id: bristol-all, institution: "University of Bristol", region: England, mode: auto, domain: bristol.ac.uk, exclude: '/chemistry/postgraduate/pg-vacancies'}
@@ -176,7 +179,8 @@ sources:
   - {id: edge-hill, institution: "Edge Hill University", region: England, mode: auto, domain: edgehill.ac.uk}
   - {id: edinburgh, institution: "University of Edinburgh", region: Scotland, mode: auto, domain: ed.ac.uk, disabled: "project directory is a FindAPhD widget (pilot, Oct 2026)"}
   - {id: napier, institution: "Edinburgh Napier University", region: Scotland, mode: auto, domain: napier.ac.uk}
-  - {id: essex, institution: "University of Essex", region: England, mode: auto, domain: essex.ac.uk}
+  # FindAPhD gap check 19 Nov: 7 on FindAPhD; own opportunities pages exist. SSLError from GitHub (incomplete certificate chain?), so crawled from the home PC with the browser
+  - {id: essex, institution: "University of Essex", region: England, mode: auto, domain: essex.ac.uk, seeds: ["https://www.essex.ac.uk/postgraduate/research/opportunities"], link: 'essex\.ac\.uk/postgraduate/research/opportunities/[A-Za-z0-9-]+$', runner: home, browser: true}
   - {id: exeter, institution: "University of Exeter", region: England, mode: auto, domain: exeter.ac.uk}
   - {id: falmouth, institution: "Falmouth University", region: England, mode: auto, domain: falmouth.ac.uk, runner: home, browser: true}
   - {id: glasgow, institution: "University of Glasgow", region: Scotland, mode: auto, domain: gla.ac.uk, seeds: ["https://www.gla.ac.uk/colleges/mvls/graduateschool/phd-research-opportunities/funded-research-opportunities", "https://www.gla.ac.uk/schools/computing/postgraduateresearch/prospectivestudents/phd-projects/", "https://www.gla.ac.uk/schools/computing/postgraduateresearch/prospectivestudents/scholarshipsandfundingopportunities/"]}
@@ -184,7 +188,8 @@ sources:
   - {id: gsa, institution: "Glasgow School of Art", region: Scotland, mode: auto, domain: gsa.ac.uk}
   - {id: gloucestershire, institution: "University of Gloucestershire", region: England, mode: auto, domain: glos.ac.uk, runner: home, browser: true}
   - {id: goldsmiths, institution: "Goldsmiths, University of London", region: England, mode: auto, domain: gold.ac.uk}
-  - {id: greenwich, institution: "University of Greenwich", region: England, mode: auto, domain: gre.ac.uk}
+  # FindAPhD gap check 19 Nov: 3 on FindAPhD; studentships mostly on jobs.ac.uk, some institute pages of its own
+  - {id: greenwich, institution: "University of Greenwich", region: England, mode: auto, domain: gre.ac.uk, seeds: ["https://www.gre.ac.uk/institute-lifecourse-development/phd-opportunities"]}
   - {id: guildhall, institution: "Guildhall School of Music & Drama", region: England, mode: auto, domain: gsmd.ac.uk}
   - {id: harper-adams, institution: "Harper Adams University", region: England, mode: auto, domain: harper-adams.ac.uk}
   - {id: hartpury, institution: "Hartpury University", region: England, mode: auto, domain: hartpury.ac.uk}
@@ -196,9 +201,11 @@ sources:
   - {id: icr, institution: "The Institute of Cancer Research", region: England, mode: auto, domain: icr.ac.uk}
   - {id: keele, institution: "Keele University", region: England, mode: auto, domain: keele.ac.uk}
   # FindAPhD gap check 19 Nov: Kent posts studentships in its own scholarships search (codes like FNADNERC0002)
-  - {id: kent, institution: "University of Kent", region: England, mode: auto, domain: kent.ac.uk, seeds: ["https://www.kent.ac.uk/scholarships/search"], link: 'kent\.ac\.uk/scholarships/search/FN[A-Z0-9]+$'}
+  # 19 Nov run: the search page draws its list with JavaScript from window.KENT.scholarships (76 codes, 74 FNAD = postgraduate); detail pages are plain HTML
+  - {id: kent, institution: "University of Kent", region: England, mode: auto, domain: kent.ac.uk, seeds: ["https://www.kent.ac.uk/scholarships/search"], code_re: '"code"\s*:\s*"(FNAD[A-Z0-9]+)"', code_url: 'https://www.kent.ac.uk/scholarships/search/{code}'}
   - {id: kcl, institution: "King's College London", region: England, mode: auto, domain: kcl.ac.uk, runner: home, conc: 1, delay: 1500}  # HTTP 429 from GitHub runners (1 Nov 2026): read from the home PC
-  - {id: kingston, institution: "Kingston University", region: England, mode: auto, domain: kingston.ac.uk}
+  # FindAPhD gap check 19 Nov: Kingston runs its own PhD studentships competition page; faculty pages list projects
+  - {id: kingston, institution: "Kingston University", region: England, mode: auto, domain: kingston.ac.uk, seeds: ["https://www.kingston.ac.uk/research/research-degrees/phd-studentships"]}
   - {id: lancaster, institution: "Lancaster University", region: England, mode: auto, domain: lancaster.ac.uk}
   - {id: leeds-beckett, institution: "Leeds Beckett University", region: England, mode: auto, domain: leedsbeckett.ac.uk}
   - {id: leeds-trinity, institution: "Leeds Trinity University", region: England, mode: auto, domain: leedstrinity.ac.uk}
@@ -206,11 +213,13 @@ sources:
   - {id: lincoln, institution: "University of Lincoln", region: England, mode: auto, domain: lincoln.ac.uk}
   - {id: liverpool-all, institution: "University of Liverpool", region: England, mode: auto, domain: liverpool.ac.uk, exclude: '/chemistry/study/postgraduate/postgraduate-research/opportunities'}
   - {id: liverpool-hope, institution: "Liverpool Hope University", region: England, mode: auto, domain: hope.ac.uk}
+  # FindAPhD gap check 19 Nov: FindAPhD-only (projects posted only on FindAPhD). Nothing to scrape; only submissions/partnerships will cover it.
   - {id: ljmu, institution: "Liverpool John Moores University", region: England, mode: auto, domain: ljmu.ac.uk}
   - {id: lstm, institution: "Liverpool School of Tropical Medicine", region: England, mode: auto, domain: lstmed.ac.uk}
   - {id: london-met, institution: "London Metropolitan University", region: England, mode: auto, domain: londonmet.ac.uk}
   - {id: lse, institution: "London School of Economics", region: England, mode: auto, domain: lse.ac.uk}
-  - {id: lshtm, institution: "London School of Hygiene & Tropical Medicine", region: England, mode: auto, domain: lshtm.ac.uk}
+  # FindAPhD gap check 19 Nov: only 1 on FindAPhD; LSHTM posts PhD studentships as its own funding-scholarships pages
+  - {id: lshtm, institution: "London School of Hygiene & Tropical Medicine", region: England, mode: auto, domain: lshtm.ac.uk, seeds: ["https://www.lshtm.ac.uk/study/fees-and-funding/funding-scholarships"], link: 'lshtm\.ac\.uk/study/fees-and-funding/funding-scholarships/(research-degree-funding/)?[0-9a-z-]+$'}
   - {id: lsbu, institution: "London South Bank University", region: England, mode: auto, domain: lsbu.ac.uk, runner: home, browser: true}
   - {id: manchester, institution: "University of Manchester", region: England, mode: auto, domain: manchester.ac.uk, disabled: "FSE project directory is a FindAPhD widget (pilot, Oct 2026)"}
   - {id: mmu, institution: "Manchester Metropolitan University", region: England, mode: auto, domain: mmu.ac.uk}
@@ -218,6 +227,7 @@ sources:
   - {id: newcastle, institution: "Newcastle University", region: England, mode: auto, domain: ncl.ac.uk, seeds: ["https://www.ncl.ac.uk/postgraduate/fees-funding/search-funding/"]}
   - {id: northampton, institution: "University of Northampton", region: England, mode: auto, domain: northampton.ac.uk}
   # FindAPhD gap check 19 Nov: ~18 on FindAPhD; individual projects are posted there, own site has DTP/CDT studentship pages
+  # 19 Nov run: the studentships page only links to 4 DTP/CDT pages (NBC, NINE, One Planet, ReNU+); projects are on FindAPhD. FindAPhD-only; DTPs go in the programme list
   - {id: northumbria, institution: "Northumbria University", region: England, mode: auto, domain: northumbria.ac.uk, seeds: ["https://www.northumbria.ac.uk/research/postgraduate-research-degrees/studentships/"]}
   - {id: nua, institution: "Norwich University of the Arts", region: England, mode: auto, domain: nua.ac.uk}
   - {id: ntu, institution: "Nottingham Trent University", region: England, mode: auto, domain: ntu.ac.uk, runner: home, browser: true}
@@ -244,13 +254,15 @@ sources:
   - {id: sas, institution: "School of Advanced Study, University of London", region: England, mode: auto, domain: sas.ac.uk}
   - {id: sheffield, institution: "University of Sheffield", region: England, mode: auto, domain: sheffield.ac.uk, disabled: "project directory is a FindAPhD widget (pilot, Oct 2026)"}
   - {id: shu, institution: "Sheffield Hallam University", region: England, mode: auto, domain: shu.ac.uk}
-  - {id: soas, institution: "SOAS University of London", region: England, mode: auto, domain: soas.ac.uk}
+  # FindAPhD gap check 19 Nov: SOAS lists research scholarships in its own table, one page each
+  - {id: soas, institution: "SOAS University of London", region: England, mode: auto, domain: soas.ac.uk, seeds: ["https://www.soas.ac.uk/study/fees-funding-and-finance/scholarships/research-scholarships"], link: 'soas\.ac\.uk/study/student-life/finance/scholarships/[a-z0-9/-]+$'}
   - {id: solent, institution: "Solent University", region: England, mode: auto, domain: solent.ac.uk}
   - {id: south-wales, institution: "University of South Wales", region: Wales, mode: auto, domain: southwales.ac.uk}
   - {id: sruc, institution: "SRUC (Scotland's Rural College)", region: Scotland, mode: auto, domain: sruc.ac.uk}
   - {id: st-andrews, institution: "University of St Andrews", region: Scotland, mode: auto, domain: st-andrews.ac.uk}
   - {id: st-marys, institution: "St Mary's University, Twickenham", region: England, mode: auto, domain: stmarys.ac.uk}
   - {id: staffordshire, institution: "Staffordshire University", region: England, mode: auto, domain: staffs.ac.uk}
+  # FindAPhD gap check 19 Nov: FindAPhD-only (departments say funded places are advertised on FindAPhD). Nothing to scrape; only submissions/partnerships will cover it.
   - {id: stirling, institution: "University of Stirling", region: Scotland, mode: auto, domain: stir.ac.uk}
   - {id: strathclyde, institution: "University of Strathclyde", region: Scotland, mode: auto, domain: strath.ac.uk, seeds: ["https://www.strath.ac.uk/studywithus/postgraduateresearchphdopportunities/engineering/", "https://www.strath.ac.uk/studywithus/postgraduateresearchphdopportunities/science/", "https://www.strath.ac.uk/studywithus/postgraduateresearchphdopportunities/business/", "https://www.strath.ac.uk/studywithus/postgraduateresearchphdopportunities/humanitiessocialsciences/"]}
   - {id: suffolk, institution: "University of Suffolk", region: England, mode: auto, domain: uos.ac.uk}
@@ -262,6 +274,7 @@ sources:
     pages: {url: "https://www.sussex.ac.uk/study/fees-funding/phd-funding/browse/page/{page}", from: 1, to: 8}
     stopWhenEmpty: true
     link: 'sussex\.ac\.uk/study/fees-funding/phd-funding/view/\d+-'
+  # FindAPhD gap check 19 Nov: FindAPhD-only (says all funded studentships are on findaphd.com). Nothing to scrape; only submissions/partnerships will cover it.
   - {id: teesside, institution: "Teesside University", region: England, mode: auto, domain: tees.ac.uk, seeds: ["https://www.tees.ac.uk/sections/research/funded_opportunities.cfm"]}
   - {id: trinity-laban, institution: "Trinity Laban Conservatoire", region: England, mode: auto, domain: trinitylaban.ac.uk}
   - {id: ual, institution: "University of the Arts London", region: England, mode: auto, domain: arts.ac.uk, runner: home, browser: true}
@@ -270,7 +283,8 @@ sources:
   - {id: uwtsd, institution: "University of Wales Trinity Saint David", region: Wales, mode: auto, domain: uwtsd.ac.uk}
   - {id: warwick, institution: "University of Warwick", region: England, mode: auto, domain: warwick.ac.uk, base: "https://warwick.ac.uk", seeds: ["https://warwick.ac.uk/engineeringscholarships", "https://warwick.ac.uk/services/dc/schols_fund/"]}
   # FindAPhD gap check 19 Nov: UWE has one page per studentship under studentship-opportunities/
-  - {id: uwe, institution: "University of the West of England", region: England, mode: auto, domain: uwe.ac.uk, seeds: ["https://www.uwe.ac.uk/research/postgraduate-research-study/how-to-apply/studentship-opportunities"], link: 'uwe\.ac\.uk/research/postgraduate-research-study/how-to-apply/studentship-opportunities/[a-z0-9-]+$'}
+  # 19 Nov run: old address redirects to /studentships/; 4 current studentships linked in plain HTML
+  - {id: uwe, institution: "University of the West of England", region: England, mode: auto, domain: uwe.ac.uk, seeds: ["https://www.uwe.ac.uk/research/postgraduate-research-study/studentships"], link: 'uwe\.ac\.uk/research/postgraduate-research-study/studentships/[a-z0-9-]+$'}
   - {id: uwl, institution: "University of West London", region: England, mode: auto, domain: uwl.ac.uk}
   - {id: uws, institution: "University of the West of Scotland", region: Scotland, mode: auto, domain: uws.ac.uk}
   - {id: westminster, institution: "University of Westminster", region: England, mode: auto, domain: westminster.ac.uk, conc: 1, delay: 2000, exclude: 'phd-by-published-work|thinking-of-doing-a-phd|hardship-fund'}  # slow: it returned HTTP 429 (too many requests) at the default pace
@@ -279,5 +293,6 @@ sources:
   - {id: worcester, institution: "University of Worcester", region: England, mode: auto, domain: worcester.ac.uk}
   - {id: wrexham, institution: "Wrexham University", region: Wales, mode: auto, domain: wrexham.ac.uk}
   # FindAPhD gap check 19 Nov: York shows ~100-130 on FindAPhD; most department lists are FindAPhD widgets, so expect partial coverage
+  # 19 Nov run: the physics projects page is a FindAPhD widget too. York is largely FindAPhD-only; the CDT seed is kept
   - {id: york, institution: "University of York", region: England, mode: auto, domain: york.ac.uk, seeds: ["https://www.york.ac.uk/physics/postgraduate/phd-projects/", "https://www.york.ac.uk/yorrobots/more-projects/albert/cdt-albert-funded-projects/"]}
   - {id: york-st-john, institution: "York St John University", region: England, mode: auto, domain: yorksj.ac.uk}

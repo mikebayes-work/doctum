@@ -606,6 +606,14 @@ def crawl_auto(cfg: dict) -> list[dict]:
                 o["list_title"] = t
             if len(s) > len(o["list_snippet"]):
                 o["list_snippet"] = s
+        if cfg.get("code_re"):
+            # adverts held as data inside the page and drawn by JavaScript (Kent: window.KENT.scholarships):
+            # pull the codes out of the raw HTML and build each advert's URL from code_url
+            for code in dict.fromkeys(re.findall(cfg["code_re"], page_html)):
+                h = cfg["code_url"].format(code=code)
+                if not (ex_re and ex_re.search(h)):
+                    found.setdefault(h, {"url": h, "list_title": "", "list_snippet": ""})
+                    added += 1
         if not added and has_findaphd:
             findaphd += 1
             print(f"  [{cfg['id']}] FindAPhD widget on {lu} and no on-site adverts - skipped")

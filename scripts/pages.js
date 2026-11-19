@@ -262,7 +262,7 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
     description: 'Doctum lists funded PhD opportunities from UK university websites and matches them to your CV.' };
   // Doctoral training programmes (data/programmes.json): which open adverts belong to which DTP/CDT
   const progs = loadProgrammes(root);
-  const progOf = matchProgrammes(progs, open);
+  const progOf = matchProgrammes(progs, open, slugify); // also adds programmes found in the adverts
 
   // ── Listing pages ──
   const similarOf = (r) => {

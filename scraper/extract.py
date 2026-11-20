@@ -136,13 +136,51 @@ def get_stipend(text: str) -> int | None:
     return best
 
 
+# Who can apply, by fee status. Order matters: the narrowest statement wins.
+_HOME = r"(?:uk|home|domestic|uk/eu|home/eu|home \(uk\))"
+_INTL = r"(?:international|overseas|non-uk|rest of world|row)"
+ELIG_INTL_ONLY = re.compile(
+    r"(?:reserved for|only (?:open|available) to|restricted to|exclusively for) " + _INTL + r" (?:fee[- ]paying )?(?:students|applicants|candidates)\b"
+    r"|(?:open|available) (?:only )?to " + _INTL + r" (?:fee[- ]paying )?(?:students|applicants|candidates) only"
+    r"|(?:must|need to) (?:be|hold) (?:a )?chinese (?:national|citizen)")
+# Scholarship schemes for named nationalities: only trusted in the advert's title/opening.
+ELIG_INTL_SCHEME = re.compile(r"china scholarship council|\bcsc\b|commonwealth (?:shared |split[- ]site )?scholarship")
+ELIG_HOME_ONLY = re.compile(
+    _HOME + r"(?: fee)?[- ](?:eligible |fee[- ]status )?(?:applicants|students|candidates)? ?only"
+    r"|only (?:be )?(?:open|available|eligible) (?:to|for) (?:applicants |students |candidates )?(?:who (?:are eligible for|qualify for|have) |with |eligible for )?" + _HOME
+    + r"|restricted to " + _HOME + r"|\buk only\b|home fee status only|home (?:tuition )?fees? only"
+    r"|(?:must|need to|will need to|should) (?:be eligible for|qualify for|have|be classed as having|hold) (?:uk )?home (?:tuition )?fee status"
+    r"|(?:not (?:open|available) to|cannot (?:be )?(?:accept|consider|fund)(?:ed)?|unable to (?:accept|consider|fund)) " + _INTL
+    + r"|" + _INTL + r" (?:students|applicants|candidates) (?:are|will be) (?:not|in)eligible"
+    r"|" + _INTL + r" (?:students|applicants|candidates) (?:are|will be) not eligible"
+    r"|(?:only|solely) (?:covers?|cover|pays?) (?:the )?(?:uk )?home (?:rate )?(?:tuition )?fees")
+ELIG_BOTH = re.compile(
+    r"open to (?:both )?(?:uk|home)(?:[/, ]+eu)?(?:,| and|/| &| or)+ ?(?:eu[/, ]+)?" + _INTL
+    + r"|(?:available|open|eligible|offered) (?:to|for) (?:both )?(?:uk|home|domestic)(?: fee)?(?:[/, ]+eu)? (?:and|or|&|/) " + _INTL
+    + r"|(?:both|either) (?:uk|home)(?: fee)?(?: status)?(?: students| applicants)? (?:and|or) " + _INTL
+    + r"|" + _INTL + r" (?:and|&|or) (?:uk|home|domestic) (?:students|applicants|candidates)"
+    r"|(?:uk |home |domestic )(?:and|&|or|/) ?" + _INTL + r" (?:students|applicants|candidates|fees|fee rate|rate|tuition)"
+    r"|" + _INTL + r" (?:students|applicants|candidates) (?:are |will be )?(?:also )?(?:welcome|eligible|encouraged to apply|can (?:also )?apply|may (?:also )?apply)"
+    r"|open to (?:applicants |students )?(?:of |from )?(?:all|any) nationalit|any nationality|open to all applicants regardless"
+    r"|international fee waiver|full international fees|covers? (?:the )?(?:full )?(?:international|overseas) (?:tuition )?fees?"
+    r"|fees at (?:either )?the (?:uk )?(?:home|uk) or (?:overseas|international) rate"
+    r"|(?:a limited number of|up to \d+ ?%[^.\n]{0,60}to|a small number of|some) " + _INTL + r" (?:students|applicants|candidates|studentships|places)"
+    r"|open to " + _INTL + r" (?:students|applicants|candidates)"
+    r"|(?:chinese|overseas|international)[^.\n]{0,15} and (?:uk|home) (?:students|applicants|candidates)"
+    r"|eligibility\s*:?\s*\n?[^\n]*(?:rest of world|international|overseas)")
+
+
 def get_eligibility(text: str, snippet: str, funding: str = "") -> str:
     if funding == "Self-funded":
         return "Open to all (self-funded)"
-    s = (snippet + "\n" + text).lower()
-    if re.search(r"(?:uk|home)(?: fee)?[- ](?:eligible )?(?:applicants|students|candidates)? ?only|only (?:open|available) to (?:uk|home)|restricted to (?:uk|home)|uk only|home fee status only|home students only", s):
+    s = re.sub(r"[ \t]+", " ", (snippet + "\n" + text).lower().replace("\u2019", "'"))
+    if ELIG_INTL_ONLY.search(s):
+        return "International only"
+    if ELIG_INTL_SCHEME.search(s[:250]):  # e.g. CSC: Chinese nationals, unless home places are offered too
+        return "UK & International" if ELIG_BOTH.search(s) else "International only"
+    if ELIG_HOME_ONLY.search(s):
         return "UK/Home only"
-    if re.search(r"open to (?:both )?(?:uk|home) and international|international (?:students|applicants|candidates) (?:are )?(?:also )?(?:welcome|eligible)|open to all nationalities|any nationality|international fee waiver|uk or international fees|eligibility\s*:?\s*\n?[^\n]*(?:rest of world|international|overseas)", s):
+    if ELIG_BOTH.search(s):
         return "UK & International"
     return "Not stated"
 

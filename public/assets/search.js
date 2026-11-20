@@ -9,7 +9,7 @@
   var daysLeft = function (iso) { return Math.round((Date.parse(iso + 'T00:00:00Z') - Date.parse(today + 'T00:00:00Z')) / 864e5); };
   var words = function (s, n) { var w = String(s || '').replace(/\s+/g, ' ').trim().split(' '); return w.length <= n ? w.join(' ') : w.slice(0, n).join(' ').replace(/[,;:.\-–]+$/, '') + '…'; };
   var FUND_CLS = { 'Fully funded': 'funded', 'Competition funded': 'comp', 'Self-funded': 'self' };
-  var ELIG_CHIP = { 'Open to international': 'Open to international', 'UK / Home fee status only': 'UK / Home only' };
+  var ELIG_CHIP = { 'Open to international': 'Open to international', 'UK / Home fee status only': 'UK / Home only', 'International applicants only': 'International only' };
   var shortInst = function (i) { return String(i || '').replace(/^University of /, '').replace(/ University$/, '').replace(/^Queen's University Belfast$/, "Queen's"); };
 
   function api(url, opts) {

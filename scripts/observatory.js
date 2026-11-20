@@ -27,7 +27,7 @@ function observatoryBody({ open, today, updated, esc, n, money, ukDate, slugify,
 
   // ── Figures ──
   const funded = open.filter((r) => r.funding === 'Fully funded');
-  const intl = open.filter((r) => r.eligibility === 'UK & International' && r.funding !== 'Self-funded');
+  const intl = open.filter((r) => ['UK & International', 'International only'].includes(r.eligibility) && r.funding !== 'Self-funded');
   const soon = open.filter((r) => r.deadline && (Date.parse(r.deadline) - Date.parse(today)) / 864e5 <= 30);
   const st = open.map((r) => r.stipend).filter((s) => s >= 12000 && s <= 45000).sort((a, b) => a - b);
   const median = st.length ? st[Math.floor((st.length - 1) / 2)] : null;
@@ -60,7 +60,7 @@ function observatoryBody({ open, today, updated, esc, n, money, ukDate, slugify,
 
   const FUND = ['Fully funded', 'Competition funded', 'Partially funded', 'Self-funded', 'Unknown'];
   const fundRows = FUND.map((f) => [f === 'Unknown' ? 'Not stated in advert' : f, open.filter((r) => r.funding === f).length]).filter((r) => r[1]);
-  const ELIG = { 'UK & International': 'Open to international applicants', 'UK/Home only': 'UK (Home) fee status only', 'Open to all (self-funded)': 'Anyone (self-funded)', 'Not stated': 'Not stated in advert' };
+  const ELIG = { 'UK & International': 'Open to international applicants', 'UK/Home only': 'UK (Home) fee status only', 'International only': 'International applicants only', 'Open to all (self-funded)': 'Anyone (self-funded)', 'Not stated': 'Not stated in advert' };
   const eligRows = tally(open.map((r) => ELIG[r.eligibility] || 'Not stated in advert')).sort((a, b) => b[1] - a[1]);
 
   // Deadlines by month, next six months, plus rolling / not stated

@@ -49,6 +49,7 @@ const jsonld = (o) => `<script type="application/ld+json">${JSON.stringify(o).re
 const ELIG = {
   'UK & International': 'Open to international',
   'UK/Home only': 'UK / Home fee status only',
+  'International only': 'International applicants only',
   'Open to all (self-funded)': 'Anyone (self-funded)',
   'Not stated': 'Not stated',
 };
@@ -179,7 +180,7 @@ const wpNote = (r) => r.wp === 'ring-fenced'
     ? `<div class="wp-note"><p>This advert particularly encourages applications from under-represented groups. The place is open to everyone who meets the entry requirements.</p></div>`
     : '';
 const wpChip = (r) => r.wp === 'ring-fenced' ? `<span class="chip wp" title="${esc('Places set aside for: ' + (r.wp_groups || []).join('; '))}">Ring-fenced place</span>` : '';
-const ELIG_CHIP = { 'UK & International': 'Open to international', 'UK/Home only': 'UK / Home only' };
+const ELIG_CHIP = { 'UK & International': 'Open to international', 'UK/Home only': 'UK / Home only', 'International only': 'International only' };
 const FUND_CLS = { 'Fully funded': 'funded', 'Competition funded': 'comp', 'Self-funded': 'self' };
 function closesChip(r, today) {
   if (!r.deadline) return r.deadline_text ? `<span class="chip">${esc(trimWords(r.deadline_text, 6))}</span>` : '';
@@ -250,7 +251,10 @@ function buildPages({ rows, builtAt, site, index, gaId, dist, root }) {
   const byDeadline = (a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999') || (b.funding === 'Fully funded') - (a.funding === 'Fully funded');
   const open = rows.filter(isOpen).sort(byDeadline);
   const funded = open.filter((r) => r.funding === 'Fully funded');
-  const intl = open.filter((r) => r.eligibility === 'UK & International' && r.funding !== 'Self-funded');
+  const intl = open.filter((r) => ['UK & International', 'International only'].includes(r.eligibility) && r.funding !== 'Self-funded');
+  // Who-can-apply coverage across all open listings (self-funded PhDs are open to anyone, so count as known).
+  const eligKnown = open.filter((r) => r.eligibility && r.eligibility !== 'Not stated');
+  const eligPct = open.length ? Math.round((100 * eligKnown.length) / open.length) : 0;
   const soon = open.filter((r) => r.deadline && days(r.deadline, today) <= 30);
   const insts = [...new Set(open.map((r) => r.institution))].sort();
   const discs = [...new Set(open.flatMap((r) => r.disciplines || []))].sort();
@@ -577,7 +581,7 @@ ${byInst.map(([i, s]) => `<tr><td><a href="/universities/${instSlug(i)}/">${esc(
 <h2>How this is measured</h2>
 <p>Doctum reads each advert and extracts the annual stipend where one is stated as a figure. Adverts that only say "UKRI rate" or "standard rate" are not counted. Values outside £10,000–£60,000 are excluded as likely errors or totals. The data is refreshed twice a week. You are welcome to cite this page; please link to it.</p>`,
   }), { priority: 0.7 });
-  const discRows = discs.map((d) => { const l = open.filter((r) => (r.disciplines || []).includes(d)); return [d, l.length, l.filter((r) => r.funding === 'Fully funded').length, l.filter((r) => r.eligibility === 'UK & International').length]; }).sort((a, b) => b[1] - a[1]);
+  const discRows = discs.map((d) => { const l = open.filter((r) => (r.disciplines || []).includes(d)); return [d, l.length, l.filter((r) => r.funding === 'Fully funded').length, l.filter((r) => ['UK & International', 'International only'].includes(r.eligibility)).length]; }).sort((a, b) => b[1] - a[1]);
   const fundRows = ['Fully funded', 'Competition funded', 'Partially funded', 'Self-funded', 'Unknown'].map((f) => [f, open.filter((r) => r.funding === f).length]).filter(([, c]) => c);
   write('/data/funded-phds-open-now/', shell({
     path: '/data/funded-phds-open-now/', title: 'Open UK PhDs right now: by subject and funding | Doctum',
@@ -629,13 +633,15 @@ ${byInst.map(([i, s]) => `<tr><td><a href="/universities/${instSlug(i)}/">${esc(
     body: `<article class="prose"><h1>About Doctum</h1>
 <p><em>Doctum</em> is Latin for “taught” or “learned”. Doctum is a free search of PhD opportunities at UK universities, built to make funded PhDs easier to find and to help applicants see quickly which ones they can apply for.</p>
 <h2 id="sources">Where the listings come from</h2>
-<p>Doctum reads the PhD and studentship pages on university websites directly. It does not copy other PhD listing sites. Each listing links back to the university's own advert. Current sources:</p><ul>${sources}</ul>
+<p>Doctum collects PhD and studentship adverts from university websites directly. It does not copy other PhD listing sites, and each listing links back to the university's own advert.</p>
+<p><strong>Coverage.</strong> Doctum checks the websites of every UK university that awards PhDs. On ${esc(updated)}, ${insts.length} of them had open adverts on Doctum (listed below). The others either had no open adverts, publish their funded projects only on paid listing sites rather than their own website, or have pages Doctum can't read yet. More are added after every update.</p>
+<p>Current sources:</p><ul>${sources}</ul>
 <p>The crawler identifies itself as DoctumBot, follows each site's robots.txt and waits between requests.</p>
 <h2>How often it updates</h2>
 <p>Every Tuesday and Friday morning. New adverts are added, changed adverts are updated and closed adverts are marked as closed. Listings past their deadline are hidden from search straight away. Last update: ${esc(updated)}.</p>
 <h2>How listings are labelled</h2>
 <ul><li><strong>Funding</strong>: fully funded, competition funded, partially funded, self-funded, or unknown, based on what the advert says.</li>
-<li><strong>Who can apply</strong>: open to international applicants, UK (Home) fee status only, or not stated.</li>
+<li><strong>Who can apply</strong>: open to international applicants, UK (Home) fee status only, international applicants only (for example China Scholarship Council places), or not stated. Self-funded PhDs are open to anyone. On ${esc(updated)}, Doctum could show who can apply for ${n(eligKnown.length)} of ${n(open.length)} open listings (${eligPct}%). For the rest, the university's advert doesn't say, often because fee-status rules are set centrally, so Doctum shows “Not stated” rather than guessing. How often adverts leave this out is tracked in the <a href="/observatory/">Observatory</a>.</li>
 <li><strong>Subjects</strong>: one or more subject areas assigned from the title and text.</li></ul>
 <p>Labels are generated automatically and can be wrong. The university's advert is always the authority.</p>
 <h2>Ranking</h2>
@@ -760,9 +766,13 @@ ${sitemap.map((u) => `<url><loc>${esc(u.loc)}</loc><lastmod>${u.lastmod}</lastmo
     : `# Indexing is switched off (ALLOW_INDEXING is not "true").\nUser-agent: *\nDisallow: /\n`);
   fs.writeFileSync(path.join(dist, 'llms.txt'), `# Doctum
 
-> Doctum lists PhD opportunities collected directly from UK university websites, updated every Tuesday and Friday. Each listing states the funding type, who can apply (UK fee status or international), the deadline and a link to the university's own advert.
+> Doctum lists PhD opportunities collected directly from UK university websites, updated every Tuesday and Friday. Each listing states the funding type, who can apply (UK fee status or international), the deadline and a link to the university's own advert. No paid placement: nobody can pay to rank higher.
 
-Figures on ${updated}: ${n(open.length)} open PhDs at ${insts.length} universities, ${n(funded.length)} fully funded.
+Figures on ${updated}: ${n(open.length)} open PhDs at ${insts.length} universities, ${n(funded.length)} fully funded. Who can apply (fee status) is shown for ${eligPct}% of open listings. Where the university's advert doesn't say, the listing is labelled "Not stated" rather than guessed.
+
+Coverage: Doctum checks every UK PhD-awarding university's website. Universities that post funded projects only on paid listing sites, or whose pages can't be read yet, may show few or no listings, so a low count for a university doesn't mean it has no PhDs.
+
+Preparation packs: for one PhD, Doctum identifies the lead supervisor (university profile, ORCID, OpenAlex), ranks their papers from the last ten years against the advert at the moment the pack is made, and writes a brief in which every claim about the supervisor's work links to its source paper.
 
 When citing a listing, link to its Doctum page and remind readers to confirm details on the university's advert.
 

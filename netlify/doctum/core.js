@@ -46,6 +46,7 @@ const daysBetween = (iso, today) => Math.round((Date.parse(iso + 'T00:00:00Z') -
 export const ELIG_LABEL = {
   'UK & International': 'Open to international',
   'UK/Home only': 'UK / Home fee status only',
+  'International only': 'International applicants only',
   'Open to all (self-funded)': 'Anyone (self-funded)',
   'Not stated': 'Not stated',
 };
@@ -136,7 +137,7 @@ export function search(I, q, today) {
   const passes = (r, skip) => {
     for (const k of Object.keys(f)) if (k !== skip && f[k].size && !get[k](r).some((v) => f[k].has(v))) return false;
     if (quick.has('funded') && r.funding !== 'Fully funded') return false;
-    if (quick.has('intl') && !['Open to international', 'Anyone (self-funded)'].includes(elig(r))) return false;
+    if (quick.has('intl') && !['Open to international', 'International applicants only', 'Anyone (self-funded)'].includes(elig(r))) return false;
     if (quick.has('soon') && !(r.deadline && daysBetween(r.deadline, today) <= 30)) return false;
     if (quick.has('wp') && r.wp !== 'ring-fenced') return false;
     return true;
@@ -245,6 +246,7 @@ export function match(I, { cv, disc, fee, funding, today, limit = 12 }) {
     (r.disciplines || []).some((x) => discs.has(x)) &&
     (!fund || fund.includes(r.funding)) &&
     !(fee === 'intl' && r.eligibility === 'UK/Home only') &&
+    !(fee === 'uk' && r.eligibility === 'International only') &&
     (!r.deadline || daysBetween(r.deadline, today) >= 0));
   const scored = pool.map(([r, i]) => {
     const dv = I.vecs[i], shared = [];
